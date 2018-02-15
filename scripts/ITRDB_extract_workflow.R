@@ -1,4 +1,4 @@
-dat.out <- "~/Desktop/ITRDB_test"
+dat.out <- "ITRDB_test"
  
 # # ----------------------
 # # Example of pulling a state shapefile
