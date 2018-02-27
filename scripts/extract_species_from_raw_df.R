@@ -25,14 +25,42 @@
 # raw <- read.csv("raw_data_temp_0218.csv")
 
 raw <- read.csv("../data/raw_data_temp_0218.csv")
+#raw <- read.csv("gbif_arkansana_inopina.csv")
 
 library(dplyr)
 
 # First we will sort through the data at the county level.
 county <- filter(raw, gps_determ=="C")
 
+#group_by(county, species_no)
+# Now we will use county to get the county occurrences for each species
 
+# First filter the county occurrences only
+ark1 <- filter(county, species_no==3)
+ino1 <- filter(county, species_no==15)
 
+# Then use this function to compile a list of unique counties and the coordinates of each
+extract_county_one  <- function(d.f){
+    d.f_coord <- data.frame()
+    sta <- unique(d.f$state)
+    
+    for (st in (1:length(sta))){
+      cou <- unique(ark1[ark1$state==sta[st],]$county)
+      
+      for (co in (1:length(cou))){
+      vec <- which(ark1$state==sta[st] & ark1$county==cou[co])
+      
+      d.f_coord <- rbind(d.f_coord, ark1[vec[1],c("state", "county", "lat", "long")])
+    
+      }
+    }
+    print(d.f_coord)
+  }
 
-# Second we will remove all the county level data.
-local <- filter(raw, gps_determ!="C")
+ark1_coord <- extract_county_one(ark1)
+ino1_coord <- extract_county_one(ino1)
+
+#################################################################################
+# Second we keep only the given and localized coordinates.
+#################################################################################
+local <- filter(raw, gps_determ=="L"|gps_determ=="G")
