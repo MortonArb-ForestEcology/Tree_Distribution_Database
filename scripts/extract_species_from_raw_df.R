@@ -107,6 +107,17 @@ write_loc2_csv(ino2, "ino2_coord.csv")
 # Third we look at the occurrence data from step 2 more closely and remove less reliable points
 #################################################################################
 
+# First give these objects that we will manipulate a new identity
+
 ark3 <- ark2
 ino3 <- ino2
+
+# change data into types of information we want
+str(ark3)
+ark3$year <- as.numeric(ark3$year)
+ark3$locality <- as.character(ark3$locality)
+ark3$uncertainty..m. <- as.numeric(ark3$uncertainty..m.)
+
+summary(ark3$issue)
+
 
