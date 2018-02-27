@@ -58,9 +58,57 @@ extract_county_one  <- function(d.f){
   }
 
 ark1_coord <- extract_county_one(ark1)
+write.csv(ark1_coord, "ark1_coord.csv")
+
 ino1_coord <- extract_county_one(ino1)
+write.csv(ino1_coord, "ino1_coord.csv")
 
 #################################################################################
 # Second we keep only the given and localized coordinates.
 #################################################################################
+
+# First filter the localized occurrences only
 local <- filter(raw, gps_determ=="L"|gps_determ=="G")
+
+
+
+ark2 <- filter(local, species_no==3)
+
+ark2[1:5,1]
+
+# remove unecessary columns
+ark2 <- select(ark2, ï..dataset, species, state, county, lat, long, basis, year, locality,
+               source, gps_determ, uncertainty..m., issue)
+# filter out non-numeric coordinates
+ark2$lat <- as.numeric(as.character(ark2$lat))
+ark2$long <- as.numeric(as.character(ark2$long))
+ark2 <- filter(ark2, lat > 0 & long < 0)
+# check for duplicates to 2 decimal places
+ark2 <- ark2[!duplicated(round(ark2[,c("lat","long")], 2)), ]
+# now we are ready to write the csvs
+ark2w <- select(ark2, state, county, lat, long, gps_determ)
+
+write.csv(ark2w, "ark2_coord.csv")
+
+summary(ark2)
+coord <- paste(ark2$lat, ark2$long)
+unique(coord)
+# After filtering the dataset by species and coordinates, we can remove duplicate 
+# or overlapping coordinates
+
+summary(ark2$lat)
+
+
+
+
+# unecessarycolumns and write the csv
+
+
+
+head(ark2)
+
+
+
+
+
+
