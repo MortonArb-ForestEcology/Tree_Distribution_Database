@@ -73,42 +73,40 @@ local <- filter(raw, gps_determ=="L"|gps_determ=="G")
 
 
 ark2 <- filter(local, species_no==3)
+ino2 <- filter(local, species_no==15)
 
-ark2[1:5,1]
+# now write a function to do the following
 
-# remove unecessary columns
-ark2 <- select(ark2, ï..dataset, species, state, county, lat, long, basis, year, locality,
-               source, gps_determ, uncertainty..m., issue)
-# filter out non-numeric coordinates
-ark2$lat <- as.numeric(as.character(ark2$lat))
-ark2$long <- as.numeric(as.character(ark2$long))
-ark2 <- filter(ark2, lat > 0 & long < 0)
-# check for duplicates to 2 decimal places
-ark2 <- ark2[!duplicated(round(ark2[,c("lat","long")], 2)), ]
-# now we are ready to write the csvs
-ark2w <- select(ark2, state, county, lat, long, gps_determ)
+extract_localized_two <- function(d.f){
+  # remove unecessary columns
+  d.f_holder <- select(d.f, ï..dataset, species, state, county, lat, long, basis, year, locality,
+                 source, gps_determ, uncertainty..m., issue)
+  # filter out non-numeric coordinates
+  d.f_holder$lat <- as.numeric(as.character(d.f_holder$lat))
+  d.f_holder$long <- as.numeric(as.character(d.f_holder$long))
+  d.f_holder <- filter(d.f_holder, lat > 0 & long < 0)
+  # check for duplicates to 2 decimal places
+  d.f_holder <- d.f_holder[!duplicated(round(d.f_holder[,c("lat","long")], 2)), ]
+  print(d.f_holder)
+}
 
-write.csv(ark2w, "ark2_coord.csv")
+ark2 <- extract_localized_two(ark2)
+ino2 <- extract_localized_two(ino2)
 
-summary(ark2)
-coord <- paste(ark2$lat, ark2$long)
-unique(coord)
-# After filtering the dataset by species and coordinates, we can remove duplicate 
-# or overlapping coordinates
+# now we are ready to write the csvs with the following function
+write_loc2_csv <- function(d.f, name){
+  d.f.w <- select(d.f, state, county, lat, long, gps_determ)
+  write.csv(d.f.w, name)
+}
 
-summary(ark2$lat)
-
-
-
-
-# unecessarycolumns and write the csv
-
+write_loc2_csv(ark2, "ark2_coord.csv")
+write_loc2_csv(ino2, "ino2_coord.csv")
 
 
-head(ark2)
+#################################################################################
+# Third we look at the occurrence data from step 2 more closely and remove less reliable points
+#################################################################################
 
-
-
-
-
+ark3 <- ark2
+ino3 <- ino2
 
