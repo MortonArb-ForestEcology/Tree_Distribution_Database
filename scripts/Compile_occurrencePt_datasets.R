@@ -8,6 +8,7 @@ library(rgbif)
 library(ridigbio)
 library(data.table)
 library(tidyr)
+library(lubridate)
 
 ## Subset data and (optionally) write a CSV
 gen_subset <- function(orig_data, action, export_name){
@@ -90,7 +91,18 @@ idigbio <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurr
     # then remove the extra symbols and change to numeric
     idigbio$long <- as.numeric(gsub(" \"lon\": ","",idigbio$long, fixed = T))
     unique(idigbio$long)
-### help ###: Edit eventDate column to just be 'year' ( now in form YYYY-MM-DD )
+    # next change the "dwc.eventDate" column to year
+    unique(idigbio$dwc.eventDate)
+    # start by renaming the column
+    names(idigbio)[names(idigbio) == 'dwc.eventDate'] <- 'year'
+    unique(idigbio$year)
+    # First we have to remove the characters that are not the year, month or day
+    idigbio$year <- gsub("T00:00:00+00:00", "", idigbio$year, fixed = T)
+    # now use lubridate package
+    idigbio$year <- ymd(idigbio$year) # It automatically changes blank entries to NA
+    # now we just need to extract the year and save only that.
+    idigbio$year <- year(idigbio$year)
+    unique(idigbio$year) # looks good
 keep_col <- c("dataset","genus","species","locality","lat","long","source","year","basis","uncert_m","state","county")
 datasets <- list(gbif, consortium, idigbio)
 for (i in datasets) {
