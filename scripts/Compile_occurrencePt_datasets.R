@@ -19,7 +19,7 @@ gen_subset <- function(orig_data, action, export_name){
       write.csv(new, file = export_name)
       return(data.frame(new))
     }
-}
+} 
 
 ################
 ### 1. CREATE UNIFIED DATAFRAME OF ALL OCCURRENCE RECORDS FOR TARGET SPECIES
@@ -27,9 +27,14 @@ gen_subset <- function(orig_data, action, export_name){
 
 ## a. Read in list of target species
 sp_list <- as.character(as.list(read.csv(file='./Google Drive/Distributions_TreeSpecies/target_species_list.csv'))$species)
+# for windows?
+# sp_list <- as.character(as.list(read.csv(file='G:/My Drive/Distributions_TreeSpecies/target_species_list.csv'))$species)
+
 
 ## b. Read in standardized occurrence point datasets (exactly the same column headers in each file)
 file_list <- list.files(path = "./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/standard_col", pattern = ".csv", full.names = T)
+# for windows?
+# file_list <- list.files(path = "G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/standard_col", pattern = ".csv", full.names = T)
 file_dfs <- lapply(file_list, read.csv, header = TRUE, fileEncoding="latin1", strip.white = TRUE, colClasses = "character")
   length(file_dfs)
 
@@ -38,11 +43,13 @@ df <- data.frame()
 for(file in seq_along(file_dfs)){
   df <- rbind(df, file_dfs[[file]])
 }
-  str(df); nrow(df) #94426
+  str(df); nrow(df) #94426 #93192 ELT
 df$species_no <- 0
 
 ## d. Read in raw occurrence point datasets, standardize column names, and create one dataframe
 gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_raw.csv', as.is=T)
+# for windows? but too big to not use server
+# gbif <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_raw.csv', as.is=T)
     nrow(gbif) #90192
   setnames(gbif,
     old=c("decimallatitude","decimallongitude","basisofrecord","institutioncode","coordinateuncertaintyinmeters"),
@@ -58,6 +65,8 @@ consortium <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occ
     consortium$dataset <- "consortium"
     consortium$county <- NA
 idigbio <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/idigbio_raw.csv', as.is=T)
+# for windows?
+# idigbio <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/idigbio_raw.csv', as.is=T)
     nrow(idigbio) #196485
   idigbio <- setnames(idigbio,
     old=c("dwc.genus","dwc.scientificName","idigbio.geoPoint","dwc.basisOfRecord","idigbio.eventDate","dwc.locality","dwc.institutionCode","dwc.coordinateUncertaintyInMeters","dwc.stateProvince","dwc.county"),
@@ -66,8 +75,13 @@ idigbio <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurr
     # Separate single iDigBio lat/long column into lat and long
   idigbio <- idigbio %>% separate("lat-long", c("lat", "long"), sep=",", fill="right", extra="merge")
     unique(idigbio$lat)
-### help ###: Remove everything but the number in lat and long columns in iDigBio
-  #idigbio1$lat <- gsub("{\\\"lat\\\":","",idigbio$lat)
+    # reassign the empty latitude values to NA to avoid confusion
+    idigbio[which(idigbio$lat==unique(idigbio$lat)[1] ), ] <- NA
+    unique(idigbio$lat) #better
+    # remove the extra symbols and change the column to a numeric variable
+    # when using gsub, be sure to include fixed=T to avoid confusion of symbols like "
+    idigbio$lat <- as.numeric(gsub("{\"lat\": ","",idigbio$lat, fixed = T))
+    unique(idigbio$lat) #best
 ### help ###: Edit eventDate column to just be 'year' ( now in form YYYY-MM-DD )
 keep_col <- c("dataset","genus","species","locality","lat","long","source","year","basis","uncert_m","state","county")
 datasets <- list(gbif, consortium, idigbio)
