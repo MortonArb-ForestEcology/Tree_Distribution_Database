@@ -76,12 +76,20 @@ idigbio <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurr
   idigbio <- idigbio %>% separate("lat-long", c("lat", "long"), sep=",", fill="right", extra="merge")
     unique(idigbio$lat)
     # reassign the empty latitude values to NA to avoid confusion
-    idigbio[which(idigbio$lat==unique(idigbio$lat)[1] ), ] <- NA
+    idigbio$lat[which(idigbio$lat==unique(idigbio$lat)[1] )] <- NA
     unique(idigbio$lat) #better
     # remove the extra symbols and change the column to a numeric variable
     # when using gsub, be sure to include fixed=T to avoid confusion of symbols like "
     idigbio$lat <- as.numeric(gsub("{\"lat\": ","",idigbio$lat, fixed = T))
     unique(idigbio$lat) #best
+    # repeat for longitude ("long" column)    
+    unique(idigbio$long)# NAs already in place
+    # first remove the bracket at the end
+    idigbio$long <- gsub("}", "", idigbio$long)
+    unique(idigbio$long)
+    # then remove the extra symbols and change to numeric
+    idigbio$long <- as.numeric(gsub(" \"lon\": ","",idigbio$long, fixed = T))
+    unique(idigbio$long)
 ### help ###: Edit eventDate column to just be 'year' ( now in form YYYY-MM-DD )
 keep_col <- c("dataset","genus","species","locality","lat","long","source","year","basis","uncert_m","state","county")
 datasets <- list(gbif, consortium, idigbio)
