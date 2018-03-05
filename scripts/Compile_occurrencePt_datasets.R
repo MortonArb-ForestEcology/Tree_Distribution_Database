@@ -104,9 +104,40 @@ idigbio <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurr
     idigbio$year <- year(idigbio$year)
     unique(idigbio$year) # looks good
 #fia <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/fia_tree_raw.csv', as.is=T)   # where species information is stored
-#plot <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/fia_plot_raw.csv', as.is=T)   # where coordinates are stored
+#plot <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/translation_data_raw/fia_plot_raw.csv', as.is=T)   # where coordinates are stored
+    # remove unnecessary columns from plot
+    plot2 <- plot[, c("INVYR", "STATECD", "UNITCD", "COUNTYCD", "PLOT", "LAT", "LON")]
+    # Match the location IDs and merge the species and plot data frames 
+    fia_coord <- merge(fia, plot2, by = c("INVYR", "STATECD", "UNITCD", "COUNTYCD", "PLOT"), all = F)
+    # Add in density here. First make a dataframe with all unique plots and number them.
+    u <- unique(fia_coord[,c('SPCD', 'INVYR','STATECD','UNITCD', 'COUNTYCD', 'PLOT', 'LAT', 'LON')])
+    ID <- seq(from = 1, to = length(u$INVYR), by = 1)
+    u_plot <- data.frame(u, ID)
+    # using ID as a label that marks unique plots, see how many individual trees of a species are found in each.
+    density_test <- merge(u_plot, fia_coord, by = c("SPCD", "INVYR", "UNITCD", "COUNTYCD", "PLOT", "STATECD"), all = T)
+    t <- as.numeric(table(density_test$ID))
+    # The results of the table show the number of individuals per plot
+    u_plot$density <- t
+    # manipulate u_plot further to add onto raw data block; rename as fia
+    fia <- u_plot
+    rm(plot, plot2)
+    fia$dataset <- "FIA"
+    fia$genus <- "Quercus"
+    fia$locality <- NA
+    fia$source <- "FIA" 
+    fia$basis <- "WILD_PROVENANCE"
+    # Match up SPCD using 
+    #fia_sp <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/translation_data_raw/fia_species_raw.csv', as.is=T)    
+    test <- merge(fia, fia_sp, by = "SPCD", all = F)
+    test <- test[, 1:21]
+    # Match up STATECD and COUNTYCD using
+    #fia_cou <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/translation_data_raw/fia_county_raw.csv', as.is=T)    
+    test <- merge(test, fia_cou, by = c("STATECD", "COUNTYCD"), all = F)
+    setnames(fia,
+             old=c("LAT","LON"),
+             new=c("lat","lon"))
     
-    
+                 
 keep_col <- c("dataset","genus","species","locality","lat","long","source","year","basis","uncert_m","state","county")
 datasets <- list(gbif, consortium, idigbio)
 for (i in datasets) {
