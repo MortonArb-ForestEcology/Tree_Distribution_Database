@@ -45,12 +45,12 @@ extract_county_one  <- function(d.f){
     sta <- unique(d.f$state)
     
     for (st in (1:length(sta))){
-      cou <- unique(ark1[ark1$state==sta[st],]$county)
+      cou <- unique(d.f[d.f$state==sta[st],]$county)
       
       for (co in (1:length(cou))){
-      vec <- which(ark1$state==sta[st] & ark1$county==cou[co])
+      vec <- which(d.f$state==sta[st] & d.f$county==cou[co])
       
-      d.f_coord <- rbind(d.f_coord, ark1[vec[1],c("state", "county", "lat", "long")])
+      d.f_coord <- rbind(d.f_coord, d.f[vec[1],c("state", "county", "lat", "long")])
     
       }
     }
@@ -118,6 +118,6 @@ ark3$year <- as.numeric(ark3$year)
 ark3$locality <- as.character(ark3$locality)
 ark3$uncertainty..m. <- as.numeric(ark3$uncertainty..m.)
 
-summary(ark3$issue)
+summary(ark3$species)
 
 

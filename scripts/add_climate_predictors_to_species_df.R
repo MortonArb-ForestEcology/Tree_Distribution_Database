@@ -42,11 +42,12 @@ library(raster)
 library(rgdal)
 library(dplyr)
 
+# setwd("C:/Users/Elizabeth/Desktop/2017_CTS_fellowship/compilation_eb")
 # decide which species data you would like to work with
-#ark1 <- 
-#ino1 <- 
-#ark2 <- 
-#ino2 <- 
+#ark1 <- read.csv("ark1_coord.csv")
+#ino1 <- read.csv("ino1_coord.csv")
+#ark2 <- read.csv("ark2_coord.csv")
+#ino2 <- read.csv("ino2_coord.csv")
 #ark3 <- 
 #ino3 <- 
 

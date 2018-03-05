@@ -44,7 +44,7 @@ Q_similis <- prep_Q_occ(fia_occ, similis)
 
 # Now let's load in our GBIF data
 gbif_sim <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/trial_Q_similis.csv', header = T, as.is=T)
-head(gbif)
+head(gbif_sim)
 
 # Let's map them!
 library(maps)
