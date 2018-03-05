@@ -26,6 +26,8 @@ similis <- 836
 # be patient. it takes a while.
 plot <- read.csv("PLOT.csv")
 
+
+### BY SPECIES
 # Now we will extract the locations for the species one by one and then map them. 
 # Let's make a function to make it faster.
 
@@ -64,6 +66,30 @@ Q_oglethorpensis <- prep_Q_occ(fia_occ, oglethorpensis)
 
 Q_similis <- prep_Q_occ(fia_occ, similis)
 
+
+### ALL AT ONCE
+# **We will try this a new way to enhance the existing FIA data frame with coordinates only and some plot data
+# don't need a function if we only do this once
+
+  # let's remove unnecessary columns from the plot csv
+  plot2 <- plot[, c("INVYR", "STATECD", "UNITCD", "COUNTYCD",
+                   "PLOT", "LAT", "LON")]
+  # Next we will match up the location IDs and merge the 'treeXX' and 'plot' data frames 
+  fia_coord <- merge(fia_occ, plot2, by = c("INVYR", "STATECD", "UNITCD", 
+                                   "COUNTYCD", "PLOT"), all = F)
+  
+  # We just have to add in density here. First make a dataframe 
+  # with all unique plots for this state XX and number them with ID numbers.
+  u <- unique(fia_coord[,c('SPCD', 'INVYR','STATECD','UNITCD', 'COUNTYCD', 'PLOT', 'LAT', 'LON')])
+  ID <- seq(from = 1, to = length(u$INVYR), by = 1)
+  u_plot <- data.frame(u, ID)
+  
+  density_test <- merge(u_plot, fia_coord, by = c("SPCD", "INVYR", "UNITCD", "COUNTYCD", "PLOT", "STATECD"), all = T)
+  t <- as.numeric(table(density_test$ID))
+  u_plot$density <- t
+  print(u_plot)
+
+  # manipulate u_plot further to add onto raw data block
 
 # Let's map them!
 library(maps)
