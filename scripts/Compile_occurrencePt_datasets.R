@@ -103,6 +103,10 @@ idigbio <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurr
     # now we just need to extract the year and save only that.
     idigbio$year <- year(idigbio$year)
     unique(idigbio$year) # looks good
+#fia <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/fia_tree_raw.csv', as.is=T)   # where species information is stored
+#plot <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/fia_plot_raw.csv', as.is=T)   # where coordinates are stored
+    
+    
 keep_col <- c("dataset","genus","species","locality","lat","long","source","year","basis","uncert_m","state","county")
 datasets <- list(gbif, consortium, idigbio)
 for (i in datasets) {
@@ -112,7 +116,9 @@ for (i in datasets) {
   df2$species_no <- 0
   df2$gps_determ <- NA
   df2$status <- NA
+ 
   
+   
 ##  e. Stack datasets to create one large file
 occur_all <- rbind(df,df2)
 
