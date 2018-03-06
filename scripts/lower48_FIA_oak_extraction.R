@@ -518,7 +518,6 @@ rm(treeWY)
 write.csv(x = IUCN_oak, file = "lower_48_Quercus.csv")
 
 
-
 # Now try making this a function for all states at once
 # have vector of state data frame names for d.f and a vector of rare_oak for sp
 fia_extract <- function(d.f, sp){

@@ -108,7 +108,7 @@ idigbio <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurr
     # remove unnecessary columns from plot
     plot2 <- plot[, c("INVYR", "STATECD", "UNITCD", "COUNTYCD", "PLOT", "LAT", "LON")]
     # Match the location IDs and merge the species and plot data frames 
-    fia_coord <- merge(fia, plot2, by = c("INVYR", "STATECD", "UNITCD", "COUNTYCD", "PLOT"), all = F)
+    fia_coord <- merge(fia, plot2, by.y = c("INVYR", "STATECD", "UNITCD", "COUNTYCD", "PLOT"), all = F)
     # Add in density here. First make a dataframe with all unique plots and number them.
     u <- unique(fia_coord[,c('SPCD', 'INVYR','STATECD','UNITCD', 'COUNTYCD', 'PLOT', 'LAT', 'LON')])
     ID <- seq(from = 1, to = length(u$INVYR), by = 1)
@@ -128,18 +128,27 @@ idigbio <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurr
     fia$basis <- "WILD_PROVENANCE"
     # Match up SPCD using 
     #fia_sp <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/translation_data_raw/fia_species_raw.csv', as.is=T)    
-    test <- merge(fia, fia_sp, by = "SPCD", all = F)
-    test <- test[, 1:21]
+    fia <- merge(fia, fia_sp, by = "SPCD", all = F)
+    fia <- fia[, 1:21]
+    # combine columns into single species name
+    fia$species <- paste(fia$GENUS, fia$SPECIES, fia$VARIETY, fia$SUBSPECIES)
+    # remove unnecessary columns
+    fia <- subset(fia, select = -c(COMMON_NAME, GENUS, SPECIES, VARIETY, SUBSPECIES, SPECIES_SYMBOL, SPCD, ID))
     # Match up STATECD and COUNTYCD using
     #fia_cou <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/translation_data_raw/fia_county_raw.csv', as.is=T)    
-    test <- merge(test, fia_cou, by = c("STATECD", "COUNTYCD"), all = F)
+    fia <- merge(fia, fia_cou, by = c("STATECD", "COUNTYCD"), all = F)
+    # remove unnecessary columns
+    fia <- fia[, 1:19]
+    fia <- subset(fia, select = -c(STATECD, COUNTYCD, UNITCD.x, UNITCD.y, PLOT))
+    # rename remaining columns to match other data sets
     setnames(fia,
-             old=c("LAT","LON"),
-             new=c("lat","lon"))
+             old=c("LAT","LON", "INVYR", "STATENM", "COUNTYNM"),
+             new=c("lat","lon", "year", "state", "county"))
+    fia$uncert_m <- NA
     
                  
 keep_col <- c("dataset","genus","species","locality","lat","long","source","year","basis","uncert_m","state","county")
-datasets <- list(gbif, consortium, idigbio)
+datasets <- list(gbif, consortium, idigbio, fia)
 for (i in datasets) {
   i <- i %>% select(keep_col) 
   df2 <- rbind(i) 
