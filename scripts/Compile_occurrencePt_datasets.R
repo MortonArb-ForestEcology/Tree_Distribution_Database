@@ -49,7 +49,7 @@ df$species_no <- 0
 
 ## d. Read in raw occurrence point datasets, standardize column names, and create one dataframe
 gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_raw.csv', as.is=T)
-# for windows? but too big to not use server
+# for windows? but too big to not use server # more columns than column names
 # gbif <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_raw.csv', as.is=T)
     nrow(gbif) #90192
   setnames(gbif,
@@ -59,6 +59,8 @@ gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrenc
     gbif$state <- NA
     gbif$county <- NA
 consortium <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/consortium_raw.csv', as.is=T)
+    # for windows
+    # consortium <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/consortium_raw.csv', as.is=T)
     nrow(consortium) #98500
   setnames(consortium,
     old=c("scientificName","decimalLatitude","decimalLongitude","basisOfRecord","habitat","associatedTaxa","institutionCode","coordinateUncertaintyInMeters","stateProvince"),
@@ -92,9 +94,6 @@ idigbio <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurr
     idigbio$long <- as.numeric(gsub(" \"lon\": ","",idigbio$long, fixed = T))
     unique(idigbio$long)
     # next change the "dwc.eventDate" column to year
-    unique(idigbio$dwc.eventDate)
-    # start by renaming the column
-    names(idigbio)[names(idigbio) == 'dwc.eventDate'] <- 'year'
     unique(idigbio$year)
     # First we have to remove the characters that are not the year, month or day
     idigbio$year <- gsub("T00:00:00+00:00", "", idigbio$year, fixed = T)
@@ -120,16 +119,11 @@ idigbio <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurr
     u_plot$density <- t
     # manipulate u_plot further to add onto raw data block; rename as fia
     fia <- u_plot
-    rm(plot, plot2)
-    fia$dataset <- "FIA"
-    fia$genus <- "Quercus"
-    fia$locality <- NA
-    fia$source <- "FIA" 
-    fia$basis <- "WILD_PROVENANCE"
+    rm(plot, plot2, fia_coord, density_test, u, ID)
     # Match up SPCD using 
     #fia_sp <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/translation_data_raw/fia_species_raw.csv', as.is=T)    
     fia <- merge(fia, fia_sp, by = "SPCD", all = F)
-    fia <- fia[, 1:21]
+    fia <- fia[, 1:16]
     # combine columns into single species name
     fia$species <- paste(fia$GENUS, fia$SPECIES, fia$VARIETY, fia$SUBSPECIES)
     # remove unnecessary columns
@@ -138,21 +132,28 @@ idigbio <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurr
     #fia_cou <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/translation_data_raw/fia_county_raw.csv', as.is=T)    
     fia <- merge(fia, fia_cou, by = c("STATECD", "COUNTYCD"), all = F)
     # remove unnecessary columns
-    fia <- fia[, 1:19]
+    fia <- fia[, 1:12]
     fia <- subset(fia, select = -c(STATECD, COUNTYCD, UNITCD.x, UNITCD.y, PLOT))
     # rename remaining columns to match other data sets
     setnames(fia,
              old=c("LAT","LON", "INVYR", "STATENM", "COUNTYNM"),
-             new=c("lat","lon", "year", "state", "county"))
+             new=c("lat","long", "year", "state", "county"))
+    fia$dataset <- "FIA"
+    fia$genus <- "Quercus"
+    fia$locality <- NA
+    fia$source <- "FIA" 
+    fia$basis <- "WILD_PROVENANCE"
     fia$uncert_m <- NA
-    
-                 
 keep_col <- c("dataset","genus","species","locality","lat","long","source","year","basis","uncert_m","state","county")
 datasets <- list(gbif, consortium, idigbio, fia)
-for (i in datasets) {
-  i <- i %>% select(keep_col) 
-  df2 <- rbind(i) 
+#datasets <- list(consortium, idigbio, fia)
+
+df2 <- data.frame()
+for (ds in datasets) {
+    ds <- ds %>% select(keep_col) 
+  df2 <- rbind(df2, ds) 
 }
+
   df2$species_no <- 0
   df2$gps_determ <- NA
   df2$status <- NA
@@ -162,6 +163,7 @@ for (i in datasets) {
 ##  e. Stack datasets to create one large file
 occur_all <- rbind(df,df2)
 
+# all oaks? compile each occurrence set first better way?
 ## f. Subset based on target species list and write file
 occur_sp <- gen_subset(occur_all, (occur_all$species %in% sp_list),"./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/standard_col/datasets_combined/occurrence_raw_compiled.csv")
   nrow(occur_sp) #11508
