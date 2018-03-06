@@ -163,8 +163,36 @@ for (ds in datasets) {
 ##  e. Stack datasets to create one large file
 occur_all <- rbind(df,df2)
 
+
+## f. make some changes across this dataset to prevent future errors
+occur_all$year[is.na(occur_all$year)]<-"1111"
+replace <- c("UNKNOWN","\\<0\\>","N/A","NA","^$")
+for (i in replace){
+  occur_all$year <- gsub(i,"1111",occur_all$year)
+}
+occur_all$year<-as.numeric(occur_all$year)
+occur_all$lat<-as.numeric(occur_all$lat)
+occur_all$long<-as.numeric(occur_all$long)
+occur_all$locality<-gsub(",",".",occur_all$locality)
+
+# IDK about this one...
+## g. Remove points with ---less than 2 digits after the decimal for lat and/or long---
+#occur_dec <- occur_all[grep("\\.[0-9][1-9]",occur_all$lat),]
+#nrow(occur_dec) #16678
+#occur_dec2 <- occur_all[grep("\\.[0-9][1-9]",occur_dec$long),]
+#nrow(occur_dec2) #14881
+
+## g. Reorder dataset before duplicate deletion to place higher quality datasets and most recent records first
+occur_all <- occur_all[order(factor(occur_all$dataset,levels=c("other_pts","redlist",
+                                                                  "consortium","fia","ex_situ","gbif","andrew_hipp","natureserve","bonap","usda"))),]
+head(occur_all)
+occur_all <- occur_all[order(occur_all$year, na.last = FALSE, decreasing = T),]
+unique(occur_all$year)
+str(occur_all)
+
+
 # all oaks? compile each occurrence set first better way?
-## f. Subset based on target species list and write file
+## i. Subset based on target species list and write file
 occur_sp <- gen_subset(occur_all, (occur_all$species %in% sp_list),"./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/standard_col/datasets_combined/occurrence_raw_compiled.csv")
   nrow(occur_sp) #11508
 
