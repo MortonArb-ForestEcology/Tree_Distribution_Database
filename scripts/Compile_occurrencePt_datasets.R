@@ -182,20 +182,24 @@ occur_all$locality<-gsub(",",".",occur_all$locality)
 #occur_dec2 <- occur_all[grep("\\.[0-9][1-9]",occur_dec$long),]
 #nrow(occur_dec2) #14881
 
-## g. Reorder dataset before duplicate deletion to place higher quality datasets and most recent records first
+## h. Reorder dataset before subsetting in next script to place higher quality datasets and most recent records first
 occur_all <- occur_all[order(factor(occur_all$dataset,levels=c("other_pts","redlist",
                                                                   "consortium","fia","ex_situ","gbif","andrew_hipp","natureserve","bonap","usda"))),]
 head(occur_all)
 occur_all <- occur_all[order(occur_all$year, na.last = FALSE, decreasing = T),]
 unique(occur_all$year)
-str(occur_all)
 
-
+##REPLACE
 # all oaks? compile each occurrence set first better way?
 ## i. Subset based on target species list and write file
-occur_sp <- gen_subset(occur_all, (occur_all$species %in% sp_list),"./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/standard_col/datasets_combined/occurrence_raw_compiled.csv")
-  nrow(occur_sp) #11508
+#occur_sp <- gen_subset(occur_all, (occur_all$species %in% sp_list),"./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/standard_col/datasets_combined/occurrence_raw_compiled.csv")
+#  nrow(occur_sp) #11508
 
+## i. Write file
+write.csv(occur_all,file="./Distributions_TreeSpecies/in-use_occurrence_raw/standard_col/datasets_combined/occurence_raw_compiled_edit.csv")
+
+
+##REMOVE/MOVE TO NEXT SCRIPT
 ################
 ### 2. CREATE DATA SUBSETS ---- working ----
 ################
