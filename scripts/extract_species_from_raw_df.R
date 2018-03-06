@@ -6,7 +6,7 @@
 ###########
 
 
-############### INPUT: raw data csv (a large file holding all the data we could
+############### INPUT: raw "occur_all" data csv (a large file holding all the data we could
 #               possibly need for our 28 species; including location, source)
 #
 #     package: dplyr
@@ -26,6 +26,11 @@
 
 raw <- read.csv("../data/raw_data_temp_0218.csv")
 #raw <- read.csv("gbif_arkansana_inopina.csv")
+
+## a. Read in occurrence point file -IF- you've added coordinates for species with locality info but no given lat/long
+occur_all <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/standard_col/datasets_combined/occurrence_raw_compiled_edit.csv', as.is=T)
+# windows
+# occur_all <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/standard_col/datasets_combined/occurrence_raw_compiled_edit.csv', as.is=T)
 
 library(dplyr)
 
