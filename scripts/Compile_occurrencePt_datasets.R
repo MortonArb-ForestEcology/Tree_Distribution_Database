@@ -50,7 +50,12 @@ df$species_no <- 0
 ## d. Read in raw occurrence point datasets, standardize column names, and create one dataframe
 gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_raw.csv', as.is=T)
 # for windows? but too big to not use server # more columns than column names
-# gbif <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_raw.csv', as.is=T)
+# gbif <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_raw_DarwinCore_edit.csv', as.is=T)
+
+
+
+
+
     nrow(gbif) #90192
   setnames(gbif,
     old=c("decimallatitude","decimallongitude","basisofrecord","institutioncode","coordinateuncertaintyinmeters"),
