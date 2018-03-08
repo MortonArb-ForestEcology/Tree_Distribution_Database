@@ -51,12 +51,19 @@ df$species_no <- 0
 gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_raw.csv', as.is=T)
 # for windows? but too big to not use server # more columns than column names
 # gbif <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_raw_DarwinCore_edit.csv', as.is=T)
-
-
-
-
-
-    nrow(gbif) #90192
+    nrow(gbif) #12195
+    # remove extraneous columns
+    gbif_2 <- subset(gbif, select = c(basisOfRecord, institutionID, institutionCode, 
+                                      genus, taxonID, scientificName, species, 
+                                      specificEpithet, speciesKey, scientificNameID, year,
+                                      countryCode, stateProvince, county, municipality, 
+                                      locality, verbatimLocality, occurrenceRemarks, 
+                                      associatedTaxa, decimalLatitude, decimalLongitude,
+                                      coordinateUncertaintyInMeters, coordinatePrecision,
+                                      georeferencedBy, issue))
+  
+    write.csv(gbif_2, file = 'G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_raw_DC_trial.csv')
+      
   setnames(gbif,
     old=c("decimallatitude","decimallongitude","basisofrecord","institutioncode","coordinateuncertaintyinmeters"),
     new=c("lat","long","basis","source","uncert_m"))
