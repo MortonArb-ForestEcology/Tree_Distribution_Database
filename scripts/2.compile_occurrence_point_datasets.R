@@ -73,11 +73,37 @@ gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrenc
     sum(is.na(gbif$state)) # 2030
     head(gbif$locality[is.na(gbif$state)])
     # write a function to take the state from the locality
-    extract_state <- function(loc, rep){
-      gbif$state[grep(pattern = "loc", gbif$locality[is.na(gbif$state)])] <- "rep"
+    extract_state <- function(df, loc, rep){
+      df$state[grep(pattern = loc, df$locality[is.na(df$state)])] <- rep
     }
+    # not sure why the above didn't work...
+    gbif2 <- gbif
+    # See how this pattern changes. Why?
+    sum(is.na(gbif2$state)) # 2030
+    grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)])
+    gbif2$state[grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)])] <- "Texas"
+    sum(is.na(gbif2$state)) # 2026
+    # what happens to entry 5?
+    gbif2[5, ] # It looks good
+    # what happens to entry 36?
+    gbif[36, ] # It's still NA. Why?
+    # Can grep only make one change at a time?
     
-    extract_state(CA, California)
+    grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)])
+    gbif2$state[grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)])] <- "Texas"
+    grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)])
+    gbif2$state[grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)])] <- "Texas"
+    grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)])
+    gbif2$state[grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)])] <- "Texas"
+    grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)])
+    
+    
+    
+    gbif2$state[grep(pattern = "CA", x = gbif2$locality[is.na(gbif2$state)])] <- "California"
+    gbif2$state[grep(pattern = "California", x = gbif2$locality[is.na(gbif2$state)])] <- "California"
+    # When the above runs several times, it catches more empty spaces...why?
+    # this doesn't completely work either
+    
     extract_state(California, California)
     extract_state(TX, Texas)
     extract_state(Texas, Texas)
