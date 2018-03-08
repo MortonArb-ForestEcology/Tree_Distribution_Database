@@ -84,7 +84,7 @@ ino2 <- filter(local, species_no==15)
 
 extract_localized_two <- function(d.f){
   # remove unecessary columns
-  d.f_holder <- select(d.f, Ã¯..dataset, species, state, county, lat, long, basis, year, locality,
+  d.f_holder <- select(d.f, ï..dataset, species, state, county, lat, long, basis, year, locality,
                  source, gps_determ, uncertainty..m., issue)
   # filter out non-numeric coordinates
   d.f_holder$lat <- as.numeric(as.character(d.f_holder$lat))
