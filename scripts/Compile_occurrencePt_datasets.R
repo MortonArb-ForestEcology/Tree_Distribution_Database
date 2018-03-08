@@ -53,23 +53,28 @@ gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrenc
 # gbif <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_raw_DarwinCore_edit.csv', as.is=T)
     nrow(gbif) #12195
     # remove extraneous columns
-    gbif_2 <- subset(gbif, select = c(basisOfRecord, institutionID, institutionCode, 
-                                      genus, taxonID, scientificName, species, 
-                                      specificEpithet, speciesKey, scientificNameID, year,
-                                      countryCode, stateProvince, county, municipality, 
+    gbif <- subset(gbif, select = c(basisOfRecord, institutionCode, genus, 
+                                      scientificName, species, year, countryCode, 
+                                      stateProvince, county, municipality, 
                                       locality, verbatimLocality, occurrenceRemarks, 
                                       associatedTaxa, decimalLatitude, decimalLongitude,
-                                      coordinateUncertaintyInMeters, coordinatePrecision,
-                                      georeferencedBy, issue))
-  
-    write.csv(gbif_2, file = 'G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_raw_DC_trial.csv')
-      
+                                      coordinateUncertaintyInMeters,
+                                      georeferenceSources, issue))
+
   setnames(gbif,
-    old=c("decimallatitude","decimallongitude","basisofrecord","institutioncode","coordinateuncertaintyinmeters"),
-    new=c("lat","long","basis","source","uncert_m"))
+    old=c("decimalLatitude","decimalLongitude","basisOfRecord","institutionCode","coordinateUncertaintyInMeters", "countryCode", "stateProvince", "scientificName"),
+    new=c("lat","long","basis","source","uncert_m", "country", "state", "synonym"))
+  # fix locality data as much as possible  
+  sum(is.na(gbif$locality)) #3044
+    # when there is no locality information other than that of the verbatim locality column, copy that information to locality
+    gbif$locality[is.na(gbif$locality)]  <- gbif$verbatimLocality[is.na(gbif$locality)]
+    sum(is.na(gbif$locality)) #1835, better
+    # write a csv to upload into georeference
+    write.csv(gbif, file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_DC_georef.csv')
+    
+    table(gbif$state)
     gbif$dataset <- "gbif"
-    gbif$state <- NA
-    gbif$county <- NA
+    
 consortium <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/consortium_raw.csv', as.is=T)
     # for windows
     # consortium <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/consortium_raw.csv', as.is=T)
