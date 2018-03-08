@@ -80,16 +80,17 @@ gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrenc
     gbif2 <- gbif
     # See how this pattern changes. Why?
     sum(is.na(gbif2$state)) # 2030
-    grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)])
+    grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)]) # should replace 14
     gbif2$state[grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)])] <- "Texas"
     sum(is.na(gbif2$state)) # 2026
     # what happens to entry 5?
     gbif2[5, ] # It looks good
     # what happens to entry 36?
     gbif[36, ] # It's still NA. Why?
+    grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)]) # 13 remain
     # Can grep only make one change at a time?
-    
-    grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)])
+    gbif2$state[grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)])] <- "Texas"
+    grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)]) # now 13 still remain, but their row numbers have shifted...
     gbif2$state[grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)])] <- "Texas"
     grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)])
     gbif2$state[grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)])] <- "Texas"
