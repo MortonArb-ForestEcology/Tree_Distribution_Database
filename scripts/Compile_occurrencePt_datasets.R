@@ -69,6 +69,29 @@ gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrenc
     # when there is no locality information other than that of the verbatim locality column, copy that information to locality
     gbif$locality[is.na(gbif$locality)]  <- gbif$verbatimLocality[is.na(gbif$locality)]
     sum(is.na(gbif$locality)) #1835, better
+    # for columns with NA in state, look in locality data for a state abbreviation or name and copy it into the empty column
+    sum(is.na(gbif$state)) # 2030
+    head(gbif$locality[is.na(gbif$state)])
+    # write a function to take the state from the locality
+    extract_state <- function(loc, rep){
+      gbif$state[grep(pattern = "loc", gbif$locality[is.na(gbif$state)])] <- "rep"
+    }
+    
+    extract_state(CA, California)
+    extract_state(California, California)
+    extract_state(TX, Texas)
+    extract_state(Texas, Texas)
+    extract_state(FL, Florida)
+    extract_state(Florida, Florida)
+    extract_state(AZ, Arizona)
+    extract_state(UT, Utah)
+    extract_state(Utah, Utah)
+    extract_state(AL, Alabama)
+    extract_state(Alamaba, Alabama)
+    extract_state(Arkansas, Arkansas)
+    extract_state(Georgia, Georgia)
+    extract_state(LA, Louisiana)
+    
     # write a csv to upload into georeference
     write.csv(gbif, file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_DC_georef.csv')
     
