@@ -14,10 +14,15 @@ Within folder "scripts", files have been numbered in the order they are to be us
   Purpose: FIA data comes in unique form, where individual trees are not directly linked with their
   coordinates. Here we first cycle through the tree occurrence data from 48 states and extract all
   occurrences labeled as a species of interest.
+  
   Input: TREE.csv files for lower 48 states from FIA datamart, PLOT.csv file from FIA datamart
+  
   Output: single csv containing FIA occurrence data for 28 species of interest
+  
   Packages:
+  
   Functions:
+  
   Notes: 1) This output does not include the coordinates of surveyed plots that did not 
   contain the species of interest. Consider altering this script if decide to use 
   empty plots as absence data. 2) This script may need to be updated if FIA API becomes available.
@@ -34,21 +39,31 @@ Within folder "scripts", files have been numbered in the order they are to be us
   (gbif, consortium, idigbio, bonap, A. Hipp, exsitu, natureserve, redlist, usdaplants, other),
   we will make a larger stacked data frame containing all the occurrence data we will need to make
   our model. Column names will be made uniform.
+  
   Input: all csv files from in_use_occurrence_raw folder in Google Drive
+  
   Output: single csv containing uniform occurrence data for 28 species of interest from several sources
+  
   Column names: dataset, basis, source, genus, species, year, state, county, locality, lat, long,
   uncert_m, issue, species_no
+  
   Packages: dplyr, rgbif, ridigbio, data.table, tidyr, lubridate
+  
   Functions: gen_subset ()
+  
   Notes: 
 
 
 ## 3.extract_species_from_raw_df
   Purpose: Subset by species from large occurrence pool first 
   and then at different spatial scales second
+  
   Input: large occurrence csv from step 2
+  
   Output: several smaller csvs, depending on preference of modeller
+  
   Packages: dplyr
+  
   Functions: extract_county_one ()
              extract_localized_two ()
              write_loc2_csv ()             
@@ -70,10 +85,14 @@ Within folder "scripts", files have been numbered in the order they are to be us
   Purpose: Using any of the species-specific csvs created in step 3, columns for climatic data
   of the location of the occurrence will be appended, thereby creating a new file in which 
   coordinates will be associated with local climatic statistics.
+  
   Input: species-specific csv from step 3 & climate rasterLayers from PRISM 
   (30-year normals for annual precipitation, mean annual temperature, maximum annual 
   temperature, minimum annual temperature) Additional rasterLayers can be added without much difficulty.
+  
   Output: updated csv with species occurrence data and climate data for those areas
+  
   Packages: dplyr, raster, rgdal, sp
+  
   Functions: extract_PRISM (This single function will extract the appropriate climatic 
   statistics from each layer of interest and append it to the existing data frame)
