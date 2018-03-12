@@ -16,6 +16,8 @@
 # read in our rare oak vector
 rare_oak <- c(6768, 8429, 811, 6782, 851, 6785, 8514, 821, 844, 8492, 836, 8455, 8457)
 
+# Trial a function:
+
 # read in tree data, which lists all species and the plots in which they were found
 # this one will take time to read in
 # treeAL <- read.csv("AL_TREE.csv")
