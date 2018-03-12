@@ -9,12 +9,52 @@
 ############### only our rare oaks)
 ###### lower48_Quercus.csv 
 
-###### *initially skip Georgia and Minnesota because files are so large
 
 # working directory cannot be changed on the server, so simply specify the route whenever uploading a CSV file
 #setwd("C:/Users/Elizabeth/Desktop/2017_CTS_fellowship/FIA_unzipped_postgres_data/FIADB_PG/CSV_DATA")
+
+######################################################################################
+# Note: if function does not work, skip and go state by state.
 # read in our rare oak vector
 rare_oak <- c(6768, 8429, 811, 6782, 851, 6785, 8514, 821, 844, 8492, 836, 8455, 8457)
+
+# Now try making this a function for all states at once
+# have vector of state data frame names for df and a vector of rare_oak for sp
+
+# make state vector
+lower_48 <- c("AL_TREE.csv", "AZ_TREE.csv", "AR_TREE.csv", "CA_TREE.csv", "CO_TREE.csv",
+              "CT_TREE.csv", "DE_TREE.csv", "FL_TREE.csv", "GA_TREE.csv", "ID_TREE.csv",
+              "IL_TREE.csv", "IN_TREE.csv", "IA_TREE.csv", "KS_TREE.csv", "KY_TREE.csv",
+              "LA_TREE.csv", "ME_TREE.csv", "MD_TREE.csv", "MA_TREE.csv", "MI_TREE.csv",
+              "MN_TREE.csv", "MS_TREE.csv", "MO_TREE.csv", "MT_TREE.csv", "NE_TREE.csv",
+              "NV_TREE.csv", "NH_TREE.csv", "NJ_TREE.csv", "NM_TREE.csv", "NY_TREE.csv",
+              "NC_TREE.csv", "ND_TREE.csv", "OH_TREE.csv", "OK_TREE.csv", "OR_TREE.csv",
+              "PA_TREE.csv", "RI_TREE.csv", "SC_TREE.csv", "SD_TREE.csv", "TN_TREE.csv",
+              "TX_TREE.csv", "UT_TREE.csv", "VT_TREE.csv", "VA_TREE.csv", "WA_TREE.csv",
+              "WV_TREE.csv", "WI_TREE.csv", "WY_TREE.csv")
+
+fia_extract <- function(df, sp){
+  
+  for (i in 1:length(df)){
+    onedf <- read.csv(df[i])
+    onedf <- onedf[onedf$STATUSCD == 1, ]
+    print(head(onedf[, 4:16]))
+    
+    for (sp in 1:length(sp)){
+      oak <- onedf[which(onedf$SPCD==rare_oak[sp]),]
+      IUCN_oak_test <- rbind(IUCN_oak_test, oak)
+    }
+    print(tail(IUCN_oak_test[, 4:16]))
+  }
+  
+}
+
+trial <- fia_extract(lower_48, rare_oak)
+
+write.csv(x = trial, file = "lower_48_Quercus_trial.csv")
+# this might work, but how long would it take? est. 8 states in 13 minutes!
+# beware of filling up your memory
+######################################################################################
 
 # read in tree data, which lists all species and the plots in which they were found
 # this one will take time to read in
@@ -514,26 +554,3 @@ rm(treeWY)
 write.csv(x = IUCN_oak, file = "lower_48_Quercus.csv")
 
 
-# Now try making this a function for all states at once
-# have vector of state data frame names for d.f and a vector of rare_oak for sp
-
-# make state vector
-lower_48 <- c("AL_TREE.csv", "AZ_TREE.csv", "AR_TREE.csv", "CA_TREE.csv", "CO_TREE.csv",
-             "CT_TREE.csv", "DE_TREE.csv", "FL_TREE.csv", "GA_TREE.csv", "ID_TREE.csv",
-             "IL_TREE.csv", "IN_TREE.csv", "IA_TREE.csv", "KS_TREE.csv", "KY_TREE.csv",
-             "LA_TREE.csv", "ME_TREE.csv", "MD_TREE.csv", "MA_TREE.csv", "MI_TREE.csv",
-             "MN_TREE.csv", "MS_TREE.csv", "MO_TREE.csv", "MT_TREE.csv", "NE_TREE.csv",
-             "NV_TREE.csv", "NH_TREE.csv", "NJ_TREE.csv", "NM_TREE.csv", "NY_TREE.csv",
-             "NC_TREE.csv", "ND_TREE.csv", "OH_TREE.csv", "OK_TREE.csv", "OR_TREE.csv",
-             "PA_TREE.csv", "RI_TREE.csv", "SC_TREE.csv", "SD_TREE.csv", "TN_TREE.csv",
-             "TX_TREE.csv", "UT_TREE.csv", "VT_TREE.csv", "VA_TREE.csv", "WA_TREE.csv",
-             "WV_TREE.csv", "WI_TREE.csv", "WY_TREE.csv")
-
-fia_extract <- function(d.f, sp){
-  
-  d.f <- read.csv("../data/CSV_DATA/df.csv")
-  d.f <- d.f[d.f$STATUSCD == 1, ]
-
-}
-
-<- fia_extract(lower_48, rare_oak)
