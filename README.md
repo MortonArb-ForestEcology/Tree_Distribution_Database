@@ -67,6 +67,7 @@ Within folder "scripts", files have been numbered in the order they are to be us
   Functions: extract_county_one ()
              extract_localized_two ()
              write_loc2_csv ()             
+ 
   Notes: 1) Subsetting by species is made especially easy with the use of the species_no code.
   2) Subsetting can be done further at three different levels of spatial scale. 
   ONE: county level--this large-scale picture is useful for mapping an upper limit of a 
