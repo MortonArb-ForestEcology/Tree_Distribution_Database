@@ -17,6 +17,22 @@
 rare_oak <- c(6768, 8429, 811, 6782, 851, 6785, 8514, 821, 844, 8492, 836, 8455, 8457)
 
 # Trial a function:
+IUCN_oak_test <- data.frame()
+
+extract_FIA <- function(ff, df){
+  tree <- read.csv(ff)
+  tree <- tree[tree$STATUSCD == 1, ]
+
+        for (sp in 1:length(rare_oak)){
+    oak <- tree[which(tree$SPCD==rare_oak[sp]),]
+    df <- rbind(df, oak)
+  }
+  rm(tree)
+  print(IUCN_oak_test)
+}
+
+extract_FIA("AL_TREE.csv", IUCN_oak_test)
+# still takes a long time and will have to rbind later anyway...
 
 # read in tree data, which lists all species and the plots in which they were found
 # this one will take time to read in
