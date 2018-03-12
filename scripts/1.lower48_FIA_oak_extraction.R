@@ -16,36 +16,14 @@
 # read in our rare oak vector
 rare_oak <- c(6768, 8429, 811, 6782, 851, 6785, 8514, 821, 844, 8492, 836, 8455, 8457)
 
-# Trial a function:
-IUCN_oak_test <- data.frame()
-
-extract_FIA <- function(ff, df){
-  tree <- read.csv(ff)
-  tree <- tree[tree$STATUSCD == 1, ]
-
-        for (sp in 1:length(rare_oak)){
-    oak <- tree[which(tree$SPCD==rare_oak[sp]),]
-    df <- rbind(df, oak)
-  }
-  rm(tree)
-  print(IUCN_oak_test)
-}
-
-extract_FIA("AL_TREE.csv", IUCN_oak_test)
-# still takes a long time and will have to rbind later anyway...
-
 # read in tree data, which lists all species and the plots in which they were found
 # this one will take time to read in
 # treeAL <- read.csv("AL_TREE.csv")
 treeAL <- read.csv("../data/CSV_DATA/AL_TREE.csv")
-
 # first we want to ensure that all the trees in this sample are live
 treeAL <- treeAL[treeAL$STATUSCD == 1, ]
-
 # and make a new Oak data frame
-
 IUCN_oak <- data.frame()
-  
 # Now we can cycle through our vector of rare oak species codes and extract those 
 # rows from Alabama
 
@@ -538,10 +516,24 @@ write.csv(x = IUCN_oak, file = "lower_48_Quercus.csv")
 
 # Now try making this a function for all states at once
 # have vector of state data frame names for d.f and a vector of rare_oak for sp
+
+# make state vector
+lower_48 <- c("AL_TREE.csv", "AZ_TREE.csv", "AR_TREE.csv", "CA_TREE.csv", "CO_TREE.csv",
+             "CT_TREE.csv", "DE_TREE.csv", "FL_TREE.csv", "GA_TREE.csv", "ID_TREE.csv",
+             "IL_TREE.csv", "IN_TREE.csv", "IA_TREE.csv", "KS_TREE.csv", "KY_TREE.csv",
+             "LA_TREE.csv", "ME_TREE.csv", "MD_TREE.csv", "MA_TREE.csv", "MI_TREE.csv",
+             "MN_TREE.csv", "MS_TREE.csv", "MO_TREE.csv", "MT_TREE.csv", "NE_TREE.csv",
+             "NV_TREE.csv", "NH_TREE.csv", "NJ_TREE.csv", "NM_TREE.csv", "NY_TREE.csv",
+             "NC_TREE.csv", "ND_TREE.csv", "OH_TREE.csv", "OK_TREE.csv", "OR_TREE.csv",
+             "PA_TREE.csv", "RI_TREE.csv", "SC_TREE.csv", "SD_TREE.csv", "TN_TREE.csv",
+             "TX_TREE.csv", "UT_TREE.csv", "VT_TREE.csv", "VA_TREE.csv", "WA_TREE.csv",
+             "WV_TREE.csv", "WI_TREE.csv", "WY_TREE.csv")
+
 fia_extract <- function(d.f, sp){
   
   d.f <- read.csv("../data/CSV_DATA/df.csv")
   d.f <- d.f[d.f$STATUSCD == 1, ]
-  
-  
+
 }
+
+<- fia_extract(lower_48, rare_oak)
