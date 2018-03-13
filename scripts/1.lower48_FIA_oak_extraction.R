@@ -14,7 +14,10 @@
 #setwd("C:/Users/Elizabeth/Desktop/2017_CTS_fellowship/FIA_unzipped_postgres_data/FIADB_PG/CSV_DATA")
 
 ######################################################################################
-# Note: if function does not work, skip and go state by state.
+# Note: a lot of memory is needed to run the function through all at once, so 
+# if function does not work, skip and go state by state.
+# Estimated time to run: 3 hours
+
 # read in our rare oak vector
 rare_oak <- c(6768, 8429, 811, 6782, 851, 6785, 8514, 821, 844, 8492, 836, 8455, 8457)
 
@@ -32,6 +35,10 @@ lower_48 <- c("AL_TREE.csv", "AZ_TREE.csv", "AR_TREE.csv", "CA_TREE.csv", "CO_TR
               "PA_TREE.csv", "RI_TREE.csv", "SC_TREE.csv", "SD_TREE.csv", "TN_TREE.csv",
               "TX_TREE.csv", "UT_TREE.csv", "VT_TREE.csv", "VA_TREE.csv", "WA_TREE.csv",
               "WV_TREE.csv", "WI_TREE.csv", "WY_TREE.csv")
+
+
+
+IUCN_oak_test <- data.frame()
 
 fia_extract <- function(df, sp){
   
@@ -52,8 +59,7 @@ fia_extract <- function(df, sp){
 trial <- fia_extract(lower_48, rare_oak)
 
 write.csv(x = trial, file = "lower_48_Quercus_trial.csv")
-# this might work, but how long would it take? est. 8 states in 13 minutes!
-# beware of filling up your memory
+
 ######################################################################################
 
 # read in tree data, which lists all species and the plots in which they were found
