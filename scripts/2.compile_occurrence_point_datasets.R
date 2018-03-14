@@ -78,6 +78,31 @@ gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrenc
     }
     # not sure why the above didn't work...
     gbif2 <- gbif
+    rows <- grep(pattern = "CA", x = gbif2$locality[is.na(gbif2$state)]) # These are all the rows we want to target
+    # not all of the above rows have NA in the state column
+    
+    gbif2[rows, "state"] <- "California"
+    
+    # See how this pattern changes. Why?
+    sum(is.na(gbif2$state)) # 2030
+    grep(pattern = "CA", x = gbif2$locality[is.na(gbif2$state)]) # should replace 666
+    gbif2$state[grep(pattern = "CA", x = gbif2$locality[is.na(gbif2$state)])] <- "California"
+    gbif2[!is.na(gbif2$state),]
+    gbif2[!is.na(gbif2$state), c(8, 11)]
+    
+    sum(is.na(gbif2$state)) # 1785  
+    gbif2$state[grep(pattern = "CA", x = gbif2$locality[is.na(gbif2$state)])] <- "California"
+    sum(is.na(gbif2$state)) # 1717  
+    gbif2$state[grep(pattern = "CA", x = gbif2$locality[is.na(gbif2$state)])] <- "California"
+    sum(is.na(gbif2$state)) # 1700
+    gbif2$state[grep(pattern = "CA", x = gbif2$locality[is.na(gbif2$state)])] <- "California"
+    sum(is.na(gbif2$state)) # 1692
+    gbif2$state[grep(pattern = "CA", x = gbif2$locality[is.na(gbif2$state)])] <- "California"
+    sum(is.na(gbif2$state)) # 1692  
+    # Doesn't seem to catch all CAs.. does the row number differ after being rewritten?
+    #Does the first round catch only appropriate CAs?
+    
+    gbif2 <- gbif
     # See how this pattern changes. Why?
     sum(is.na(gbif2$state)) # 2030
     grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)]) # should replace 14
