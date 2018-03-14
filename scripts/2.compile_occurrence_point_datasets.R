@@ -78,10 +78,24 @@ gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrenc
     }
     # not sure why the above didn't work...
     gbif2 <- gbif
-    rows <- grep(pattern = "CA", x = gbif2$locality[is.na(gbif2$state)]) # These are all the rows we want to target
-    # not all of the above rows have NA in the state column
     
-    gbif2[rows, "state"] <- "California"
+    
+    gbif_s_na <- which(is.na(gbif2$state))
+    rows <- grep(pattern = "CA", x = gbif2$locality[gbif_s_na]) # These are all the rows we want to target
+    # these row numbers refer to the spacing in vector gbif_s_na
+    gbif_s_na[rows]
+    
+    [grep(pattern = "CA", x = gbif2$locality[is.na(gbif2$state)])] <- "California"
+    is.na(gbif2$state)[rows] <- "California"
+    
+    
+    gbif2[rows, "state"]
+    gbif2[c(20:25), "state"]
+    
+    
+    which(gbif2[is.na(gbif2$state), c("locality", "state")])
+    
+    <- "California"
     
     # See how this pattern changes. Why?
     sum(is.na(gbif2$state)) # 2030
