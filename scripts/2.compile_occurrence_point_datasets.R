@@ -69,16 +69,12 @@ gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrenc
     # when there is no locality information other than that of the verbatim locality column, copy that information to locality
     gbif$locality[is.na(gbif$locality)]  <- gbif$verbatimLocality[is.na(gbif$locality)]
     sum(is.na(gbif$locality)) #1835, better
+    
+    
     # for columns with NA in state, look in locality data for a state abbreviation or name and copy it into the empty column
     sum(is.na(gbif$state)) # 2030
-    head(gbif$locality[is.na(gbif$state)])
-    # write a function to take the state from the locality
-    extract_state <- function(df, loc, rep){
-      df$state[grep(pattern = loc, df$locality[is.na(df$state)])] <- rep
-    }
-    # not sure why the above didn't work...
+    # example
     gbif2 <- gbif
-    sum(is.na(gbif2$state)) # 1700
     # make a vector of the rows for which state is NA
     gbif_s_na <- which(is.na(gbif2$state))
     # find which rows have a locality clue of CA
@@ -90,28 +86,60 @@ gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrenc
     gbif2$state[overlap] <- "California"
     sum(is.na(gbif2$state)) # 1363 Hurrah ! It worked!
     
+    # write a function to take the state from the locality
+    extract_state <- function(df, loc, rep){
+      gbif_s_na <- which(is.na(df$state))
+      rows <- grep(pattern = loc, x = df$locality) 
+      overlap <- intersect(gbif_s_na, rows)
+      df$state[overlap] <- rep
+    }
+    
+    # The function isn't working for some reason though...
+    extract_state(gbif2, "CA", "California")
+    extract_state(gbif2, "California", "California")
+    extract_state(gbif2, "TX", "Texas")
+    extract_state(gbif2, "Texas", "Texas")
+    extract_state(gbif2, "FL", "Florida")
+    extract_state(gbif2, "Florida", "Florida")
+    extract_state(gbif2, "AZ", "Arizona")
+    extract_state(gbif2, "UT", "Utah")
+    extract_state(gbif2, "Utah", "Utah")
+    extract_state(gbif2, "AL", "Alabama")
+    extract_state(gbif2, "Alamaba", "Alabama")
+    extract_state(gbif2, "Arkansas", "Arkansas")
+    extract_state(gbif2, "Georgia", "Georgia")
+    extract_state(gbif2, "LA", "Louisiana")
+    
+    # not sure why the above didn't work...
+    
+    # Now we will search for county in locality
+    head(gbif2$locality)
+    
+    sum(is.na(gbif2$county)) # 2587
+    # make a vector of the rows for which counties are NA
+    gbif_c_na <- which(is.na(gbif2$county))
+    # find which rows have a locality clue of "County, county, Co. or co."
+    rows <- grep(pattern = "County", x = gbif2$locality) 
+    rows2 <- grep(pattern = "county", x = gbif2$locality) 
+    rows3 <- grep(pattern = "Co.", x = gbif2$locality) 
+    rows4 <- grep(pattern = "co.", x = gbif2$locality) 
+    # find out which row numbers overlap, meaning that both the state entry is 
+    # NA and the locality indicates that the NA can be changed to California
+    overlap <- intersect(gbif_c_na, rows)
+    overlap2 <- intersect(gbif_c_na, rows2)
+    overlap3 <- intersect(gbif_c_na, rows3)
+    overlap4 <- intersect(gbif_c_na, rows4)
+    # now we know which rows from which we can extract the county name # about 800
+    
+    
+    # now change the state entries in rows "overlap" to California
+    gbif2$state[overlap] <- "California"
+    sum(is.na(gbif2$state)) # 1363 Hurrah ! It worked!
     
     
     
     
-    gbif2$state[grep(pattern = "CA", x = gbif2$locality[is.na(gbif2$state)])] <- "California"
-    gbif2$state[grep(pattern = "California", x = gbif2$locality[is.na(gbif2$state)])] <- "California"
-    # When the above runs several times, it catches more empty spaces...why?
-    # this doesn't completely work either
     
-    extract_state(California, California)
-    extract_state(TX, Texas)
-    extract_state(Texas, Texas)
-    extract_state(FL, Florida)
-    extract_state(Florida, Florida)
-    extract_state(AZ, Arizona)
-    extract_state(UT, Utah)
-    extract_state(Utah, Utah)
-    extract_state(AL, Alabama)
-    extract_state(Alamaba, Alabama)
-    extract_state(Arkansas, Arkansas)
-    extract_state(Georgia, Georgia)
-    extract_state(LA, Louisiana)
     
     # write a csv to upload into georeference
     write.csv(gbif, file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_DC_georef.csv')
