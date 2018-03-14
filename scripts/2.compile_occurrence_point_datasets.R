@@ -78,64 +78,19 @@ gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrenc
     }
     # not sure why the above didn't work...
     gbif2 <- gbif
-    
-    
-    gbif_s_na <- which(is.na(gbif2$state))
-    rows <- grep(pattern = "CA", x = gbif2$locality[gbif_s_na]) # These are all the rows we want to target
-    # these row numbers refer to the spacing in vector gbif_s_na
-    gbif_s_na[rows]
-    
-    [grep(pattern = "CA", x = gbif2$locality[is.na(gbif2$state)])] <- "California"
-    is.na(gbif2$state)[rows] <- "California"
-    
-    
-    gbif2[rows, "state"]
-    gbif2[c(20:25), "state"]
-    
-    
-    which(gbif2[is.na(gbif2$state), c("locality", "state")])
-    
-    <- "California"
-    
-    # See how this pattern changes. Why?
-    sum(is.na(gbif2$state)) # 2030
-    grep(pattern = "CA", x = gbif2$locality[is.na(gbif2$state)]) # should replace 666
-    gbif2$state[grep(pattern = "CA", x = gbif2$locality[is.na(gbif2$state)])] <- "California"
-    gbif2[!is.na(gbif2$state),]
-    gbif2[!is.na(gbif2$state), c(8, 11)]
-    
-    sum(is.na(gbif2$state)) # 1785  
-    gbif2$state[grep(pattern = "CA", x = gbif2$locality[is.na(gbif2$state)])] <- "California"
-    sum(is.na(gbif2$state)) # 1717  
-    gbif2$state[grep(pattern = "CA", x = gbif2$locality[is.na(gbif2$state)])] <- "California"
     sum(is.na(gbif2$state)) # 1700
-    gbif2$state[grep(pattern = "CA", x = gbif2$locality[is.na(gbif2$state)])] <- "California"
-    sum(is.na(gbif2$state)) # 1692
-    gbif2$state[grep(pattern = "CA", x = gbif2$locality[is.na(gbif2$state)])] <- "California"
-    sum(is.na(gbif2$state)) # 1692  
-    # Doesn't seem to catch all CAs.. does the row number differ after being rewritten?
-    #Does the first round catch only appropriate CAs?
+    # make a vector of the rows for which state is NA
+    gbif_s_na <- which(is.na(gbif2$state))
+    # find which rows have a locality clue of CA
+    rows <- grep(pattern = "CA", x = gbif2$locality) 
+    # find out which row numbers overlap, meaning that both the state entry is 
+    # NA and the locality indicates that the NA can be changed to California
+    overlap <- intersect(gbif_s_na, rows)
+    # now change the state entries in rows "overlap" to California
+    gbif2$state[overlap] <- "California"
+    sum(is.na(gbif2$state)) # 1363 Hurrah ! It worked!
     
-    gbif2 <- gbif
-    # See how this pattern changes. Why?
-    sum(is.na(gbif2$state)) # 2030
-    grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)]) # should replace 14
-    gbif2$state[grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)])] <- "Texas"
-    sum(is.na(gbif2$state)) # 2026
-    # what happens to entry 5?
-    gbif2[5, ] # It looks good
-    # what happens to entry 36?
-    gbif[36, ] # It's still NA. Why?
-    grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)]) # 13 remain
-    # Can grep only make one change at a time?
-    gbif2$state[grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)])] <- "Texas"
-    grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)]) # now 13 still remain, but their row numbers have shifted...
-    gbif2$state[grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)])] <- "Texas"
-    grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)])
-    gbif2$state[grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)])] <- "Texas"
-    grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)])
-    gbif2$state[grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)])] <- "Texas"
-    grep(pattern = "TX", x = gbif2$locality[is.na(gbif2$state)])
+    
     
     
     
