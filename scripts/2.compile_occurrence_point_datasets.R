@@ -69,6 +69,7 @@ gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrenc
     # when there is no locality information other than that of the verbatim locality column, copy that information to locality
     gbif$locality[is.na(gbif$locality)]  <- gbif$verbatimLocality[is.na(gbif$locality)]
     sum(is.na(gbif$locality)) #1835, better
+  # STATE
     # for columns with NA in state, look in locality data for a state abbreviation or name and copy it into the empty column
     sum(is.na(gbif$state)) # 2030
     # example
@@ -164,13 +165,11 @@ gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrenc
       overlap <- intersect(gbif_s_na, rows)
       gbif$state[overlap] <- "Louisiana"
       sum(is.na(gbif$state)) # 1137 We filled in almost 1000 blanks
-      sum(is.na(gbif$locality[is.na(gbif$state)])) # 928 localities are NAs anyway, but what about the others?
+      sum(is.na(gbif$locality[is.na(gbif$state)])) # 928 localities are NAs anyway, but what about the 209 others?
       gbif$locality[!is.na(gbif$locality[is.na(gbif$state)])]
       # The states aren't listed, but I can still tell that many of them are in CA.
       
-    # Now we will search for county in locality
-    head(gbif2$locality)
-    
+  # COUNTY
     sum(is.na(gbif2$county)) # 2587
     # make a vector of the rows for which counties are NA
     gbif_c_na <- which(is.na(gbif2$county))
