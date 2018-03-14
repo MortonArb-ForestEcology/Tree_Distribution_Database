@@ -64,13 +64,11 @@ gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrenc
   setnames(gbif,
     old=c("decimalLatitude","decimalLongitude","basisOfRecord","institutionCode","coordinateUncertaintyInMeters", "countryCode", "stateProvince", "scientificName"),
     new=c("lat","long","basis","source","uncert_m", "country", "state", "synonym"))
-  # fix locality data as much as possible  
+  # FIX LOCALITY DATA as much as possible  
   sum(is.na(gbif$locality)) #3044
     # when there is no locality information other than that of the verbatim locality column, copy that information to locality
     gbif$locality[is.na(gbif$locality)]  <- gbif$verbatimLocality[is.na(gbif$locality)]
     sum(is.na(gbif$locality)) #1835, better
-    
-    
     # for columns with NA in state, look in locality data for a state abbreviation or name and copy it into the empty column
     sum(is.na(gbif$state)) # 2030
     # example
@@ -94,43 +92,110 @@ gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrenc
       df$state[overlap] <- rep
     }
     
-    # The function isn't working for some reason though...
-    extract_state(gbif2, "CA", "California")
-    extract_state(gbif2, "California", "California")
-    extract_state(gbif2, "TX", "Texas")
-    extract_state(gbif2, "Texas", "Texas")
-    extract_state(gbif2, "FL", "Florida")
-    extract_state(gbif2, "Florida", "Florida")
-    extract_state(gbif2, "AZ", "Arizona")
-    extract_state(gbif2, "UT", "Utah")
-    extract_state(gbif2, "Utah", "Utah")
-    extract_state(gbif2, "AL", "Alabama")
-    extract_state(gbif2, "Alamaba", "Alabama")
-    extract_state(gbif2, "Arkansas", "Arkansas")
-    extract_state(gbif2, "Georgia", "Georgia")
-    extract_state(gbif2, "LA", "Louisiana")
-    
-    # not sure why the above didn't work...
-    
+    # Until function works, we can do the alternative long way...
+    #extract_state(gbif2, "CA", "California")
+      gbif_s_na <- which(is.na(gbif$state))
+      rows <- grep(pattern = "CA", x = gbif$locality) 
+      overlap <- intersect(gbif_s_na, rows)
+      gbif$state[overlap] <- "California"
+    #extract_state(gbif2, "California", "California")
+      gbif_s_na <- which(is.na(gbif$state))
+      rows <- grep(pattern = "California", x = gbif$locality) 
+      overlap <- intersect(gbif_s_na, rows)
+      gbif$state[overlap] <- "California"
+    #extract_state(gbif2, "TX", "Texas")
+      gbif_s_na <- which(is.na(gbif$state))
+      rows <- grep(pattern = "TX", x = gbif$locality) 
+      overlap <- intersect(gbif_s_na, rows)
+      gbif$state[overlap] <- "Texas"
+    #extract_state(gbif2, "Texas", "Texas")
+      gbif_s_na <- which(is.na(gbif$state))
+      rows <- grep(pattern = "Texas", x = gbif$locality) 
+      overlap <- intersect(gbif_s_na, rows)
+      gbif$state[overlap] <- "Texas"
+    #extract_state(gbif2, "FL", "Florida")
+      gbif_s_na <- which(is.na(gbif$state))
+      rows <- grep(pattern = "FL", x = gbif$locality) 
+      overlap <- intersect(gbif_s_na, rows)
+      gbif$state[overlap] <- "Florida"
+    #extract_state(gbif2, "Florida", "Florida")
+      gbif_s_na <- which(is.na(gbif$state))
+      rows <- grep(pattern = "Florida", x = gbif$locality) 
+      overlap <- intersect(gbif_s_na, rows)
+      gbif$state[overlap] <- "Florida"
+    #extract_state(gbif2, "AZ", "Arizona")
+      gbif_s_na <- which(is.na(gbif$state))
+      rows <- grep(pattern = "AZ", x = gbif$locality) 
+      overlap <- intersect(gbif_s_na, rows)
+      gbif$state[overlap] <- "Arizona"
+    #extract_state(gbif2, "UT", "Utah")
+      gbif_s_na <- which(is.na(gbif$state))
+      rows <- grep(pattern = "UT", x = gbif$locality) 
+      overlap <- intersect(gbif_s_na, rows)
+      gbif$state[overlap] <- "Utah"
+    #extract_state(gbif2, "Utah", "Utah")
+      gbif_s_na <- which(is.na(gbif$state))
+      rows <- grep(pattern = "Utah", x = gbif$locality) 
+      overlap <- intersect(gbif_s_na, rows)
+      gbif$state[overlap] <- "Utah"
+    #extract_state(gbif2, "AL", "Alabama")
+      gbif_s_na <- which(is.na(gbif$state))
+      rows <- grep(pattern = "AL", x = gbif$locality) 
+      overlap <- intersect(gbif_s_na, rows)
+      gbif$state[overlap] <- "Alabama"
+    #extract_state(gbif2, "Alamaba", "Alabama")
+      gbif_s_na <- which(is.na(gbif$state))
+      rows <- grep(pattern = "Alabama", x = gbif$locality) 
+      overlap <- intersect(gbif_s_na, rows)
+      gbif$state[overlap] <- "Alabama"
+    #extract_state(gbif2, "Arkansas", "Arkansas")
+      gbif_s_na <- which(is.na(gbif$state))
+      rows <- grep(pattern = "Arkansas", x = gbif$locality) 
+      overlap <- intersect(gbif_s_na, rows)
+      gbif$state[overlap] <- "Arkansas"
+    #extract_state(gbif2, "Georgia", "Georgia")
+      gbif_s_na <- which(is.na(gbif$state))
+      rows <- grep(pattern = "Georgia", x = gbif$locality) 
+      overlap <- intersect(gbif_s_na, rows)
+      gbif$state[overlap] <- "Georgia"
+    #extract_state(gbif2, "LA", "Louisiana")
+      gbif_s_na <- which(is.na(gbif$state))
+      rows <- grep(pattern = "LA", x = gbif$locality) 
+      overlap <- intersect(gbif_s_na, rows)
+      gbif$state[overlap] <- "Louisiana"
+      sum(is.na(gbif$state)) # 1137 We filled in almost 1000 blanks
+      sum(is.na(gbif$locality[is.na(gbif$state)])) # 928 localities are NAs anyway, but what about the others?
+      gbif$locality[!is.na(gbif$locality[is.na(gbif$state)])]
+      # The states aren't listed, but I can still tell that many of them are in CA.
+      
     # Now we will search for county in locality
     head(gbif2$locality)
     
     sum(is.na(gbif2$county)) # 2587
     # make a vector of the rows for which counties are NA
     gbif_c_na <- which(is.na(gbif2$county))
-    # find which rows have a locality clue of "County, county, Co. or co."
+    # find which rows have a locality clue of "County or county"
+    # considered also using, "Co. or co.", but it also picked up words beginning with co...
     rows <- grep(pattern = "County", x = gbif2$locality) 
     rows2 <- grep(pattern = "county", x = gbif2$locality) 
-    rows3 <- grep(pattern = "Co.", x = gbif2$locality) 
-    rows4 <- grep(pattern = "co.", x = gbif2$locality) 
     # find out which row numbers overlap, meaning that both the state entry is 
     # NA and the locality indicates that the NA can be changed to California
     overlap <- intersect(gbif_c_na, rows)
     overlap2 <- intersect(gbif_c_na, rows2)
-    overlap3 <- intersect(gbif_c_na, rows3)
-    overlap4 <- intersect(gbif_c_na, rows4)
-    # now we know which rows from which we can extract the county name # about 800
+    intersect(overlap, overlap2) # none. good.
+    # now we know which rows from which we can extract the county name # about 330
+    # Of course, the word county may be used without it referring to the county name.
+    # next extract the words before county
     
+    find_cou <- strsplit(x= gbif2$locality[overlap], split = "County")
+    # makes a list, so need to use lapply
+    lapply(find_cou, strsplit(x= find_cou[[1]], split = " "))
+    # to extract the last part of the vector
+    tail(vector, n = 1)
+    
+    
+    
+    gbif2$locality[overlap]
     
     # now change the state entries in rows "overlap" to California
     gbif2$state[overlap] <- "California"
