@@ -204,40 +204,7 @@ gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrenc
     
     
         
-    # now we know which rows from which we can extract the county name # about 330
-    # Of course, the word county may be used without it referring to the county name.
-    # next extract the words before county
-    
   
-  
-    
-    
-    
-    find_cou <- strsplit(x= gbif2$locality[overlap], split = "County")
-    # makes a list, so need to use lapply
-    lapply(find_cou, strsplit(x= find_cou[[1]], split = " "))
-    # to extract the last part of the vector
-    tail(vector, n = 1)
-    
-    
-    
-    gbif2$locality[overlap]
-    
-    # now change the state entries in rows "overlap" to California
-    gbif2$state[overlap] <- "California"
-    sum(is.na(gbif2$state)) # 1363 Hurrah ! It worked!
-    
-    
-    
-    
-    
-    
-    # write a csv to upload into georeference
-    write.csv(gbif, file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_DC_georef.csv')
-    
-    table(gbif$state)
-    gbif$dataset <- "gbif"
-    
 consortium <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/consortium_raw.csv', as.is=T)
     # for windows
     # consortium <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/consortium_raw.csv', as.is=T)
