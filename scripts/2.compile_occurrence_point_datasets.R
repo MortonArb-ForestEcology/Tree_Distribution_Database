@@ -168,7 +168,6 @@ gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrenc
       sum(is.na(gbif$locality[is.na(gbif$state)])) # 928 localities are NAs anyway, but what about the 209 others?
       gbif$locality[!is.na(gbif$locality[is.na(gbif$state)])]
       # The states aren't listed, but I can still tell that many of them are in CA.
-      
   # COUNTY
     sum(is.na(gbif$county)) # 2587
     # make a vector of the rows for which counties are NA
@@ -180,22 +179,37 @@ gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrenc
     # NA and the locality indicates a particular county
     overlap <- intersect(gbif_c_na, rows)
     # now to extract the county
-    find_cou <- strsplit(x= gbif$locality[overlap], split = "County")
-    
-    lapply(find_cou, unlist(find_cou)[ c(TRUE,FALSE) ])
-    
+    find_cou <- separate(gbif[overlap, ], locality, into = "loca", sep = "County", remove = F)
+    gbif$county[overlap]  <- find_cou$loca
+    sum(is.na(gbif$county)) # 2256
+    # do the same for "county" lowercase
     gbif_c_na <- which(is.na(gbif$county))
     rows <- grep(pattern = "county", x = gbif$locality) 
     overlap <- intersect(gbif_c_na, rows)
-    intersect(overlap, overlap2) # none. good.
+    find_cou <- separate(gbif[overlap, ], locality, into = "loca", sep = "county", remove = F)
+    gbif$county[overlap]  <- find_cou$loca
+    sum(is.na(gbif$county)) # 2252
+    # and repeat for "Co." capitalized
+    gbif_c_na <- which(is.na(gbif$county))
+    rows <- grep(pattern = "Co.", x = gbif$locality) 
+    overlap <- intersect(gbif_c_na, rows)
+    find_cou <- separate(gbif[overlap, ], locality, into = "loca", sep = "Co.", remove = F)
+    gbif$county[overlap]  <- find_cou$loca
+    sum(is.na(gbif$county)) # 2135
+    sum(is.na(gbif$locality[is.na(gbif$county)])) # 963 localities are NAs anyway, but what about the 1172 others?
+    gbif$locality[!is.na(gbif$locality[is.na(gbif$county)])]
+    # although the county name is often accomoanied by other words in the updated
+    # county column, the information should be sufficient to use geolocate.
+    
+    
+    
+        
     # now we know which rows from which we can extract the county name # about 330
     # Of course, the word county may be used without it referring to the county name.
     # next extract the words before county
     
-    gbif2 <- gbif
-    find_cou <- separate(gbif[overlap, ], locality, into = "loca", sep = "County", remove = F)
-    gbif$county[is.na(gbif$county)]  <- gbif$loca[is.na(gbif$county)]
-    save[, c("loca_one", "locality")]
+  
+  
     
     
     
