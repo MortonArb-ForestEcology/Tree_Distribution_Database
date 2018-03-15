@@ -170,21 +170,34 @@ gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrenc
       # The states aren't listed, but I can still tell that many of them are in CA.
       
   # COUNTY
-    sum(is.na(gbif2$county)) # 2587
+    sum(is.na(gbif$county)) # 2587
     # make a vector of the rows for which counties are NA
-    gbif_c_na <- which(is.na(gbif2$county))
+    gbif_c_na <- which(is.na(gbif$county))
     # find which rows have a locality clue of "County or county"
     # considered also using, "Co. or co.", but it also picked up words beginning with co...
-    rows <- grep(pattern = "County", x = gbif2$locality) 
-    rows2 <- grep(pattern = "county", x = gbif2$locality) 
-    # find out which row numbers overlap, meaning that both the state entry is 
-    # NA and the locality indicates that the NA can be changed to California
+    rows <- grep(pattern = "County", x = gbif$locality) 
+    # find out which row numbers overlap, meaning that both the county entry is 
+    # NA and the locality indicates a particular county
     overlap <- intersect(gbif_c_na, rows)
-    overlap2 <- intersect(gbif_c_na, rows2)
+    # now to extract the county
+    find_cou <- strsplit(x= gbif$locality[overlap], split = "County")
+    
+    lapply(find_cou, unlist(find_cou)[ c(TRUE,FALSE) ])
+    
+    gbif_c_na <- which(is.na(gbif$county))
+    rows <- grep(pattern = "county", x = gbif$locality) 
+    overlap <- intersect(gbif_c_na, rows)
     intersect(overlap, overlap2) # none. good.
     # now we know which rows from which we can extract the county name # about 330
     # Of course, the word county may be used without it referring to the county name.
     # next extract the words before county
+    
+    gbif2 <- gbif
+    find_cou <- separate(gbif[overlap, ], locality, into = "loca", sep = "County", remove = F)
+    gbif$county[is.na(gbif$county)]  <- gbif$loca[is.na(gbif$county)]
+    save[, c("loca_one", "locality")]
+    
+    
     
     find_cou <- strsplit(x= gbif2$locality[overlap], split = "County")
     # makes a list, so need to use lapply
