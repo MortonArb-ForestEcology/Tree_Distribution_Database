@@ -200,6 +200,10 @@ geo_loc$issue <- gbif$issue
 # write a csv to upload into georeference
 write.csv(geo_loc, file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_DC_georef.csv')
 
+# note how many coordinates are missing.
+sum(is.na(geo_loc$latitude)) # 5168
+# We will compare this to how many have been filled in after using geoLocate
+
 
 
 
