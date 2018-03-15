@@ -173,6 +173,8 @@ gbif$county[overlap] <- gbif$municipality[overlap]
 # county column, the information should be sufficient to use geolocate.
 
 # make a new data frame for use in geolocate
+# Note: it is very important that the first ten columns are as follows.
+# This format is how GeoLocate knows to read the data.
 geo_loc <- data.frame(locality_string = gbif$locality)
 geo_loc$country <- gbif$country
 geo_loc$state <- gbif$state
@@ -198,13 +200,22 @@ geo_loc$issue <- gbif$issue
 
 
 # write a csv to upload into georeference
-write.csv(geo_loc, file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_DC_georef.csv')
+write.csv(geo_loc, file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_DC_georef.csv',
+          row.names = F)
 
 # note how many coordinates are missing.
 sum(is.na(geo_loc$latitude)) # 5168
 # We will compare this to how many have been filled in after using geoLocate
 
+# Instructions for GeoLocate
+# The application can only process 128 entries at a time, so you will have to go 
+# through and change the page, select "Page Georeference" and let it run. 
+# It should take about five minutes per page of 128 entries.
+# After, on the bottom there should be an export option.
 
+# proceed here to run the file:
+# http://www.museum.tulane.edu/geolocate/web/WebFileGeoref.aspx
+# use the default options when loading the file.
 
 
 
