@@ -197,6 +197,7 @@ geo_loc$associatedTaxa <- gbif$associatedTaxa
 geo_loc$uncert_m <- gbif$uncert_m
 geo_loc$georeferencedSources <- gbif$georeferenceSources
 geo_loc$issue <- gbif$issue
+geo_loc$obs_no <- seq(1, length(gbif$basis), 1)
 
 
 # write a csv to upload into georeference
@@ -205,7 +206,8 @@ write.csv(geo_loc, file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence
 
 # note how many coordinates are missing.
 sum(is.na(geo_loc$latitude)) # 5168
-# We will compare this to how many have been filled in after using geoLocate
+# We will compare this to how many have been filled in after using geoLocate.
+# We don't expect it to catch everything.
 
 # Instructions for GeoLocate
 # The application can only process 128 entries at a time, so you will have to go 
@@ -217,11 +219,9 @@ sum(is.na(geo_loc$latitude)) # 5168
 # http://www.museum.tulane.edu/geolocate/web/WebFileGeoref.aspx
 # use the default options when loading the file.
 
+# load this file from memory CB576794
 
-
-
-
-
-
-
-
+# How is it exported though?
+# And will the application sometimes overwrite existing coordinates and erase them?
+# need to number the observations to align them if the coordinates went missing?
+# Overdrive will export them to excel as a csv
