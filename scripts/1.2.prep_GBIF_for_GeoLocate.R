@@ -41,25 +41,25 @@ sum(is.na(gbif$locality)) #1835, better
 # for columns with NA in state, look in locality data for a state abbreviation or name and copy it into the empty column
 sum(is.na(gbif$state)) # 2030
 # example
-gbif2 <- gbif
+#gbif2 <- gbif
 # make a vector of the rows for which state is NA
-gbif_s_na <- which(is.na(gbif2$state))
+#gbif_s_na <- which(is.na(gbif2$state))
 # find which rows have a locality clue of CA
-rows <- grep(pattern = "CA", x = gbif2$locality) 
+#rows <- grep(pattern = "CA", x = gbif2$locality) 
 # find out which row numbers overlap, meaning that both the state entry is 
 # NA and the locality indicates that the NA can be changed to California
-overlap <- intersect(gbif_s_na, rows)
+#overlap <- intersect(gbif_s_na, rows)
 # now change the state entries in rows "overlap" to California
-gbif2$state[overlap] <- "California"
-sum(is.na(gbif2$state)) # 1363 Hurrah ! It worked!
+#gbif2$state[overlap] <- "California"
+#sum(is.na(gbif2$state)) # 1363 Hurrah ! It worked!
 
 # write a function to take the state from the locality
-extract_state <- function(df, loc, rep){
-  gbif_s_na <- which(is.na(df$state))
-  rows <- grep(pattern = loc, x = df$locality) 
-  overlap <- intersect(gbif_s_na, rows)
-  df$state[overlap] <- rep
-}
+#extract_state <- function(df, loc, rep){
+#  gbif_s_na <- which(is.na(df$state))
+#  rows <- grep(pattern = loc, x = df$locality) 
+#  overlap <- intersect(gbif_s_na, rows)
+#  df$state[overlap] <- rep
+#}
 
 # Until function works, we can do the alternative long way...
 #extract_state(gbif2, "CA", "California")
@@ -164,21 +164,41 @@ overlap <- intersect(gbif_c_na, rows)
 find_cou <- separate(gbif[overlap, ], locality, into = "loca", sep = "Co.", remove = F)
 gbif$county[overlap]  <- find_cou$loca
 sum(is.na(gbif$county)) # 2135
-sum(is.na(gbif$locality[is.na(gbif$county)])) # 963 localities are NAs anyway, but what about the 1172 others?
-gbif$locality[!is.na(gbif$locality[is.na(gbif$county)])]
-# although the county name is often accomoanied by other words in the updated
+# lastly, if the county is NA, but the municipality is not, then we can rewrite municipality into the county column
+gbif_c_na <- which(is.na(gbif$county))
+mun <- which(!is.na(gbif$municipality))
+overlap <- intersect(gbif_c_na, mun)
+gbif$county[overlap] <- gbif$municipality[overlap]
+# although the county name is often accompanied by other words in the updated
 # county column, the information should be sufficient to use geolocate.
 
-
-find_cou <- strsplit(x= gbif2$locality[overlap], split = "County")
-# makes a list, so need to use lapply
-lapply(find_cou, strsplit(x= find_cou[[1]], split = " "))
-# to extract the last part of the vector
-tail(vector, n = 1)
+# make a new data frame for use in geolocate
+geo_loc <- data.frame(locality_string = gbif$locality)
+geo_loc$country <- gbif$country
+geo_loc$state <- gbif$state
+geo_loc$county <- gbif$county
+geo_loc$latitude <- gbif$lat
+geo_loc$longitude <- gbif$long
+geo_loc$correction_status <- NA
+geo_loc$precision <- NA
+geo_loc$error_polygon <- NA
+geo_loc$multiple_results <- NA
+# the above are the necessary columns, but we can add more to preserve our data structure
+geo_loc$basis <- gbif$basis
+geo_loc$source <- gbif$source
+geo_loc$genus <- gbif$genus
+geo_loc$synonym <- gbif$synonym
+geo_loc$species <- gbif$species
+geo_loc$year <- gbif$year
+geo_loc$occurrenceRemarks <- gbif$occurrenceRemarks
+geo_loc$associatedTaxa <- gbif$associatedTaxa
+geo_loc$uncert_m <- gbif$uncert_m
+geo_loc$georeferencedSources <- gbif$georeferenceSources
+geo_loc$issue <- gbif$issue
 
 
 # write a csv to upload into georeference
-write.csv(gbif, file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_DC_georef.csv')
+write.csv(geo_loc, file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_DC_georef.csv')
 
 
 
