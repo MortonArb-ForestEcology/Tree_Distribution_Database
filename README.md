@@ -22,8 +22,7 @@ Within folder "scripts", files have been numbered in the order they are to be us
   
   Packages: none
   
-  Functions: fia_extract (This function cycles through each state TREE.csv, one at a time, removes all trees marked as not living, and then   
-  goes through all the remaining occurrences, checking for each of our 13 species of interest with FIA codes, one at a time. If it finds a 
+  Functions: fia_extract (This function cycles through each state TREE.csv, one at a time, removes all trees marked as not living, and then   goes through all the remaining occurrences, checking for each of our 13 species of interest with FIA codes, one at a time. If it finds a 
   match, it pulls the occurrence and saves it to a new data frame. As it goes through each state and finds more occurrences, the data frame 
   grows until it reaches its final size.)
   
