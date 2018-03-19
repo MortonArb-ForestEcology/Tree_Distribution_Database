@@ -5,9 +5,8 @@
 ## Load data like this: http://www.museum.tulane.edu/geolocate/standalone/tutorial.html 
 
 ############### INPUT: gbif_DarwinCore_edit.csv from Google Drive
-############### OUTPUT: smaller csv file (removing all dead trees and containing
-############### only our rare oaks)
-###### lower48_Quercus.csv 
+############### OUTPUT: gbif_DC_georef.csv (to be uploaded into GEOLocate application)
+########                (from GEOLocate application) gbif_DC_post-georef.csv
 
 
 
@@ -213,15 +212,11 @@ sum(is.na(geo_loc$latitude)) # 5168
 # The application can only process 128 entries at a time, so you will have to go 
 # through and change the page, select "Page Georeference" and let it run. 
 # It should take about five minutes per page of 128 entries.
-# After, on the bottom there should be an export option.
+# After, on the bottom there should be an export option. The file should be 
+# exported as a csv and it can be renamed then as "gbif_DC_post-georef.csv".
 
 # proceed here to run the file:
 # http://www.museum.tulane.edu/geolocate/web/WebFileGeoref.aspx
 # use the default options when loading the file.
 
-# load this file from memory CB576794
-
-# How is it exported though?
-# And will the application sometimes overwrite existing coordinates and erase them?
-# need to number the observations to align them if the coordinates went missing?
-# Overdrive will export them to excel as a csv
+# load this file from memory CB576794 (created 3.15.18)
