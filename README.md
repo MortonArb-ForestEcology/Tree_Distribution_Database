@@ -1,7 +1,8 @@
 # Tree_Distribution_Database
 Repository for curating occurrence and predictor data of tree distributions
 
-All scripts are located in folder scripts
+All scripts are located in folder "scripts"
+Examples and attempts to use similar scripts with data that have not been refined are in folder "trials"
 
 # scripts folder
 Within folder "scripts", files have been numbered in the order they are to be used in the workflow.
@@ -121,3 +122,18 @@ Within folder "scripts", files have been numbered in the order they are to be us
   
   Functions: extract_PRISM (This single function will extract the appropriate climatic 
   statistics from each layer of interest and append it to the existing data frame)
+
+
+# trials folder
+Within folder "trials", files are usually not related, so are not meant to be run in any particular order
+
+Data used in these trials varies with the file, bust should come from the Google Drive
+# Files   
+## FIA_extraction_loop_example
+Purpose: Early version of making a loop to extract FIA occurrence data state by state
+
+## map_FIA_data
+Purpose: Plot the FIA occurrence data for each of the species included and zoom in on the region of the country in which they are found so we can visualize the spread of FIA.
+
+## trial_Q_similis
+Purpose: Compares FIA an GBIF occurrence points where FIA data comes from most recent survey data across the lower 48 and the GBIF data comes from a hand-checked sample where occurences were run through GEOLocate to obtain more coordinates.
