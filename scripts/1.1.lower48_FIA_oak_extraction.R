@@ -57,7 +57,7 @@ fia_extract <- function(df, sp){
 
 trial <- fia_extract(lower_48, rare_oak)
 
-write.csv(x = trial, file = "lower_48_Quercus_trial.csv")
+write.csv(x = trial, file = "FIA_tree_raw.csv")
 
 ######################################################################################
 
