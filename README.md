@@ -51,7 +51,7 @@ Within folder "scripts", files have been numbered in the order they are to be us
   
   Functions: extract_state (Search in the state column for NAs and in the locality column for a state name or abbreviation. If a row has an    NA for state and a state listed in the locality, then write in that state's name in the state column.)
   
-             extract_county (Search in the county column for NAs and in the locality column for the words "County", "county" or the abbreviation "Co." If any of the above are found, then create a new data frame "find_cou" where the locality column is split by that word. If a row has an NA for county and corresponds to a split column in find_cou, then write in the characters from the first part of the splut column into the original county column.)
+   extract_county (Search in the county column for NAs and in the locality column for the words "County", "county" or the abbreviation "Co." If any of the above are found, then create a new data frame "find_cou" where the locality column is split by that word. If a row has an NA for county and corresponds to a split column in find_cou, then write in the characters from the first part of the splut column into the original county column.)
   
   Notes: After running this script, the resulting CSV must be uploaded into a separate online application and further changed. 
   Running our csv through GEOLocate takes a significant amount of time and the completed result, which can be saved with a 
