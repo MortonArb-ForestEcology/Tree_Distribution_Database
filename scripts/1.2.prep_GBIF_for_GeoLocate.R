@@ -8,12 +8,10 @@
 ############### OUTPUT: gbif_DC_georef.csv (to be uploaded into GEOLocate application)
 ########                (from GEOLocate application) gbif_DC_post-georef.csv
 
-
-
 library(dplyr)
 library(rgbif)
 library(tidyr)
-
+library(data.table)
 
 gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_raw.csv', as.is=T)
 # for windows? but too big to not use server # more columns than column names
@@ -57,16 +55,18 @@ sum(is.na(gbif$state)) # 2030
 # so some adjustments must be made.
 extract_state <- function(d.f, loc, repl){
   gbif_s_na <- which(is.na(d.f$state))
-  rows <- grep(pattern = loc, x = d.f$locality) 
+  rows <- grep(pattern = "loc", x = d.f$locality) 
   overlap <- intersect(gbif_s_na, rows)
-  d.f$state[overlap] <- repl
+  d.f$state[overlap] <- "repl"
+  return(d.f$state)
 }
 
-# maybe make it a loop instead?
+# maybe make it a loop instead, as worked in 1.1?
 # did i overwrite a base r object?
+# add quotations into function? doesn't seem to do anything, but cannot include them in arguments.
+# adding the return function brought something back, but it had only replaced 8 of the 667 possible replacements...?
 
-
-extract_state(gbif2, "CA", "California")
+gbif2$state <- extract_state(gbif2, "CA", "California")
 sum(is.na(gbif2$state))
 gbif2 <- gbif
 
