@@ -10,7 +10,7 @@ Within folder "scripts", files have been numbered in the order they are to be us
    None of the data comes from API currently, but we hope to update these file paths when API becomes available, we hope.
    
 # Workflow   
-## 1.lower48_FIA_oak_extraction
+## 1.1.lower48_FIA_oak_extraction
   Purpose: FIA data comes in unique form, where individual trees are not directly linked with their
   coordinates. Here we first cycle through the tree occurrence data from 48 states and extract all
   occurrences labeled as a species of interest.
@@ -34,6 +34,30 @@ Within folder "scripts", files have been numbered in the order they are to be us
   Species represented in FIA: Quercus engelmannii, Q. graciliformis, Q. laceyi, Q. lobata, 
   Q. oglethorpensis, Q. similis
 
+## 1.2.prep_GBIF_for_GeoLocate
+  Purpose: After downloading GBIF occurrence data from website in Darwin Core format, several occurrences
+  have locality information, such as state, county and a description of where it was found, but lack coordinates. 
+  Tulane's GEOLocate online application finds coordinates of places based on a description of state, county 
+  and other locality information. In an effort to augment our occurrence datasets, we edited the Darwin Core 
+  columns to fit the format necessary to use the GEOLocate application, creating a CSV to load into the web application.
+  The CSV we download from the application after it has reassigned coordinates to the occurrences (gbif_DC_post-georef.csv)
+  will be used in step 2.
+  
+  Input: gbif_DarwinCore_edit.csv
+  
+  Output: gbif_DC_georef.csv, gbif_DC_post-georef.csv (indirectly)
+  
+  Packages: dplyr, gbif, tidyr
+  
+  Functions: extract_state (Search in the state column for NAs and in the locality column for a state name or abbreviation. If a row has an    NA for state and a state listed in the locality, then write in that state's name in the state column.)
+  
+             extract_county (Search in the county column for NAs and in the locality column for the words "County", "county" or the abbreviation "Co." If any of the above are found, then create a new data frame "find_cou" where the locality column is split by that word. If a row has an NA for county and corresponds to a split column in find_cou, then write in the characters from the first part of the splut column into the original county column.)
+  
+  Notes: After running this script, the resulting CSV must be uploaded into a separate online application and further changed. 
+  Running our csv through GEOLocate takes a significant amount of time and the completed result, which can be saved with a 
+  code must be redownloaded into a new CSV that will be renamed as gbif_DC_post-georef.csv. Some of the existing coordinates 
+  may also be affected by running GEOLocate, so a second supplementary script (1.3) will help check for errors.
+  
 ## 2.compile_occurrence_point_datasets
   Purpose: Using the FIA data compiled in step 1, and occurrence data from other sources 
   (gbif, consortium, idigbio, bonap, A. Hipp, exsitu, natureserve, redlist, usdaplants, other),
