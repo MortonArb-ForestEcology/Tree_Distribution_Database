@@ -1,13 +1,12 @@
-############ 1.
+############ 1.1 lower48_oak_extraction
 ########### 2.23.18 Elizabeth Tokarz
-############# can't download TREE CSV, so I'll create one for the lower 48 for now
 ############# 
 ##############
 
 ############### INPUT: lower 48 state TREE csv files from FIA Datamart
 ############### OUTPUT: smaller csv file (removing all dead trees and containing
-############### only our rare oaks)
-###### lower48_Quercus.csv 
+############### only our rare oaks, but lacking their coordinates, which will be added in step 2)
+###### fia_tree_raw.csv 
 
 
 # working directory cannot be changed on the server, so simply specify the route whenever uploading a CSV file
@@ -557,6 +556,4 @@ for (sp in 1:length(rare_oak)){
 }
 rm(treeWY)
 
-write.csv(x = IUCN_oak, file = "lower_48_Quercus.csv")
-
-
+write.csv(x = IUCN_oak, file = "fia_tree_raw.csv")
