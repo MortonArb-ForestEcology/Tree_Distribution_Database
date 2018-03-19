@@ -51,7 +51,7 @@ Within folder "scripts", files have been numbered in the order they are to be us
   
   Output: gbif_DC_georef.csv, gbif_DC_post-georef.csv (indirectly)
   
-  Packages: dplyr, gbif, tidyr
+  Packages: dplyr, gbif, tidyr, data.table
   
   Functions: extract_state (Search in the state column for NAs and in the locality column for a state name or abbreviation. If a row has an    NA for state and a state listed in the locality, then write in that state's name in the state column.)
   
