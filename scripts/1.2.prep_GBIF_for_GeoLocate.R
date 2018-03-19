@@ -53,12 +53,26 @@ sum(is.na(gbif$state)) # 2030
 #sum(is.na(gbif2$state)) # 1363 Hurrah ! It worked!
 
 # write a function to take the state from the locality
-#extract_state <- function(df, loc, rep){
-#  gbif_s_na <- which(is.na(df$state))
-#  rows <- grep(pattern = loc, x = df$locality) 
-#  overlap <- intersect(gbif_s_na, rows)
-#  df$state[overlap] <- rep
-#}
+# note that characters cannot be read directly into functions, 
+# so some adjustments must be made.
+extract_state <- function(df, loc, repl){
+  gbif_s_na <- which(is.na(df$state))
+  l <- list(loc)
+  rows <- grep(pattern = l, x = df$locality) 
+  overlap <- intersect(gbif_s_na, rows)
+  re <- list(repl)
+  df$state[overlap] <- re
+}
+
+# maybe make it a loop instead?
+
+
+
+extract_state(gbif2, "CA", "California")
+sum(is.na(gbif2$state))
+gbif2 <- gbif
+
+paste0("^", namePrefix, "\\d")
 
 # Until function works, we can do the alternative long way...
 #extract_state(gbif2, "CA", "California")
@@ -211,7 +225,7 @@ sum(is.na(geo_loc$latitude)) # 5168
 # Instructions for GeoLocate
 # The application can only process 128 entries at a time, so you will have to go 
 # through and change the page, select "Page Georeference" and let it run. 
-# It should take about five minutes per page of 128 entries.
+# It should take about five to ten minutes per page of 128 entries.
 # After, on the bottom there should be an export option. The file should be 
 # exported as a csv and it can be renamed then as "gbif_DC_post-georef.csv".
 
