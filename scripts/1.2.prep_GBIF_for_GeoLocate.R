@@ -55,17 +55,15 @@ sum(is.na(gbif$state)) # 2030
 # write a function to take the state from the locality
 # note that characters cannot be read directly into functions, 
 # so some adjustments must be made.
-extract_state <- function(df, loc, repl){
-  gbif_s_na <- which(is.na(df$state))
-  l <- list(loc)
-  rows <- grep(pattern = l, x = df$locality) 
+extract_state <- function(d.f, loc, repl){
+  gbif_s_na <- which(is.na(d.f$state))
+  rows <- grep(pattern = loc, x = d.f$locality) 
   overlap <- intersect(gbif_s_na, rows)
-  re <- list(repl)
-  df$state[overlap] <- re
+  d.f$state[overlap] <- repl
 }
 
 # maybe make it a loop instead?
-
+# did i overwrite a base r object?
 
 
 extract_state(gbif2, "CA", "California")
