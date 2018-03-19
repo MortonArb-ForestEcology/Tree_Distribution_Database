@@ -14,19 +14,20 @@ Within folder "scripts", files have been numbered in the order they are to be us
 ## 1.1.lower48_FIA_oak_extraction
   Purpose: FIA data comes in unique form, where individual trees are not directly linked with their
   coordinates. Here we first cycle through the tree occurrence data from 48 states and extract all
-  occurrences labeled as a species of interest.
+  occurrences labeled as a species of interest. The trees are not linked with their coordinates until step 2.
   
-  Input: TREE.csv files for lower 48 states from FIA datamart, PLOT.csv file from FIA datamart
+  Input: TREE.csv files for lower 48 states from FIA datamart
   
-  Output: single csv containing FIA occurrence data for 28 species of interest
+  Output: single csv containing FIA occurrence data for 28 species of interest, without coordinates
   
   Packages:
   
   Functions:
   
-  Notes: 1) This output does not include the coordinates of surveyed plots that did not 
-  contain the species of interest. Consider altering this script if decide to use 
-  empty plots as absence data. 2) This script may need to be updated if FIA API becomes available.
+  Notes: 1) This output will not lead to the later inclusion the coordinates of surveyed plots 
+  that did not contain the species of interest. Consider altering this script by also finding 
+  coordinates in step 1.1 if decide to use empty plots as absence data. 2) This script may need 
+  to be updated if FIA API becomes available.
   3) Keep in mind that the coordinates used here by FIA may differ from the actual location of 
   occurrence, up to a mile, due to "data fuzzing". 4) Only six of our 28 species of interest were 
   observed in the most recent FIA surveys, though 13 of the 28 have been assigned species codes, 
@@ -65,7 +66,7 @@ Within folder "scripts", files have been numbered in the order they are to be us
   we will make a larger stacked data frame containing all the occurrence data we will need to make
   our model. Column names will be made uniform.
   
-  Input: all csv files from in_use_occurrence_raw folder in Google Drive
+  Input: all csv files from in_use_occurrence_raw folder in Google Drive, PLOT.csv (for use in FIA section)
   
   Output: single csv containing uniform occurrence data for 28 species of interest from several sources
   
