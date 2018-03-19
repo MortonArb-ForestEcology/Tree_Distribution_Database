@@ -22,6 +22,20 @@ gen_subset <- function(orig_data, action, export_name){
     }
 } 
 
+## Match up column headers, keeping all columns, not just matching ones [stacking] (fills added columns with NAs)
+    # SOURCE: https://amywhiteheadresearch.wordpress.com/2013/05/13/combining-dataframes-when-the-columns-dont-match/
+rbind.all.columns <- function(x, y) {
+    x.diff <- setdiff(colnames(x), colnames(y))
+    y.diff <- setdiff(colnames(y), colnames(x))
+    x[, c(as.character(y.diff))] <- NA
+    y[, c(as.character(x.diff))] <- NA
+    return(rbind(x, y))
+}
+      ## Example use of rbind.all.columns function:
+          # Create a list of all dataframes you want to stack
+          # 'Reduce' iterates through list and merges with previous dataframe in the list
+        # all_data <- Reduce(rbind.all.columns, file_dfs_list)
+
 ################
 ### 1. CREATE UNIFIED DATAFRAME OF ALL OCCURRENCE RECORDS FOR TARGET SPECIES
 ################
@@ -286,3 +300,9 @@ occur_clean <- anti_join(occur_counties, to_remove, by = c("LOCALITY","SPECIES")
 ## g. Write files
 write.csv(occur_remove_marked,file="./sp_occ/merged_data/occur_dup_counties_marked.csv")
 write.csv(occur_clean,file="./sp_occ/merged_data/occur_dup_counties_removed.csv")
+
+### TO DO: spatially test to see if points are within counties of occurrence recorded by USDA PLANTS, BONAP, and NatureServe, and
+### mark points which fall outside these county-level distributions --> check these points to make sure they are not locations of
+### non-natural ex situ collections (remove), then the rest of the 'outliers' can be used as points with less confidence 
+
+
