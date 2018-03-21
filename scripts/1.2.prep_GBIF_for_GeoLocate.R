@@ -171,17 +171,20 @@ geo_loc$precision <- NA
 geo_loc$error_polygon <- NA
 geo_loc$multiple_results <- NA
 # the above are the necessary columns, but we can add more to preserve our data structure
-geo_loc$basis <- gbif$basis
-geo_loc$source <- gbif$source
-geo_loc$genus <- gbif$genus
-geo_loc$synonym <- gbif$synonym
-geo_loc$species <- gbif$species
+# However, we have to balance this against the idea that we can add these columns 
+# later and that it may be faster to run the GeoLocate app without all of them.
+# Just keep a few so we can identify the columns.
+#geo_loc$basis <- gbif$basis
+#geo_loc$source <- gbif$source
+#geo_loc$genus <- gbif$genus
+#geo_loc$synonym <- gbif$synonym
+#geo_loc$species <- gbif$species
 geo_loc$year <- gbif$year
-geo_loc$occurrenceRemarks <- gbif$occurrenceRemarks
-geo_loc$associatedTaxa <- gbif$associatedTaxa
-geo_loc$uncert_m <- gbif$uncert_m
-geo_loc$georeferencedSources <- gbif$georeferenceSources
-geo_loc$issue <- gbif$issue
+#geo_loc$occurrenceRemarks <- gbif$occurrenceRemarks
+#geo_loc$associatedTaxa <- gbif$associatedTaxa
+#geo_loc$uncert_m <- gbif$uncert_m
+#geo_loc$georeferencedSources <- gbif$georeferenceSources
+#geo_loc$issue <- gbif$issue
 geo_loc$speciesKey <- gbif$speciesKey
 geo_loc$obs_no <- seq(1, length(gbif$basis), 1)
 
@@ -207,4 +210,4 @@ sum(is.na(geo_loc$latitude)) # 5168
 # http://www.museum.tulane.edu/geolocate/web/WebFileGeoref.aspx
 # use the default options when loading the file.
 
-# load this file from memory 41AAA4A2 (created 3.21.18)
+# load this file from memory 7DBC9921 (created 3.21.18)
