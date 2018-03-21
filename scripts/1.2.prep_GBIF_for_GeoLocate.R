@@ -116,6 +116,8 @@ gbif_c_na <- which(is.na(gbif$county))
 mun <- which(!is.na(gbif$municipality))
 overlap <- intersect(gbif_c_na, mun)
 gbif$county[overlap] <- gbif$municipality[overlap]
+sum(is.na(gbif$county)) # 2130
+
 # and if the locality is NA, but the county is not, then we can rewrite the county into the locality column
 gbif_c_na <- which(is.na(gbif$locality))
 mun <- which(!is.na(gbif$county))
@@ -125,22 +127,26 @@ gbif$locality[overlap] <- gbif$county[overlap]
 # county column, the information should be sufficient to use geolocate.
 
 # Finally, to prevent some errors, let's write out some basic abbreviations in locality
-gsub(pattern = "mtn", x = gbif$locality, replacement = "mountain")
-gsub(pattern = "Mtn", x = gbif$locality, replacement = "mountain")
-gsub(pattern = "cyn", x = gbif$locality, replacement = "canyon")
-gsub(pattern = "Cyn", x = gbif$locality, replacement = "canyon")
-gsub(pattern = "jct", x = gbif$locality, replacement = "junction")
-gsub(pattern = "hwy", x = gbif$locality, replacement = "highway")
-gsub(pattern = "Hwy", x = gbif$locality, replacement = "highway")
-gsub(pattern = "\"", x = gbif$locality, fixed = T, replacement = "") # does this work?
-gsub(pattern = " N ", x = gbif$locality, replacement = "North") # does this account for the spaces?
-gsub(pattern = " s ", x = gbif$locality, replacement = "South")
-gsub(pattern = " E ", x = gbif$locality, replacement = "East")
-gsub(pattern = " W ", x = gbif$locality, replacement = "West")
-gsub(pattern = " SE ", x = gbif$locality, replacement = "southeast")
-gsub(pattern = " NE ", x = gbif$locality, replacement = "northeast")
-gsub(pattern = " ca. ", x = gbif$locality, replacement = "")
-gsub(pattern = " Ca. ", x = gbif$locality, replacement = "")
+gbif$locality <- gsub(pattern = "mtn", x = gbif$locality, replacement = "mountain")
+gbif$locality <- gsub(pattern = "Mtn", x = gbif$locality, replacement = "mountain")
+gbif$locality <- gsub(pattern = "Mts.", x = gbif$locality, replacement = "mountains")
+gbif$locality <- gsub(pattern = "cyn", x = gbif$locality, replacement = "canyon")
+gbif$locality <- gsub(pattern = "Cyn", x = gbif$locality, replacement = "canyon")
+gbif$locality <- gsub(pattern = "jct", x = gbif$locality, replacement = "junction")
+gbif$locality <- gsub(pattern = "hwy", x = gbif$locality, replacement = "highway")
+gbif$locality <- gsub(pattern = "Hwy", x = gbif$locality, replacement = "highway")
+gbif$locality <- gsub(pattern = "\\'", x = gbif$locality, fixed = T, replacement = "")
+gbif$locality <- gsub(pattern = " N ", x = gbif$locality, replacement = " North ")
+gbif$locality <- gsub(pattern = " s ", x = gbif$locality, replacement = " South ")
+gbif$locality <- gsub(pattern = " E ", x = gbif$locality, replacement = " East ")
+gbif$locality <- gsub(pattern = " W ", x = gbif$locality, replacement = " West ")
+gbif$locality <- gsub(pattern = " SE ", x = gbif$locality, replacement = " southeast ")
+gbif$locality <- gsub(pattern = " NE ", x = gbif$locality, replacement = " northeast ")
+gbif$locality <- gsub(pattern = " NW ", x = gbif$locality, replacement = " northwest ")
+gbif$locality <- gsub(pattern = " ca. ", x = gbif$locality, replacement = "")
+gbif$locality <- gsub(pattern = " Ca. ", x = gbif$locality, replacement = "")
+gbif$locality <- gsub(pattern = " mi. ", x = gbif$locality, replacement = " miles ")
+gbif$locality <- gsub(pattern = " Mt. ", x = gbif$locality, replacement = " Mount ")
 
 # make a new data frame for use in geolocate
 # Note: it is very important that the first ten columns are as follows.
