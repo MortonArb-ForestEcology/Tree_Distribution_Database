@@ -34,6 +34,7 @@ sum(is.na(gbif$locality)) #3044
 # when there is no locality information other than that of the verbatim locality column, copy that information to locality
 gbif$locality[is.na(gbif$locality)]  <- gbif$verbatimLocality[is.na(gbif$locality)]
 sum(is.na(gbif$locality)) #1835, better
+
 # STATE
 # for columns with NA in state, look in locality data for a state abbreviation or name and copy it into the empty column
 sum(is.na(gbif$state)) # 2030
@@ -55,98 +56,33 @@ sum(is.na(gbif$state)) # 2030
 # so some adjustments must be made.
 extract_state <- function(d.f, loc, repl){
   gbif_s_na <- which(is.na(d.f$state))
-  rows <- grep(pattern = "loc", x = d.f$locality) 
+  rows <- grep(pattern = loc, x = d.f$locality) 
   overlap <- intersect(gbif_s_na, rows)
-  d.f$state[overlap] <- "repl"
+  d.f$state[overlap] <- repl
   return(d.f$state)
 }
 
-# maybe make it a loop instead, as worked in 1.1?
-# did i overwrite a base r object?
-# add quotations into function? doesn't seem to do anything, but cannot include them in arguments.
-# adding the return function brought something back, but it had only replaced 8 of the 667 possible replacements...?
-
-gbif2$state <- extract_state(gbif2, "CA", "California")
-sum(is.na(gbif2$state))
-gbif2 <- gbif
-
-paste0("^", namePrefix, "\\d")
-
-# Until function works, we can do the alternative long way...
-#extract_state(gbif2, "CA", "California")
-gbif_s_na <- which(is.na(gbif$state))
-rows <- grep(pattern = "CA", x = gbif$locality) 
-overlap <- intersect(gbif_s_na, rows)
-gbif$state[overlap] <- "California"
-#extract_state(gbif2, "California", "California")
-gbif_s_na <- which(is.na(gbif$state))
-rows <- grep(pattern = "California", x = gbif$locality) 
-overlap <- intersect(gbif_s_na, rows)
-gbif$state[overlap] <- "California"
-#extract_state(gbif2, "TX", "Texas")
-gbif_s_na <- which(is.na(gbif$state))
-rows <- grep(pattern = "TX", x = gbif$locality) 
-overlap <- intersect(gbif_s_na, rows)
-gbif$state[overlap] <- "Texas"
-#extract_state(gbif2, "Texas", "Texas")
-gbif_s_na <- which(is.na(gbif$state))
-rows <- grep(pattern = "Texas", x = gbif$locality) 
-overlap <- intersect(gbif_s_na, rows)
-gbif$state[overlap] <- "Texas"
-#extract_state(gbif2, "FL", "Florida")
-gbif_s_na <- which(is.na(gbif$state))
-rows <- grep(pattern = "FL", x = gbif$locality) 
-overlap <- intersect(gbif_s_na, rows)
-gbif$state[overlap] <- "Florida"
-#extract_state(gbif2, "Florida", "Florida")
-gbif_s_na <- which(is.na(gbif$state))
-rows <- grep(pattern = "Florida", x = gbif$locality) 
-overlap <- intersect(gbif_s_na, rows)
-gbif$state[overlap] <- "Florida"
-#extract_state(gbif2, "AZ", "Arizona")
-gbif_s_na <- which(is.na(gbif$state))
-rows <- grep(pattern = "AZ", x = gbif$locality) 
-overlap <- intersect(gbif_s_na, rows)
-gbif$state[overlap] <- "Arizona"
-#extract_state(gbif2, "UT", "Utah")
-gbif_s_na <- which(is.na(gbif$state))
-rows <- grep(pattern = "UT", x = gbif$locality) 
-overlap <- intersect(gbif_s_na, rows)
-gbif$state[overlap] <- "Utah"
-#extract_state(gbif2, "Utah", "Utah")
-gbif_s_na <- which(is.na(gbif$state))
-rows <- grep(pattern = "Utah", x = gbif$locality) 
-overlap <- intersect(gbif_s_na, rows)
-gbif$state[overlap] <- "Utah"
-#extract_state(gbif2, "AL", "Alabama")
-gbif_s_na <- which(is.na(gbif$state))
-rows <- grep(pattern = "AL", x = gbif$locality) 
-overlap <- intersect(gbif_s_na, rows)
-gbif$state[overlap] <- "Alabama"
-#extract_state(gbif2, "Alamaba", "Alabama")
-gbif_s_na <- which(is.na(gbif$state))
-rows <- grep(pattern = "Alabama", x = gbif$locality) 
-overlap <- intersect(gbif_s_na, rows)
-gbif$state[overlap] <- "Alabama"
-#extract_state(gbif2, "Arkansas", "Arkansas")
-gbif_s_na <- which(is.na(gbif$state))
-rows <- grep(pattern = "Arkansas", x = gbif$locality) 
-overlap <- intersect(gbif_s_na, rows)
-gbif$state[overlap] <- "Arkansas"
-#extract_state(gbif2, "Georgia", "Georgia")
-gbif_s_na <- which(is.na(gbif$state))
-rows <- grep(pattern = "Georgia", x = gbif$locality) 
-overlap <- intersect(gbif_s_na, rows)
-gbif$state[overlap] <- "Georgia"
-#extract_state(gbif2, "LA", "Louisiana")
-gbif_s_na <- which(is.na(gbif$state))
-rows <- grep(pattern = "LA", x = gbif$locality) 
-overlap <- intersect(gbif_s_na, rows)
-gbif$state[overlap] <- "Louisiana"
+# Run the function several times
+gbif$state <- extract_state(gbif, "CA", "California")
+sum(is.na(gbif$state))
+gbif$state <- extract_state(gbif, "California", "California")
+gbif$state <- extract_state(gbif, "Texas", "Texas")
+gbif$state <- extract_state(gbif, "TX", "Texas")
+gbif$state <- extract_state(gbif, "FL", "Florida")
+gbif$state <- extract_state(gbif, "Florida", "Florida")
+gbif$state <- extract_state(gbif, "AZ", "Arizona")
+gbif$state <- extract_state(gbif, "UT", "Utah")
+gbif$state <- extract_state(gbif, "Utah", "Utah")
+gbif$state <- extract_state(gbif, "AL", "Alabama")
+gbif$state <- extract_state(gbif, "Alabama", "Alabama")
+gbif$state <- extract_state(gbif, "Arkansas", "Arkansas")
+gbif$state <- extract_state(gbif, "Georgia", "Georgia")
+gbif$state <- extract_state(gbif, "LA", "Louisiana")
 sum(is.na(gbif$state)) # 1137 We filled in almost 1000 blanks
 sum(is.na(gbif$locality[is.na(gbif$state)])) # 928 localities are NAs anyway, but what about the 209 others?
 gbif$locality[!is.na(gbif$locality[is.na(gbif$state)])]
-# The states aren't listed, but I can still tell that many of them are in CA.
+# The states aren't listed, but I can still tell that many of them are in CA.##### DO SOMETHING WITH THIS?
+
 # COUNTY
 sum(is.na(gbif$county)) # 2587
 # make a vector of the rows for which counties are NA
@@ -175,13 +111,36 @@ overlap <- intersect(gbif_c_na, rows)
 find_cou <- separate(gbif[overlap, ], locality, into = "loca", sep = "Co.", remove = F)
 gbif$county[overlap]  <- find_cou$loca
 sum(is.na(gbif$county)) # 2135
-# lastly, if the county is NA, but the municipality is not, then we can rewrite municipality into the county column
+# Next, if the county is NA, but the municipality is not, then we can rewrite municipality into the county column
 gbif_c_na <- which(is.na(gbif$county))
 mun <- which(!is.na(gbif$municipality))
 overlap <- intersect(gbif_c_na, mun)
 gbif$county[overlap] <- gbif$municipality[overlap]
+# and if the locality is NA, but the county is not, then we can rewrite the county into the locality column
+gbif_c_na <- which(is.na(gbif$locality))
+mun <- which(!is.na(gbif$county))
+overlap <- intersect(gbif_c_na, mun)
+gbif$locality[overlap] <- gbif$county[overlap]
 # although the county name is often accompanied by other words in the updated
 # county column, the information should be sufficient to use geolocate.
+
+# Finally, to prevent some errors, let's write out some basic abbreviations in locality
+gsub(pattern = "mtn", x = gbif$locality, replacement = "mountain")
+gsub(pattern = "Mtn", x = gbif$locality, replacement = "mountain")
+gsub(pattern = "cyn", x = gbif$locality, replacement = "canyon")
+gsub(pattern = "Cyn", x = gbif$locality, replacement = "canyon")
+gsub(pattern = "jct", x = gbif$locality, replacement = "junction")
+gsub(pattern = "hwy", x = gbif$locality, replacement = "highway")
+gsub(pattern = "Hwy", x = gbif$locality, replacement = "highway")
+gsub(pattern = "\"", x = gbif$locality, fixed = T, replacement = "") # does this work?
+gsub(pattern = " N ", x = gbif$locality, replacement = "North") # does this account for the spaces?
+gsub(pattern = " s ", x = gbif$locality, replacement = "South")
+gsub(pattern = " E ", x = gbif$locality, replacement = "East")
+gsub(pattern = " W ", x = gbif$locality, replacement = "West")
+gsub(pattern = " SE ", x = gbif$locality, replacement = "southeast")
+gsub(pattern = " NE ", x = gbif$locality, replacement = "northeast")
+gsub(pattern = " ca. ", x = gbif$locality, replacement = "")
+gsub(pattern = " Ca. ", x = gbif$locality, replacement = "")
 
 # make a new data frame for use in geolocate
 # Note: it is very important that the first ten columns are as follows.
@@ -221,6 +180,7 @@ sum(is.na(geo_loc$latitude)) # 5168
 # We don't expect it to catch everything.
 
 # Instructions for GeoLocate
+# After the page is loaded and before beginning to GeoLocate, check "options" and unmark "do error polygon".
 # The application can only process 128 entries at a time, so you will have to go 
 # through and change the page, select "Page Georeference" and let it run. 
 # It should take about five to ten minutes per page of 128 entries.
