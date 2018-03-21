@@ -19,7 +19,7 @@ gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrenc
 nrow(gbif) #12195
 # remove extraneous columns
 gbif <- subset(gbif, select = c(basisOfRecord, institutionCode, genus, 
-                                scientificName, species, year, countryCode, 
+                                scientificName, speciesKey, species, year, countryCode, 
                                 stateProvince, county, municipality, 
                                 locality, verbatimLocality, occurrenceRemarks, 
                                 associatedTaxa, decimalLatitude, decimalLongitude,
@@ -37,20 +37,6 @@ sum(is.na(gbif$locality)) #1835, better
 
 # STATE
 # for columns with NA in state, look in locality data for a state abbreviation or name and copy it into the empty column
-sum(is.na(gbif$state)) # 2030
-# example
-#gbif2 <- gbif
-# make a vector of the rows for which state is NA
-#gbif_s_na <- which(is.na(gbif2$state))
-# find which rows have a locality clue of CA
-#rows <- grep(pattern = "CA", x = gbif2$locality) 
-# find out which row numbers overlap, meaning that both the state entry is 
-# NA and the locality indicates that the NA can be changed to California
-#overlap <- intersect(gbif_s_na, rows)
-# now change the state entries in rows "overlap" to California
-#gbif2$state[overlap] <- "California"
-#sum(is.na(gbif2$state)) # 1363 Hurrah ! It worked!
-
 # write a function to take the state from the locality
 # note that characters cannot be read directly into functions, 
 # so some adjustments must be made.
@@ -63,6 +49,7 @@ extract_state <- function(d.f, loc, repl){
 }
 
 # Run the function several times
+sum(is.na(gbif$state)) # 2030
 gbif$state <- extract_state(gbif, "CA", "California")
 sum(is.na(gbif$state))
 gbif$state <- extract_state(gbif, "California", "California")
@@ -173,6 +160,7 @@ geo_loc$associatedTaxa <- gbif$associatedTaxa
 geo_loc$uncert_m <- gbif$uncert_m
 geo_loc$georeferencedSources <- gbif$georeferenceSources
 geo_loc$issue <- gbif$issue
+geo_loc$speciesKey <- gbif$speciesKey
 geo_loc$obs_no <- seq(1, length(gbif$basis), 1)
 
 
