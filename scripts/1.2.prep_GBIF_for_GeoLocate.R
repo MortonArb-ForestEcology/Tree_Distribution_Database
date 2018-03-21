@@ -106,34 +106,56 @@ gbif$county[overlap] <- gbif$municipality[overlap]
 sum(is.na(gbif$county)) # 2130
 
 # and if the locality is NA, but the county is not, then we can rewrite the county into the locality column
+sum(is.na(gbif$locality))  #1835
 gbif_c_na <- which(is.na(gbif$locality))
 mun <- which(!is.na(gbif$county))
 overlap <- intersect(gbif_c_na, mun)
 gbif$locality[overlap] <- gbif$county[overlap]
+sum(is.na(gbif$locality))  #959
 # although the county name is often accompanied by other words in the updated
 # county column, the information should be sufficient to use geolocate.
 
 # Finally, to prevent some errors, let's write out some basic abbreviations in locality
+# remove commas!
+gbif$locality <- gsub(pattern = ",", x = gbif$locality, replacement = " ")
 gbif$locality <- gsub(pattern = "mtn", x = gbif$locality, replacement = "mountain")
 gbif$locality <- gsub(pattern = "Mtn", x = gbif$locality, replacement = "mountain")
 gbif$locality <- gsub(pattern = "Mts.", x = gbif$locality, replacement = "mountains")
 gbif$locality <- gsub(pattern = "cyn", x = gbif$locality, replacement = "canyon")
 gbif$locality <- gsub(pattern = "Cyn", x = gbif$locality, replacement = "canyon")
 gbif$locality <- gsub(pattern = "jct", x = gbif$locality, replacement = "junction")
+gbif$locality <- gsub(pattern = "junc. ", x = gbif$locality, replacement = "junction ")
+gbif$locality <- gsub(pattern = "Rte ", x = gbif$locality, replacement = "route ")
 gbif$locality <- gsub(pattern = "hwy", x = gbif$locality, replacement = "highway")
 gbif$locality <- gsub(pattern = "Hwy", x = gbif$locality, replacement = "highway")
 gbif$locality <- gsub(pattern = "\\'", x = gbif$locality, fixed = T, replacement = "")
-gbif$locality <- gsub(pattern = " N ", x = gbif$locality, replacement = " North ")
-gbif$locality <- gsub(pattern = " s ", x = gbif$locality, replacement = " South ")
-gbif$locality <- gsub(pattern = " E ", x = gbif$locality, replacement = " East ")
-gbif$locality <- gsub(pattern = " W ", x = gbif$locality, replacement = " West ")
+gbif$locality <- gsub(pattern = " N ", x = gbif$locality, replacement = " north ")
+gbif$locality <- gsub(pattern = " N. ", x = gbif$locality, replacement = " north ")
+gbif$locality <- gsub(pattern = " S ", x = gbif$locality, replacement = " south ")
+gbif$locality <- gsub(pattern = " S. ", x = gbif$locality, replacement = " south ")
+gbif$locality <- gsub(pattern = " s ", x = gbif$locality, replacement = " south ")
+gbif$locality <- gsub(pattern = " E ", x = gbif$locality, replacement = " east ")
+gbif$locality <- gsub(pattern = " E. ", x = gbif$locality, replacement = " east ")
+gbif$locality <- gsub(pattern = " W ", x = gbif$locality, replacement = " west ")
+gbif$locality <- gsub(pattern = " W. ", x = gbif$locality, replacement = " west ")
 gbif$locality <- gsub(pattern = " SE ", x = gbif$locality, replacement = " southeast ")
+gbif$locality <- gsub(pattern = " SW ", x = gbif$locality, replacement = " southwest ")
 gbif$locality <- gsub(pattern = " NE ", x = gbif$locality, replacement = " northeast ")
 gbif$locality <- gsub(pattern = " NW ", x = gbif$locality, replacement = " northwest ")
-gbif$locality <- gsub(pattern = " ca. ", x = gbif$locality, replacement = "")
-gbif$locality <- gsub(pattern = " Ca. ", x = gbif$locality, replacement = "")
+gbif$locality <- gsub(pattern = " ca. ", x = gbif$locality, replacement = " ")
+gbif$locality <- gsub(pattern = " ca ", x = gbif$locality, replacement = " ")
+gbif$locality <- gsub(pattern = " Ca. ", x = gbif$locality, replacement = " ")
 gbif$locality <- gsub(pattern = " mi. ", x = gbif$locality, replacement = " miles ")
+gbif$locality <- gsub(pattern = " mi ", x = gbif$locality, replacement = " miles ")
+gbif$locality <- gsub(pattern = " km ", x = gbif$locality, replacement = " kilometers ")
+gbif$locality <- gsub(pattern = " Rd. ", x = gbif$locality, replacement = " road ")
+gbif$locality <- gsub(pattern = " rd. ", x = gbif$locality, replacement = " road ")
+gbif$locality <- gsub(pattern = " St. ", x = gbif$locality, replacement = " street ")
+gbif$locality <- gsub(pattern = " Ave. ", x = gbif$locality, replacement = " avenue ")
+gbif$locality <- gsub(pattern = " Fk. ", x = gbif$locality, replacement = " fork ")
+gbif$locality <- gsub(pattern = " fk. ", x = gbif$locality, replacement = " fork ")
 gbif$locality <- gsub(pattern = " Mt. ", x = gbif$locality, replacement = " Mount ")
+gbif$locality <- gsub(pattern = " Pk. ", x = gbif$locality, replacement = " Peak ")
 
 # make a new data frame for use in geolocate
 # Note: it is very important that the first ten columns are as follows.
@@ -177,7 +199,7 @@ sum(is.na(geo_loc$latitude)) # 5168
 # After the page is loaded and before beginning to GeoLocate, check "options" and unmark "do error polygon".
 # The application can only process 128 entries at a time, so you will have to go 
 # through and change the page, select "Page Georeference" and let it run. 
-# It should take about five to ten minutes per page of 128 entries.
+# It should take about two to fifteen minutes per page of 128 entries, depending on the computer.
 # After, on the bottom there should be an export option. The file should be 
 # exported as a csv and it can be renamed then as "gbif_DC_post-georef.csv".
 
@@ -185,4 +207,4 @@ sum(is.na(geo_loc$latitude)) # 5168
 # http://www.museum.tulane.edu/geolocate/web/WebFileGeoref.aspx
 # use the default options when loading the file.
 
-# load this file from memory CB576794 (created 3.15.18)
+# load this file from memory 41AAA4A2 (created 3.21.18)
