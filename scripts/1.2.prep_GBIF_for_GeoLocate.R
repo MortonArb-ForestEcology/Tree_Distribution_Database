@@ -230,7 +230,8 @@ comp_df # it looks like every number increased by at least one. Several doubled 
 #   Highlighting some dramatic increases: 76 to 164; 9 to 201; 36 to 177; 105 to 259; 10 to 91; 62 to 250; 63 to 171
 summary(comp_df$post)
 
-
+# Now let's see how many of the coordinates we had before have changed.
+sum(geo_loc$latitude==post_geo$latitude) #NA  Wow--everything has changed...what does this mean?
 
 # Now let's account for duplicates and repeat the above...
 rm_dup <- data.frame(pre = rep(NA, length(u_vec)), post = rep(NA, length(u_vec)))
@@ -296,24 +297,71 @@ PE_rm_dup # well this certainly increases the quantity of occurrences for all sp
 summary(PE_rm_dup)
 
 # To compare the above easily all at once, we can attach them to each other and make a larger data frame
+cbind(comp_df, rm_dup, PE_rm_dup)
 
-  
-  
+# Let's look into potential issues in the pre-existing coordinates.. the two 
+# problematic issues here would be "COORDINATE_ROUNDED" and "COORDINATE_MISMATCH")
+rounded <- grep(pattern = "COORDINATE_ROUNDED", x = gbif[pre_filled, "issue"])
+mismatch <- grep(pattern = "COORDINATE_MISMATCH", x = gbif[pre_filled, "issue"])
+problems <- union(rounded, mismatch)
+length(problems) # 1355--quite a few to throw out...
 
-# Now let's see how many of the coordinates we had before have changed.
-sum(geo_loc$latitude==post_geo$latitude) #NA  Wow--everything has changed...what does this mean?
+# And compare to any issues present for all other observations  
+unique(gbif[-pre_filled, "issue"]) # So there are fewer issues to do with coordinates here...
+
+# What happens if we allow for those "problem" rows to be changed back to their 
+# coordinates, as found in GeoLocate?
+# Make a post_geo3
+post_geo3 <- post_geo2
+# And make the change
+post_geo3$latitude[problems] <- post_geo$latitude[problems]
+post_geo3$longitude[problems] <- post_geo$longitude[problems]
+# and repeat the above loop
+issueless_rm_dup <- data.frame(pre = rep(NA, length(u_vec)), post = rep(NA, length(u_vec)))
+
+for (i in 1:length(u_vec)){
+  a <- which(geo_loc$speciesKey == u_vec[i]) 
+  y <- geo_loc[a, ]
+  y$lat <- as.numeric(as.character(y$latitude))
+  y$lon <- as.numeric(as.character(y$longitude))
+  y <- filter(y, lat > 0, lon < 0)
+  y <- y[!duplicated(round(y[,c("lat","lon")], 2)), ]
+  w <- sum(!is.na(y$lat))
+  b <- which(post_geo3$speciesKey == u_vec[i])
+  z <- post_geo3[b, ]
+  z$lat <- as.numeric(as.character(z$latitude))
+  z$lon <- as.numeric(as.character(z$longitude))
+  z <- filter(z, lat > 0, lon < 0)
+  z <- z[!duplicated(round(z[,c("lat","lon")], 2)), ]
+  x <- sum(!is.na(z$lat))
+  issueless_rm_dup[i, 1] <- w
+  issueless_rm_dup[i, 2] <- x
+}
+
+issueless_rm_dup # well this certainly increases the quantity of occurrences for all species, so maybe this is the best way to go
+#leave the pre-existing coordinates as is...unless there was an issue associated with them.
+
+summary(issueless_rm_dup)
+
+# Tack this one onto the others...
+cbind(comp_df, rm_dup, PE_rm_dup, issueless_rm_dup)
+# This results in virtually no change, give or take a few from each species. 
+# Let's leave these as the final coordinates..for now: ***"post_geo3"***
+
+
+# Other findings...
 # let's see how many are in the countries
 table(geo_loc$country) # 10,712 in the US, 602 in Mexico. The rest are other counties and NAs
-table(post_geo$country) # okay it remains the same # Consider removing non-US points here
+table(post_geo3$country) # okay it remains the same # Consider removing non-US points here
 
 # how many have multiple results?
-sum(post_geo$multiple_results=="") # all except 2052
+sum(post_geo3$multiple_results=="") # all except 2052
 
 # So what does the precision column tell us anyway? Couldn't find anything clear on internet
-unique(post_geo$precision)
+unique(post_geo3$precision)
 # not sure, but let's see how many are "high", "low" and "medium"
-length(grep("Low", post_geo$precision))  # 4734
-length(grep("Medium", post_geo$precision))  # 2210
-length(grep("High", post_geo$precision))  # 3181
+length(grep("Low", post_geo3$precision))  # 4734
+length(grep("Medium", post_geo3$precision))  # 2210
+length(grep("High", post_geo3$precision))  # 3181
 
 
