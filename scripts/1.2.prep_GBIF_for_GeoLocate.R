@@ -72,32 +72,25 @@ gbif$locality[!is.na(gbif$locality[is.na(gbif$state)])]
 
 # COUNTY
 sum(is.na(gbif$county)) # 2587
-# make a vector of the rows for which counties are NA
-gbif_c_na <- which(is.na(gbif$county))
-# find which rows have a locality clue of "County or county"
-# considered also using, "Co. or co.", but it also picked up words beginning with co...
-rows <- grep(pattern = "County", x = gbif$locality) 
-# find out which row numbers overlap, meaning that both the county entry is 
-# NA and the locality indicates a particular county
-overlap <- intersect(gbif_c_na, rows)
-# now to extract the county
-find_cou <- separate(gbif[overlap, ], locality, into = "loca", sep = "County", remove = F)
-gbif$county[overlap]  <- find_cou$loca
-sum(is.na(gbif$county)) # 2256
-# do the same for "county" lowercase
-gbif_c_na <- which(is.na(gbif$county))
-rows <- grep(pattern = "county", x = gbif$locality) 
-overlap <- intersect(gbif_c_na, rows)
-find_cou <- separate(gbif[overlap, ], locality, into = "loca", sep = "county", remove = F)
-gbif$county[overlap]  <- find_cou$loca
-sum(is.na(gbif$county)) # 2252
-# and repeat for "Co." capitalized
-gbif_c_na <- which(is.na(gbif$county))
-rows <- grep(pattern = "Co.", x = gbif$locality) 
-overlap <- intersect(gbif_c_na, rows)
-find_cou <- separate(gbif[overlap, ], locality, into = "loca", sep = "Co.", remove = F)
-gbif$county[overlap]  <- find_cou$loca
+
+extract_county <- function(d.f, loc){
+  gbif_c_na <- which(is.na(d.f$county))
+  rows <- grep(pattern = loc, x = d.f$locality) 
+  overlap <- intersect(gbif_c_na, rows)
+  # the difference between this function and extract_state is that the entire locality
+  # string before the key word is written into the county column here.
+  find_cou <- separate(d.f[overlap, ], locality, into = "loca", sep = "County", remove = F)
+  d.f$county[overlap]  <- find_cou$loca
+  return(d.f$county)
+}
+
+gbif$county <- extract_county(gbif, "County")
+sum(is.na(gbif$county)) # 
+gbif$county <- extract_county(gbif, "county")
+sum(is.na(gbif$county)) # 
+gbif$county <- extract_county(gbif, "Co.")
 sum(is.na(gbif$county)) # 2135
+
 # Next, if the county is NA, but the municipality is not, then we can rewrite municipality into the county column
 gbif_c_na <- which(is.na(gbif$county))
 mun <- which(!is.na(gbif$municipality))
@@ -211,3 +204,78 @@ sum(is.na(geo_loc$latitude)) # 5168
 # use the default options when loading the file.
 
 # load this file from memory 7DBC9921 (created 3.21.18)
+
+#do a quick comparison with the output file
+# for windows? but too big to not use server # more columns than column names
+  # post_geo <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_DC_post-georef.csv', as.is=T)
+
+sum(is.na(post_geo$latitude)) # 2052 Whoa! This is a big difference, using geolocate gave us over 3000 more occurrences
+# let's see if any of this increase tended to be skewed toward a certain species
+u_vec <- unique(post_geo$speciesKey)
+comp_df <- data.frame(pre = rep(NA, length(u_vec)), post = rep(NA, length(u_vec)))
+# This loop will compare the number of NA longitudes for each species before and after geolocation
+for (i in 1:length(u_vec)){
+  a <- which(geo_loc$speciesKey == u_vec[i]) 
+  y <- sum(!is.na(geo_loc[a, "latitude"]))
+  b <- which(post_geo$speciesKey == u_vec[i])
+  z <- sum(!is.na(post_geo[b, "latitude"]))
+  comp_df[i, 1] <- y
+  comp_df[i, 2] <- z
+}
+
+comp_df # it looks like every number increased by at least one. Several doubled or more in occurrence number
+#   Four species still have fewer than ten occurrences
+#   Five additional species have fewer than 32 occurrences
+#   All other species have 61 occurrences or more. Three of these species have over 1000 occurrences
+#   Highlighting some dramatic increases: 76 to 164; 9 to 201; 36 to 177; 105 to 259; 10 to 91; 62 to 250; 63 to 171
+summary(comp_df$post)
+
+
+
+# Now let's account for duplicates and repeat the above...
+rm_dup <- data.frame(pre = rep(NA, length(u_vec)), post = rep(NA, length(u_vec)))
+
+for (i in 1:length(u_vec)){
+  a <- which(geo_loc$speciesKey == u_vec[i]) 
+  y <- geo_loc[a, ]
+  y$lat <- as.numeric(as.character(y$latitude))
+  y$lon <- as.numeric(as.character(y$longitude))
+  y <- filter(y, lat > 0, lon < 0)
+  y <- y[!duplicated(round(y[,c("lat","lon")], 2)), ]
+  w <- sum(!is.na(y$lat))
+  b <- which(post_geo$speciesKey == u_vec[i])
+  z <- post_geo[b, ]
+  z$lat <- as.numeric(as.character(z$latitude))
+  z$lon <- as.numeric(as.character(z$longitude))
+  z <- filter(z, lat > 0, lon < 0)
+  z <- z[!duplicated(round(z[,c("lat","lon")], 2)), ]
+  x <- sum(!is.na(z$lat))
+  rm_dup[i, 1] <- w
+  rm_dup[i, 2] <- x
+}
+
+rm_dup # Like this, some NAs have increased and some have decreased... 
+#So in some cases, geoLocate made two distinct input coordinates the same in the output
+# Seven species have fewer than 10 occurrences after. None have over 1000 now.
+# Three additional species have 30 occurences or less.
+summary(rm_dup$post)
+
+
+
+# Now let's see how many of the coordinates we had before have changed.
+sum(geo_loc$latitude==post_geo$latitude) #NA  Wow--everything has changed...what does this mean?
+# let's see how many are in the countries
+table(geo_loc$country) # 10,712 in the US, 602 in Mexico. The rest are other counties and NAs
+table(post_geo$country) # okay it remains the same # Consider removing non-US points here
+
+# how many have multiple results?
+sum(post_geo$multiple_results=="") # all except 2052
+
+# So what does the precision column tell us anyway? Couldn't find anything clear on internet
+unique(post_geo$precision)
+# not sure, but let's see how many are "high", "low" and "medium"
+length(grep("Low", post_geo$precision))  # 4734
+length(grep("Medium", post_geo$precision))  # 2210
+length(grep("High", post_geo$precision))  # 3181
+
+
