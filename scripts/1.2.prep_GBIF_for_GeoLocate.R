@@ -306,6 +306,8 @@ mismatch <- grep(pattern = "COORDINATE_MISMATCH", x = gbif[pre_filled, "issue"])
 problems <- union(rounded, mismatch)
 length(problems) # 1355--quite a few to throw out...
 
+issueless <- pre_filled[-problems]
+
 # And compare to any issues present for all other observations  
 unique(gbif[-pre_filled, "issue"]) # So there are fewer issues to do with coordinates here...
 
@@ -314,8 +316,8 @@ unique(gbif[-pre_filled, "issue"]) # So there are fewer issues to do with coordi
 # Make a post_geo3
 post_geo3 <- post_geo2
 # And make the change
-post_geo3$latitude[problems] <- post_geo$latitude[problems]
-post_geo3$longitude[problems] <- post_geo$longitude[problems]
+post_geo3$latitude[issueless] <- post_geo$latitude[issueless]
+post_geo3$longitude[issueless] <- post_geo$longitude[issueless]
 # and repeat the above loop
 issueless_rm_dup <- data.frame(pre = rep(NA, length(u_vec)), post = rep(NA, length(u_vec)))
 
@@ -338,14 +340,14 @@ for (i in 1:length(u_vec)){
   issueless_rm_dup[i, 2] <- x
 }
 
-issueless_rm_dup # well this certainly increases the quantity of occurrences for all species, so maybe this is the best way to go
-#leave the pre-existing coordinates as is...unless there was an issue associated with them.
+issueless_rm_dup # No change from the previous alteration... so GeoLocate 
+# agreed with the coordinates that had "issues"
 
 summary(issueless_rm_dup)
 
 # Tack this one onto the others...
 cbind(comp_df, rm_dup, PE_rm_dup, issueless_rm_dup)
-# This results in virtually no change, give or take a few from each species. 
+# This results in absolutely no change.
 # Let's leave these as the final coordinates..for now: ***"post_geo3"***
 
 
