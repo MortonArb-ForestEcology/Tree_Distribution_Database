@@ -226,7 +226,10 @@ u_vec <- unique(post_geo$speciesKey)
 comp_df <- data.frame(pre = rep(NA, length(u_vec)), post = rep(NA, length(u_vec)))
 # find which coordinates existed in the input document
 pre_filled <- which(!is.na(geo_loc$latitude))
-# remove from this above vector the coordinates that had issues
+# Recognize that pre_existing coordinates were probably more precise than the 
+# geolocated coordinates, unless an issue was designated to it. We will want to 
+# retain the pre-existing coordinates that had no issues
+# Remove from this above vector the coordinates that had issues.
 # problematic issues here would be "COORDINATE_ROUNDED" and "COORDINATE_MISMATCH")
 rounded <- grep(pattern = "COORDINATE_ROUNDED", x = gbif[pre_filled, "issue"])
 mismatch <- grep(pattern = "COORDINATE_MISMATCH", x = gbif[pre_filled, "issue"])
@@ -260,7 +263,33 @@ for (i in 1:length(u_vec)){
 comp_df
 summary(comp_df) # overall there is an increase in quantity of occurrences
 
-# now using the updated geo_loc dataset, tack on the other necessary DarwinCore 
+# The post_geo dataset must be run through the above changes, one species at a 
+# time because duplicate coordinates for different species counts as two distinct occurrences.
+post_geo$latitude <- as.numeric(as.character(post_geo$latitude))
+post_geo$longitude <- as.numeric(as.character(post_geo$longitude))
+
+# we will make a new dataset with a new name  
+revised_post_geo <- data.frame()
+# run the loop
+for (i in 1:length(u_vec)){
+b <- which(post_geo$speciesKey == u_vec[i])
+z <- post_geo[b, ]
+z <- filter(z, latitude > 0, longitude < 0)
+z <- z[!duplicated(round(z[,c("latitude","longitude")], 2)), ]
+revised_post_geo <- rbind (revised_post_geo, z)
+}
+
+length(revised_post_geo$latitude) #4855 occurrences total here
+
+
+# attempt a function to do the same?
+updateGL <- function(d.f, speciesKey){
+
+}
+
+
+# Now using the updated revised_post_geo dataset and the observation numbers that 
+# correlate with the gbif rows, tack on the other necessary DarwinCore 
 # columns and write a new dataset
 
 
