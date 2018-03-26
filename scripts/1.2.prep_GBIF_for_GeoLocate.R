@@ -210,32 +210,34 @@ sum(is.na(geo_loc$latitude)) # 5168
   # post_geo <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_DC_post-georef.csv', as.is=T)
 
 sum(is.na(post_geo$latitude)) # 2052 Whoa! This is a big difference, using geolocate gave us over 3000 more occurrences
-# let's see if any of this increase tended to be skewed toward a certain species
-u_vec <- unique(post_geo$speciesKey)
-comp_df <- data.frame(pre = rep(NA, length(u_vec)), post = rep(NA, length(u_vec)))
-# This loop will compare the number of NA longitudes for each species before and after geolocation
-for (i in 1:length(u_vec)){
-  a <- which(geo_loc$speciesKey == u_vec[i]) 
-  y <- sum(!is.na(geo_loc[a, "latitude"]))
-  b <- which(post_geo$speciesKey == u_vec[i])
-  z <- sum(!is.na(post_geo[b, "latitude"]))
-  comp_df[i, 1] <- y
-  comp_df[i, 2] <- z
-}
-
-comp_df # it looks like every number increased by at least one. Several doubled or more in occurrence number
-#   Four species still have fewer than ten occurrences
-#   Five additional species have fewer than 32 occurrences
-#   All other species have 61 occurrences or more. Three of these species have over 1000 occurrences
-#   Highlighting some dramatic increases: 76 to 164; 9 to 201; 36 to 177; 105 to 259; 10 to 91; 62 to 250; 63 to 171
-summary(comp_df$post)
 
 # Now let's see how many of the coordinates we had before have changed.
-sum(geo_loc$latitude==post_geo$latitude) #NA  Wow--everything has changed...what does this mean?
+sum(geo_loc$latitude==post_geo$latitude) #NA  Wow--everything has changed...This 
+# means that some of our pre-existing coordinates that were uploaded into GeoLocate were changed.
+# We may need to change some back, but we also should be aware that some of those were
+# associated with certain issues that could have been coordinate-related. 
 
-# Now let's account for duplicates and repeat the above...
-rm_dup <- data.frame(pre = rep(NA, length(u_vec)), post = rep(NA, length(u_vec)))
+# Let's look at how the occurrence quantities changed per each species, but first 
+# remove all duplicate coordinates and replace pre-existing coordinates 
+# that lacked coordinate issues in the post_geo dataset
 
+# set up species comparison chart
+u_vec <- unique(post_geo$speciesKey)
+comp_df <- data.frame(pre = rep(NA, length(u_vec)), post = rep(NA, length(u_vec)))
+# find which coordinates existed in the input document
+pre_filled <- which(!is.na(geo_loc$latitude))
+# remove from this above vector the coordinates that had issues
+# problematic issues here would be "COORDINATE_ROUNDED" and "COORDINATE_MISMATCH")
+rounded <- grep(pattern = "COORDINATE_ROUNDED", x = gbif[pre_filled, "issue"])
+mismatch <- grep(pattern = "COORDINATE_MISMATCH", x = gbif[pre_filled, "issue"])
+problems <- union(rounded, mismatch)
+issueless <- pre_filled[-problems]
+# Now replace the "issueless rows with their pre-existing coordinates
+post_geo$latitude[issueless] <- geo_loc$latitude[issueless]
+post_geo$longitude[issueless] <- geo_loc$longitude[issueless]
+
+# and run a loop to count the number of occurrences with coordinates for each 
+# species both for the input and the output GeoLocatedatasets
 for (i in 1:length(u_vec)){
   a <- which(geo_loc$speciesKey == u_vec[i]) 
   y <- geo_loc[a, ]
@@ -251,106 +253,20 @@ for (i in 1:length(u_vec)){
   z <- filter(z, lat > 0, lon < 0)
   z <- z[!duplicated(round(z[,c("lat","lon")], 2)), ]
   x <- sum(!is.na(z$lat))
-  rm_dup[i, 1] <- w
-  rm_dup[i, 2] <- x
+  comp_df[i, 1] <- w
+  comp_df[i, 2] <- x
 }
 
-rm_dup # Like this, some NAs have increased and some have decreased... 
-#So in some cases, geoLocate made two distinct input coordinates the same in the output
-# Seven species have fewer than 10 occurrences after. None have over 1000 now.
-# Three additional species have 30 occurences or less.
-summary(rm_dup$post)
+comp_df
+summary(comp_df) # overall there is an increase in quantity of occurrences
+
+# now using the updated geo_loc dataset, tack on the other necessary DarwinCore 
+# columns and write a new dataset
 
 
-# Now how would the above change if we maintained the pre-existing coordinates as they were?
-pre_filled <- which(!is.na(geo_loc$latitude))
-# now make a post_geo2 where we can change the pre-filled coordinates back to the original.
-post_geo2 <- post_geo
-post_geo2$latitude[pre_filled] <- geo_loc$latitude[pre_filled]
-post_geo2$longitude[pre_filled] <- geo_loc$longitude[pre_filled]
-# and repeat the above loop
-
-PE_rm_dup <- data.frame(pre = rep(NA, length(u_vec)), post = rep(NA, length(u_vec)))
-
-for (i in 1:length(u_vec)){
-  a <- which(geo_loc$speciesKey == u_vec[i]) 
-  y <- geo_loc[a, ]
-  y$lat <- as.numeric(as.character(y$latitude))
-  y$lon <- as.numeric(as.character(y$longitude))
-  y <- filter(y, lat > 0, lon < 0)
-  y <- y[!duplicated(round(y[,c("lat","lon")], 2)), ]
-  w <- sum(!is.na(y$lat))
-  b <- which(post_geo2$speciesKey == u_vec[i])
-  z <- post_geo2[b, ]
-  z$lat <- as.numeric(as.character(z$latitude))
-  z$lon <- as.numeric(as.character(z$longitude))
-  z <- filter(z, lat > 0, lon < 0)
-  z <- z[!duplicated(round(z[,c("lat","lon")], 2)), ]
-  x <- sum(!is.na(z$lat))
-  PE_rm_dup[i, 1] <- w
-  PE_rm_dup[i, 2] <- x
-}
-
-PE_rm_dup # well this certainly increases the quantity of occurrences for all species, so maybe this is the best way to go
-#leave the pre-existing coordinates as is...unless there was an issue associated with them.
-
-summary(PE_rm_dup)
-
-# To compare the above easily all at once, we can attach them to each other and make a larger data frame
-cbind(comp_df, rm_dup, PE_rm_dup)
-
-# Let's look into potential issues in the pre-existing coordinates.. the two 
-# problematic issues here would be "COORDINATE_ROUNDED" and "COORDINATE_MISMATCH")
-rounded <- grep(pattern = "COORDINATE_ROUNDED", x = gbif[pre_filled, "issue"])
-mismatch <- grep(pattern = "COORDINATE_MISMATCH", x = gbif[pre_filled, "issue"])
-problems <- union(rounded, mismatch)
-length(problems) # 1355--quite a few to throw out...
-
-issueless <- pre_filled[-problems]
-
-# And compare to any issues present for all other observations  
-unique(gbif[-pre_filled, "issue"]) # So there are fewer issues to do with coordinates here...
-
-# What happens if we allow for those "problem" rows to be changed back to their 
-# coordinates, as found in GeoLocate?
-# Make a post_geo3
-post_geo3 <- post_geo2
-# And make the change
-post_geo3$latitude[issueless] <- post_geo$latitude[issueless]
-post_geo3$longitude[issueless] <- post_geo$longitude[issueless]
-# and repeat the above loop
-issueless_rm_dup <- data.frame(pre = rep(NA, length(u_vec)), post = rep(NA, length(u_vec)))
-
-for (i in 1:length(u_vec)){
-  a <- which(geo_loc$speciesKey == u_vec[i]) 
-  y <- geo_loc[a, ]
-  y$lat <- as.numeric(as.character(y$latitude))
-  y$lon <- as.numeric(as.character(y$longitude))
-  y <- filter(y, lat > 0, lon < 0)
-  y <- y[!duplicated(round(y[,c("lat","lon")], 2)), ]
-  w <- sum(!is.na(y$lat))
-  b <- which(post_geo3$speciesKey == u_vec[i])
-  z <- post_geo3[b, ]
-  z$lat <- as.numeric(as.character(z$latitude))
-  z$lon <- as.numeric(as.character(z$longitude))
-  z <- filter(z, lat > 0, lon < 0)
-  z <- z[!duplicated(round(z[,c("lat","lon")], 2)), ]
-  x <- sum(!is.na(z$lat))
-  issueless_rm_dup[i, 1] <- w
-  issueless_rm_dup[i, 2] <- x
-}
-
-issueless_rm_dup # No change from the previous alteration... so GeoLocate 
-# agreed with the coordinates that had "issues"
-
-summary(issueless_rm_dup)
-
-# Tack this one onto the others...
-cbind(comp_df, rm_dup, PE_rm_dup, issueless_rm_dup)
-# This results in absolutely no change.
-# Let's leave these as the final coordinates..for now: ***"post_geo3"***
 
 
+###### More exploration necessary regarding the following?
 # Other findings...
 # let's see how many are in the countries
 table(geo_loc$country) # 10,712 in the US, 602 in Mexico. The rest are other counties and NAs
