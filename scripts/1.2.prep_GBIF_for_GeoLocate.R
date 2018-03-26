@@ -15,8 +15,10 @@ library(data.table)
 
 gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_raw.csv', as.is=T)
 # for windows? but too big to not use server # more columns than column names
-# gbif <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_raw_DarwinCore_edit.csv', as.is=T)
+# gbif_full <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_raw_DarwinCore_edit.csv', as.is=T)
 nrow(gbif) #12195
+# rename and compress for ease of manipulation
+gbif <- gbif_full
 # remove extraneous columns
 gbif <- subset(gbif, select = c(basisOfRecord, institutionCode, genus, 
                                 scientificName, speciesKey, species, year, countryCode, 
@@ -150,6 +152,7 @@ gbif$locality <- gsub(pattern = " fk. ", x = gbif$locality, replacement = " fork
 gbif$locality <- gsub(pattern = " Mt. ", x = gbif$locality, replacement = " Mount ")
 gbif$locality <- gsub(pattern = " Pk. ", x = gbif$locality, replacement = " Peak ")
 
+
 # make a new data frame for use in geolocate
 # Note: it is very important that the first ten columns are as follows.
 # This format is how GeoLocate knows to read the data.
@@ -281,16 +284,19 @@ revised_post_geo <- rbind (revised_post_geo, z)
 
 length(revised_post_geo$latitude) #4855 occurrences total here
 
-
 # attempt a function to do the same?
-updateGL <- function(d.f, speciesKey){
+#updateGL <- function(d.f, speciesKey){
+#  
+#}
 
-}
-
-
+# tack on an observation number here
+gbif_full$obs_no <- seq(1, length(gbif$basis), 1)
 # Now using the updated revised_post_geo dataset and the observation numbers that 
-# correlate with the gbif rows, tack on the other necessary DarwinCore 
-# columns and write a new dataset
+# correlate with the gbif rows, tack on the other necessary DarwinCore columns 
+revised_post_geo <- merge(revised_post_geo, gbif_full, by = "obs_no")
+# and write a new dataset
+write.csv(geo_loc, file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_DC_post-georef_revised.csv',
+          row.names = F)
 
 
 
