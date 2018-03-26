@@ -1,14 +1,22 @@
+############ 2.1
+########### 3.22.18 Emily Beckman
+############# compile all occurrence point data into one standardized dataframe 
+
+############### INPUT: 
+############### OUTPUT: 
+
 
 ################
 ### LIBRARIES and FUNCTIONS
 ################
 
 library(dplyr)
+library(plyr)
 library(rgbif)
 library(ridigbio)
 library(data.table)
 library(tidyr)
-library(lubridate)
+library(stringr)
 
 ## Subset data and (optionally) write a CSV
 gen_subset <- function(orig_data, action, export_name){
@@ -34,96 +42,155 @@ rbind.all.columns <- function(x, y) {
       ## Example use of rbind.all.columns function:
           # Create a list of all dataframes you want to stack
           # 'Reduce' iterates through list and merges with previous dataframe in the list
-        # all_data <- Reduce(rbind.all.columns, file_dfs_list)
+          #all_data <- Reduce(rbind.all.columns, file_dfs_list)
 
 ################
-### 1. CREATE UNIFIED DATAFRAME OF ALL OCCURRENCE RECORDS FOR TARGET SPECIES
+### 1. Target Species List
 ################
 
-## a. Read in list of target species
-sp_list <- as.character(as.list(read.csv(file='./Google Drive/Distributions_TreeSpecies/target_species_list.csv'))$species)
+# read in list of target species
+sp_list <- read.csv(file='./Google Drive/Distributions_TreeSpecies/target_species_list.csv')
 # for windows?
 # sp_list <- as.character(as.list(read.csv(file='G:/My Drive/Distributions_TreeSpecies/target_species_list.csv'))$species)
 
+################
+### 2. Unify Already-Standardized Datasets
+################
 
-## b. Read in standardized occurrence point datasets (exactly the same column headers in each file)
-file_list <- list.files(path = "./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/standard_col", pattern = ".csv", full.names = T)
-# for windows?
-# file_list <- list.files(path = "G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/standard_col", pattern = ".csv", full.names = T)
+# read in standardized occurrence point datasets (exactly the same column headers in each file)
+file_list <- list.files(path = "./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/standard_col", 
+    pattern = ".csv", full.names = T)
+  # for windows?
+  # file_list <- list.files(path = "G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/standard_col", pattern = ".csv", full.names = T)
 file_dfs <- lapply(file_list, read.csv, header = TRUE, fileEncoding="latin1", strip.white = TRUE, colClasses = "character")
-  length(file_dfs)
+  length(file_dfs) #7
 
-## c. Stack standardized datasets to create one dataframe
+# stack standardized datasets to create one dataframe
 df <- data.frame()
 for(file in seq_along(file_dfs)){
   df <- rbind(df, file_dfs[[file]])
 }
   str(df); nrow(df) #94426 #93192 ELT
-df$species_no <- 0
+# rename columns to match Darwin Core Archive format
+setnames(df,
+  old=c("species","source","basis","lat", "long", "uncert_m", "state","status"),
+  new=c("species","institutionCode","basisOfRecord","decimalLatitude", "decimalLongitude", 
+    "coordinateUncertaintyInMeters", "stateProvince","occurrenceRemarks"))
+# add standard species ID columns
+df <- join(df, sp_list, by = "species", type="full"); str(df)
+# remove rows with no species name match (i.e. keep records for target species only)
+df <- df[!(is.na(df$speciesKey)),]
 
-## d. Read in raw occurrence point datasets, standardize column names, and create one dataframe
-gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_raw.csv', as.is=T)
-# for windows? but too big to not use server # more columns than column names
-# gbif <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_raw_DarwinCore_edit.csv', as.is=T)
-    nrow(gbif) #12195
-    # remove extraneous columns
-    gbif <- subset(gbif, select = c(basisOfRecord, institutionCode, genus, 
-                                      scientificName, species, year, countryCode, 
-                                      stateProvince, county, municipality, 
-                                      locality, verbatimLocality, occurrenceRemarks, 
-                                      associatedTaxa, decimalLatitude, decimalLongitude,
-                                      coordinateUncertaintyInMeters,
-                                      georeferenceSources, issue))
-  setnames(gbif,
-    old=c("decimalLatitude","decimalLongitude","basisOfRecord","institutionCode","coordinateUncertaintyInMeters", "countryCode", "stateProvince", "scientificName"),
-    new=c("lat","long","basis","source","uncert_m", "country", "state", "synonym"))
+################
+### 3. Standardize GBIF Data
+################
 
-        
-  
+# read in raw occurrence points
+gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_raw_DarwinCore_edit.csv', as.is=T)
+  # for windows? but too big to not use server # more columns than column names
+  # gbif <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_raw_DarwinCore_edit.csv', as.is=T)
+  nrow(gbif) #12195
+# remove extraneous columns
+gbif <- subset(gbif, select = c(order,family,genus,specificEpithet,infraspecificEpithet,scientificName,
+                                institutionCode,collectionCode,datasetName,basisOfRecord,catalogNumber,
+                                recordNumber,decimalLatitude,decimalLongitude,coordinateUncertaintyInMeters,
+                                georeferenceSources,year,individualCount,countryCode,stateProvince,county,
+                                municipality,locality,locationRemarks,occurrenceRemarks,habitat,fieldNotes,
+                                issue,species,speciesKey))
+# add and fill dataset name column
+gbif$dataset <- "gbif"
+# add standard species ID columns
+gbif <- join(gbif, sp_list, by = c("species","speciesKey"), type="full"); str(gbif)                              
+
+################
+### 4. Standardize Herbaria Consortium Data (SERNEC, SEINet, etc.)
+################
+
+# read in raw occurrence points  
 consortium <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/consortium_raw.csv', as.is=T)
-    # for windows
-    # consortium <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/consortium_raw.csv', as.is=T)
-    nrow(consortium) #98500
-  setnames(consortium,
-    old=c("scientificName","decimalLatitude","decimalLongitude","basisOfRecord","habitat","associatedTaxa","institutionCode","coordinateUncertaintyInMeters","stateProvince"),
-    new=c("species","lat","long","basis","locality1","locality2","source","uncert_m","state")) ### various locality info needs to be concatenated
-    consortium$dataset <- "consortium"
-    consortium$county <- NA
+  # for windows
+  # consortium <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/consortium_raw.csv', as.is=T)
+  nrow(consortium) #98500
+# remove extraneous columns
+consortium <- subset(consortium, select = c(order,family,genus,specificEpithet,infraspecificEpithet,
+                                              scientificName,scientificNameAuthorship,institutionCode,collectionCode,
+                                              basisOfRecord,catalogNumber,recordNumber,decimalLatitude,decimalLongitude,
+                                              geodeticDatum,coordinateUncertaintyInMeters,georeferenceSources,year,
+                                              individualCount,country,stateProvince,county,municipality,locality,
+                                              locationRemarks,occurrenceRemarks,habitat))
+# add and fill dataset name column
+consortium$dataset <- "herbaria" 
+consortium$incl_synonyms <- paste(consortium$scientificName)
+# add standard species ID columns
+consortium <- join(consortium, sp_list, by = "incl_synonyms", type="full"); str(consortium)
+# remove rows with no species name match (i.e. keep records for target species only)
+consortium <- consortium[!(is.na(consortium$species)),]
+
+################
+### 5. Standardize iDigBio Data
+################
+
+# read in raw occurrence points  
 idigbio <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/idigbio_raw.csv', as.is=T)
 # for windows?
 # idigbio <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/idigbio_raw.csv', as.is=T)
-    nrow(idigbio) #196485
-  idigbio <- setnames(idigbio,
-    old=c("dwc.genus","dwc.scientificName","idigbio.geoPoint","dwc.basisOfRecord","idigbio.eventDate","dwc.locality","dwc.institutionCode","dwc.coordinateUncertaintyInMeters","dwc.stateProvince","dwc.county"),
-    new=c("genus","species","lat-long","basis","year","locality","source","uncert_m","state","county"))
-    idigbio$dataset <- "idigbio"
-    # Separate single iDigBio lat/long column into lat and long
-  idigbio <- idigbio %>% separate("lat-long", c("lat", "long"), sep=",", fill="right", extra="merge")
-    unique(idigbio$lat)
+  nrow(idigbio) #196485
+# remove duplicate column
+idigbio <- subset(idigbio, select = -(dwc.eventDate))
+# remove the "dwc." and .idigbio preceeding each column name
+names(idigbio) = gsub(pattern = "dwc.", replacement = "", x = names(idigbio))
+names(idigbio) = gsub(pattern = "idigbio.", replacement = "", x = names(idigbio))
+names(idigbio)[names(idigbio) == 'isoCountryCode'] <- 'countryCode'
+  str(idigbio)
+# separate single iDigBio lat/long column into lat and long
+idigbio <- idigbio %>% separate("geoPoint", c("decimalLatitude", "decimalLongitude"), sep=",", fill="right", extra="merge")
+    #unique(idigbio$decimalLatitude)
     # reassign the empty latitude values to NA to avoid confusion
-    idigbio$lat[which(idigbio$lat==unique(idigbio$lat)[1] )] <- NA
-    unique(idigbio$lat) #better
+    idigbio$decimalLatitude[which(idigbio$decimalLatitude==unique(idigbio$decimalLatitude)[1] )] <- NA
+    #unique(idigbio$decimalLatitude) #better
     # remove the extra symbols and change the column to a numeric variable
-    # when using gsub, be sure to include fixed=T to avoid confusion of symbols like "
-    idigbio$lat <- as.numeric(gsub("{\"lat\": ","",idigbio$lat, fixed = T))
-    unique(idigbio$lat) #best
-    # repeat for longitude ("long" column)    
-    unique(idigbio$long)# NAs already in place
+      # when using gsub, be sure to include fixed=T to avoid confusion of symbols like "
+    idigbio$decimalLatitude <- as.numeric(gsub("{\"lat\": ","",idigbio$decimalLatitude, fixed = T))
+    #unique(idigbio$decimalLatitude) #best
+  # repeat for longitude ("long" column)    
+    #unique(idigbio$decimalLongitude)# NAs already in place
     # first remove the bracket at the end
-    idigbio$long <- gsub("}", "", idigbio$long)
-    unique(idigbio$long)
+    idigbio$decimalLongitude <- gsub("}", "", idigbio$decimalLongitude)
+    #unique(idigbio$decimalLongitude)
     # then remove the extra symbols and change to numeric
-    idigbio$long <- as.numeric(gsub(" \"lon\": ","",idigbio$long, fixed = T))
-    unique(idigbio$long)
-    # next change the "dwc.eventDate" column to year
-    unique(idigbio$year)
-    # First we have to remove the characters that are not the year, month or day
-    idigbio$year <- gsub("T00:00:00+00:00", "", idigbio$year, fixed = T)
-    # now use lubridate package
-    idigbio$year <- ymd(idigbio$year) # It automatically changes blank entries to NA
-    # now we just need to extract the year and save only that.
-    idigbio$year <- year(idigbio$year)
-    unique(idigbio$year) # looks good
+    idigbio$decimalLongitude <- as.numeric(gsub(" \"lon\": ","",idigbio$decimalLongitude, fixed = T))
+    #unique(idigbio$decimalLongitude)  
+# standardize the eventDate column
+    #unique(idigbio$eventDate)
+    # first we have to remove the characters that are not the year, month or day
+    idigbio <- idigbio %>% separate("eventDate", c("year", "delete"), sep="-", fill="right", extra="merge")
+    #unique(idigbio$year)
+    # remove unwanted "delete" column
+    idigbio <- subset(idigbio, select = -(delete))
+# remove extraneous columns
+idigbio <- subset(idigbio, select = c(order,family,genus,specificEpithet,infraspecificEpithet,
+                                      scientificName,institutionCode,collectionCode,basisOfRecord,
+                                      catalogNumber,recordNumber,decimalLatitude,decimalLongitude,
+                                      coordinateUncertaintyInMeters,year,individualCount,countryCode,
+                                      stateProvince,county,municipality,locality,dataQualityScore)) 
+# add and fill dataset name column
+idigbio$dataset <- "idigbio" 
+# capitalize first letter of genus
+idigbio$genus <- str_to_title(idigbio$genus, locale = "en")
+# create species column
+idigbio$species <- paste(idigbio$genus,idigbio$specificEpithet)
+# add standard species ID columns
+idigbio <- join(idigbio, sp_list, by = "species", type="full"); str(idigbio)
+# remove rows with no species name match (i.e. keep records for target species only)
+idigbio <- idigbio[!(is.na(idigbio$speciesKey)),]
+
+################
+### 6. Standardize FIA Data
+################
+
+fia <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/fia_tree_raw.csv', as.is=T)   # where species information is stored
+plot <- read.csv(file='./Google Drive/Distributions_TreeSpecies/translation_data_raw/fia_plot_raw.csv', as.is=T)   # where coordinates are stored
+ # for windows
 #fia <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/fia_tree_raw.csv', as.is=T)   # where species information is stored
 #plot <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/translation_data_raw/fia_plot_raw.csv', as.is=T)   # where coordinates are stored
     # remove unnecessary columns from plot
@@ -143,125 +210,109 @@ idigbio <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurr
     fia <- u_plot
     rm(plot, plot2, fia_coord, density_test, u, ID)
     # Match up SPCD using 
+    fia_sp <- read.csv(file='./Google Drive/Distributions_TreeSpecies/translation_data_raw/fia_species_raw.csv', as.is=T)    
+    # for windows
     #fia_sp <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/translation_data_raw/fia_species_raw.csv', as.is=T)    
     fia <- merge(fia, fia_sp, by = "SPCD", all = F)
     fia <- fia[, 1:16]
     # combine columns into single species name
-    fia$species <- paste(fia$GENUS, fia$SPECIES, fia$VARIETY, fia$SUBSPECIES)
+    fia$scientificName <- paste(fia$GENUS, fia$SPECIES, fia$VARIETY, fia$SUBSPECIES)
+    fia$species <- paste(fia$GENUS, fia$SPECIES)
     # remove unnecessary columns
-    fia <- subset(fia, select = -c(COMMON_NAME, GENUS, SPECIES, VARIETY, SUBSPECIES, SPECIES_SYMBOL, SPCD, ID))
+    #fia <- subset(fia, select = -c(COMMON_NAME, GENUS, SPECIES, VARIETY, SUBSPECIES, SPECIES_SYMBOL, ID))
     # Match up STATECD and COUNTYCD using
+    fia_cou <- read.csv(file='./Google Drive/Distributions_TreeSpecies/translation_data_raw/fia_county_raw.csv', as.is=T)    
+    # for windows
     #fia_cou <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/translation_data_raw/fia_county_raw.csv', as.is=T)    
     fia <- merge(fia, fia_cou, by = c("STATECD", "COUNTYCD"), all = F)
     # remove unnecessary columns
-    fia <- fia[, 1:12]
-    fia <- subset(fia, select = -c(STATECD, COUNTYCD, UNITCD.x, UNITCD.y, PLOT))
+      #fia <- fia[, 1:12]
+    fia <- subset(fia, select = c(SPCD,INVYR,LAT,LON,GENUS,SPECIES,scientificName,species,STATENM,COUNTYNM))
     # rename remaining columns to match other data sets
     setnames(fia,
-             old=c("LAT","LON", "INVYR", "STATENM", "COUNTYNM"),
-             new=c("lat","long", "year", "state", "county"))
-    fia$dataset <- "FIA"
-    fia$genus <- "Quercus"
-    fia$locality <- NA
-    fia$source <- "FIA" 
-    fia$basis <- "WILD_PROVENANCE"
-    fia$uncert_m <- NA
-keep_col <- c("dataset","genus","species","locality","lat","long","source","year","basis","uncert_m","state","county")
-datasets <- list(gbif, consortium, idigbio, fia)
-#datasets <- list(consortium, idigbio, fia)
+             old=c("LAT","LON", "INVYR", "STATENM", "COUNTYNM", "SPCD", "GENUS","SPECIES"),
+             new=c("decimalLatitude","decimalLongitude", "year", "stateProvince", "county", "fia_codes", "genus","specificEpithet"))
+    fia$dataset <- "fia"
+    fia$basisOfRecord <- "WILD_PROVENANCE"
+            #fia <- subset(fia, select = c(dataset,genus,species,decimalLatitude,decimalLongitude,
+            #                            year,basisOfRecord,stateProvince,county))
+# add standard species ID columns
+fia <- join(fia, sp_list, by = "fia_codes", type="full"); str(idigbio)
+# remove rows with no species name match (i.e. keep records for target species only)
+fia <- fia[!(is.na(fia$fia_codes)),]
 
-df2 <- data.frame()
-for (ds in datasets) {
-    ds <- ds %>% select(keep_col) 
-  df2 <- rbind(df2, ds) 
-}
+################
+### 7. Stack All Datasets
+################
 
-  df2$species_no <- 0
-  df2$gps_determ <- NA
-  df2$status <- NA
- 
-  
-   
-##  e. Stack datasets to create one large file
-occur_all <- rbind(df,df2)
-
-
-## f. make some changes across this dataset to prevent future errors
-occur_all$year[is.na(occur_all$year)]<-"1111"
+# Create a list of all dataframes you want to stack                            
+datasets <- list(df,gbif,consortium,idigbio,fia)
+# 'Reduce' iterates through list and merges with previous dataframe in the list
+all_data <- Reduce(rbind.all.columns, datasets)
+# make some changes across this dataset to prevent future errors
 replace <- c("UNKNOWN","\\<0\\>","N/A","NA","^$")
+occur_all$locality<-gsub(",",".",occur_all$locality)
+
+# remove rows with no lat and long
+occur_all <- all_data[!(is.na(all_data$decimalLatitude)),]
+occur_all <- all_data[!(is.na(all_data$decimalLongitude)),]
+# make some changes across this dataset to prevent future errors
+occur_all$year[is.na(occur_all$year)]<-"1111"
+replace <- c("UNKNOWN","\\<0\\>","N/A","NA","^$",is.na(i))
 for (i in replace){
   occur_all$year <- gsub(i,"1111",occur_all$year)
 }
 occur_all$year<-as.numeric(occur_all$year)
-occur_all$lat<-as.numeric(occur_all$lat)
-occur_all$long<-as.numeric(occur_all$long)
+occur_all$decimalLatitude<-as.numeric(occur_all$decimalLatitude)
+occur_all$decimalLongitude<-as.numeric(occur_all$decimalLongitude)
 occur_all$locality<-gsub(",",".",occur_all$locality)
 
 # IDK about this one...
-## g. Remove points with ---less than 2 digits after the decimal for lat and/or long---
-#occur_dec <- occur_all[grep("\\.[0-9][1-9]",occur_all$lat),]
-#nrow(occur_dec) #16678
-#occur_dec2 <- occur_all[grep("\\.[0-9][1-9]",occur_dec$long),]
-#nrow(occur_dec2) #14881
+# remove points with ---less than 2 digits after the decimal for lat and/or long---
+occur_dec <- occur_all[grep("\\.[0-9][1-9]",occur_all$decimalLatitude),]
+  nrow(occur_dec) #75696
+occur_dec2 <- occur_all[grep("\\.[0-9][1-9]",occur_dec$decimalLongitude),]
+  nrow(occur_dec2) #67379
 
-## h. Reorder dataset before subsetting in next script to place higher quality datasets and most recent records first
-occur_all <- occur_all[order(factor(occur_all$dataset,levels=c("other_pts","redlist",
-                                                                  "consortium","fia","ex_situ","gbif","andrew_hipp","natureserve","bonap","usda"))),]
-head(occur_all)
-occur_all <- occur_all[order(occur_all$year, na.last = FALSE, decreasing = T),]
-unique(occur_all$year)
+# reorder dataset before subsetting in next script to place higher quality datasets and most recent records first
+occur_all <- occur_all[order(factor(occur_all$dataset,levels=c("other","redlist","consortium","fia","ex_situ",
+                                                              "gbif","andrew_hipp","natureserve","bonap","usda"))),]
+  head(occur_all)
+occur_all <- occur_all[order(occur_all$year, na.last = TRUE, decreasing = T),]
+  unique(occur_all$year)
 
-##REPLACE
+# not used currently
 # all oaks? compile each occurrence set first better way?
 ## i. Subset based on target species list and write file
 #occur_sp <- gen_subset(occur_all, (occur_all$species %in% sp_list),"./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/standard_col/datasets_combined/occurrence_raw_compiled.csv")
 #  nrow(occur_sp) #11508
 
-## i. Write file
-write.csv(occur_all,file="./Distributions_TreeSpecies/in-use_occurrence_raw/standard_col/datasets_combined/occurence_raw_compiled_edit.csv")
+# write file
+write.csv(occur_all,file="./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/occurence_raw_compiled_test.csv")
+
 
 
 ##REMOVE/MOVE TO NEXT SCRIPT
+
 ################
-### 2. CREATE DATA SUBSETS ---- working ----
+### CREATE DATA SUBSETS ---- working ----
 ################
 
-## a. Read in occurrence point file -IF- you've added coordinates for species with locality info but no given lat/long
+# read in occurrence point file -IF- you've added coordinates for species with locality info but no given lat/long
 occur_all <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/standard_col/datasets_combined/occurrence_raw_compiled_edit.csv', as.is=T)
-
-## e. Replace unwanted values in specific columns and set to number type where necessary
-occur_all$species<-gsub("welshii","havardii",occur_all$species)
-  occur_all$species<-gsub("dunnii","palmeri",occur_all$species)
-occur_all$year[is.na(occur_all$year)]<-"1111"
-  replace <- c("UNKNOWN","\\<0\\>","N/A","NA","^$")
-  for (i in replace){
-    occur_all$year <- gsub(i,"1111",occur_all$year)
-  }
-  unique(occur_all$year)
-occur_all$year<-as.numeric(occur_all$year)
-  occur_all$lat<-as.numeric(occur_all$lat)
-  occur_all$long<-as.numeric(occur_all$long)
-occur_all$locality<-gsub(",",".",occur_all$locality)
-  str(occur_all)
-  
-## b. Remove points with ---less than 2 digits after the decimal for lat and/or long---
-occur_dec <- occur_sp[grep("\\.[0-9][1-9]",occur_sp$lat),]
-  nrow(occur_dec) #16678
-occur_dec2 <- occur_sp[grep("\\.[0-9][1-9]",occur_dec$long),]
-  nrow(occur_dec2) #14881
-
-## c. Remove points ---recorded before 1950--- (or whatever year cutoff you want)
+# remove points ---recorded before 1950--- (or whatever year cutoff you want)
 #occur_dec2_1950 <- subset(occur_dec2,year>=1950)
-#  nrow(occur_dec2_1950) #6265
-# unique(occur_dec2_1950$year)
+#nrow(occur_dec2_1950) #6265
+#unique(occur_dec2_1950$year)
 
-## d. Reorder dataset before duplicate deletion to place higher quality datasets and most recent records first
-occur_dec2 <- occur_dec2[order(factor(occur_dec2$DATASET,levels=c("other_pts","redlist",
-  "consortium","fia","ex_situ","gbif","andrew_hipp","natureserve","bonap","usda"))),]
-  head(occur_dec2)
-occur_dec2 <- occur_dec2[order(-occur_dec2$year, na.last = FALSE),]
-  unique(occur_dec2$year)
-  str(occur_dec2)
+# we already did this above
+# reorder dataset before duplicate deletion to place higher quality datasets and most recent records first
+#occur_dec2 <- occur_dec2[order(factor(occur_dec2$DATASET,levels=c("other","redlist",
+#  "consortium","fia","ex_situ","gbif","andrew_hipp","natureserve","bonap","usda"))),]
+#  head(occur_dec2)
+#occur_dec2 <- occur_dec2[order(-occur_dec2$year, na.last = FALSE),]
+#  unique(occur_dec2$year)
+#  str(occur_dec2)
 
 ## e. Remove ---spatial duplicates--- based on species name and lat/long rounded to 2 digits after the decimal
 occur_dec2_unq<-count.dups(occur_dec2)%>%distinct(SPECIES,lat_round,long_round,.keep_all=TRUE)
