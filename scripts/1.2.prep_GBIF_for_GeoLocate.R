@@ -261,6 +261,44 @@ rm_dup # Like this, some NAs have increased and some have decreased...
 summary(rm_dup$post)
 
 
+# Now how would the above change if we maintained the pre-existing coordinates as they were?
+pre_filled <- which(!is.na(geo_loc$latitude))
+# now make a post_geo2 where we can change the pre-filled coordinates back to the original.
+post_geo2 <- post_geo
+post_geo2$latitude[pre_filled] <- geo_loc$latitude[pre_filled]
+post_geo2$longitude[pre_filled] <- geo_loc$longitude[pre_filled]
+# and repeat the above loop
+
+PE_rm_dup <- data.frame(pre = rep(NA, length(u_vec)), post = rep(NA, length(u_vec)))
+
+for (i in 1:length(u_vec)){
+  a <- which(geo_loc$speciesKey == u_vec[i]) 
+  y <- geo_loc[a, ]
+  y$lat <- as.numeric(as.character(y$latitude))
+  y$lon <- as.numeric(as.character(y$longitude))
+  y <- filter(y, lat > 0, lon < 0)
+  y <- y[!duplicated(round(y[,c("lat","lon")], 2)), ]
+  w <- sum(!is.na(y$lat))
+  b <- which(post_geo2$speciesKey == u_vec[i])
+  z <- post_geo2[b, ]
+  z$lat <- as.numeric(as.character(z$latitude))
+  z$lon <- as.numeric(as.character(z$longitude))
+  z <- filter(z, lat > 0, lon < 0)
+  z <- z[!duplicated(round(z[,c("lat","lon")], 2)), ]
+  x <- sum(!is.na(z$lat))
+  PE_rm_dup[i, 1] <- w
+  PE_rm_dup[i, 2] <- x
+}
+
+PE_rm_dup # well this certainly increases the quantity of occurrences for all species, so maybe this is the best way to go
+#leave the pre-existing coordinates as is...unless there was an issue associated with them.
+
+summary(PE_rm_dup)
+
+# To compare the above easily all at once, we can attach them to each other and make a larger data frame
+
+  
+  
 
 # Now let's see how many of the coordinates we had before have changed.
 sum(geo_loc$latitude==post_geo$latitude) #NA  Wow--everything has changed...what does this mean?
