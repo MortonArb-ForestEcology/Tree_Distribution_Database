@@ -72,32 +72,25 @@ gbif$locality[!is.na(gbif$locality[is.na(gbif$state)])]
 
 # COUNTY
 sum(is.na(gbif$county)) # 2587
-# make a vector of the rows for which counties are NA
-gbif_c_na <- which(is.na(gbif$county))
-# find which rows have a locality clue of "County or county"
-# considered also using, "Co. or co.", but it also picked up words beginning with co...
-rows <- grep(pattern = "County", x = gbif$locality) 
-# find out which row numbers overlap, meaning that both the county entry is 
-# NA and the locality indicates a particular county
-overlap <- intersect(gbif_c_na, rows)
-# now to extract the county
-find_cou <- separate(gbif[overlap, ], locality, into = "loca", sep = "County", remove = F)
-gbif$county[overlap]  <- find_cou$loca
-sum(is.na(gbif$county)) # 2256
-# do the same for "county" lowercase
-gbif_c_na <- which(is.na(gbif$county))
-rows <- grep(pattern = "county", x = gbif$locality) 
-overlap <- intersect(gbif_c_na, rows)
-find_cou <- separate(gbif[overlap, ], locality, into = "loca", sep = "county", remove = F)
-gbif$county[overlap]  <- find_cou$loca
-sum(is.na(gbif$county)) # 2252
-# and repeat for "Co." capitalized
-gbif_c_na <- which(is.na(gbif$county))
-rows <- grep(pattern = "Co.", x = gbif$locality) 
-overlap <- intersect(gbif_c_na, rows)
-find_cou <- separate(gbif[overlap, ], locality, into = "loca", sep = "Co.", remove = F)
-gbif$county[overlap]  <- find_cou$loca
+
+extract_county <- function(d.f, loc){
+  gbif_c_na <- which(is.na(d.f$county))
+  rows <- grep(pattern = loc, x = d.f$locality) 
+  overlap <- intersect(gbif_c_na, rows)
+  # the difference between this function and extract_state is that the entire locality
+  # string before the key word is written into the county column here.
+  find_cou <- separate(d.f[overlap, ], locality, into = "loca", sep = "County", remove = F)
+  d.f$county[overlap]  <- find_cou$loca
+  return(d.f$county)
+}
+
+gbif$county <- extract_county(gbif, "County")
+sum(is.na(gbif$county)) # 
+gbif$county <- extract_county(gbif, "county")
+sum(is.na(gbif$county)) # 
+gbif$county <- extract_county(gbif, "Co.")
 sum(is.na(gbif$county)) # 2135
+
 # Next, if the county is NA, but the municipality is not, then we can rewrite municipality into the county column
 gbif_c_na <- which(is.na(gbif$county))
 mun <- which(!is.na(gbif$municipality))
