@@ -279,7 +279,7 @@ b <- which(post_geo$speciesKey == u_vec[i])
 z <- post_geo[b, ]
 z <- filter(z, latitude > 0, longitude < 0)
 z <- z[!duplicated(round(z[,c("latitude","longitude")], 2)), ]
-revised_post_geo <- rbind (revised_post_geo, z)
+revised_post_geo <- rbind(revised_post_geo, z)
 }
 
 length(revised_post_geo$latitude) #4855 occurrences total here
@@ -293,12 +293,18 @@ length(revised_post_geo$latitude) #4855 occurrences total here
 gbif_full$obs_no <- seq(1, length(gbif$basis), 1)
 # Now using the updated revised_post_geo dataset and the observation numbers that 
 # correlate with the gbif rows, tack on the other necessary DarwinCore columns 
-revised_post_geo <- merge(revised_post_geo, gbif_full, by = "obs_no")
+revised_post_geo <- merge(revised_post_geo, gbif_full, by = "obs_no", suffixes = c(".remove", ""))
+#to_change <- names(revised_post_geo)
+#to_change[grep(".remove", to_change)]
+#sum(revised_post_geo$county.remove!=revised_post_geo$county)
+#sum(revised_post_geo$year.remove!=revised_post_geo$county)
+#sum(revised_post_geo$speciesKey.remove!=revised_post_geo$county)
+# All the duplicate columns have the same information, so we can remove the duplicate columns
+revised_post_geo <- subset(x = revised_post_geo, select = -c(county.remove, year.remove, speciesKey.remove))
+
 # and write a new dataset
-write.csv(geo_loc, file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_DC_post-georef_revised.csv',
+write.csv(revised_post_geo, file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_DC_post-georef_revised.csv',
           row.names = F)
-
-
 
 
 ###### More exploration necessary regarding the following?
