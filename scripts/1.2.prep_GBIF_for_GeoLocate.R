@@ -220,13 +220,17 @@ sum(geo_loc$latitude==post_geo$latitude) #NA  Wow--everything has changed...This
 # We may need to change some back, but we also should be aware that some of those were
 # associated with certain issues that could have been coordinate-related. 
 
+# let's give all of these non-NA coordinates an L for localized in new column "gps_determ"
+post_geo$gps_determ <- NA
+post_geo$gps_determ[!is.na(post_geo$latitude)] <- "L"
+
 # Let's look at how the occurrence quantities changed per each species, but first 
 # remove all duplicate coordinates and replace pre-existing coordinates 
 # that lacked coordinate issues in the post_geo dataset
 
 # set up species comparison chart
-u_vec <- unique(post_geo$speciesKey)
-comp_df <- data.frame(pre = rep(NA, length(u_vec)), post = rep(NA, length(u_vec)))
+#u_vec <- unique(post_geo$speciesKey)
+#comp_df <- data.frame(pre = rep(NA, length(u_vec)), post = rep(NA, length(u_vec)))
 # find which coordinates existed in the input document
 pre_filled <- which(!is.na(geo_loc$latitude))
 # Recognize that pre_existing coordinates were probably more precise than the 
@@ -241,6 +245,22 @@ issueless <- pre_filled[-problems]
 # Now replace the "issueless rows with their pre-existing coordinates
 post_geo$latitude[issueless] <- geo_loc$latitude[issueless]
 post_geo$longitude[issueless] <- geo_loc$longitude[issueless]
+# Now label these replaced values with a G for given in "gps_determ"
+post_geo$gps_determ[issueless] <- "G"
+
+# At this point, some of the NA coordinates may correspond to occurrences with only state and county locality.
+# Label these points as C for county in "gps_determ"
+check_sc <- post_geo[which(is.na(post_geo$gps_determ)), c("state", "county")]
+length(check_sc$state)
+sum(!is.na(check_sc))
+
+a <- which(!is.na(check_sc$state))
+b <- which(!is.na(check_sc$county))
+keep_these <- intersect(a,b)
+## how to work this out?
+check_sc[keep_these,]
+
+post_geo[check_sc[keep_these, ]]
 
 # and run a loop to count the number of occurrences with coordinates for each 
 # species both for the input and the output GeoLocatedatasets
@@ -266,23 +286,24 @@ post_geo$longitude[issueless] <- geo_loc$longitude[issueless]
 #comp_df
 #summary(comp_df) # overall there is an increase in quantity of occurrences
 
+# No need to remove duplicates for now.
 # The post_geo dataset must be run through the above changes, one species at a 
 # time because duplicate coordinates for different species counts as two distinct occurrences.
-post_geo$latitude <- as.numeric(as.character(post_geo$latitude))
-post_geo$longitude <- as.numeric(as.character(post_geo$longitude))
+#post_geo$latitude <- as.numeric(as.character(post_geo$latitude))
+#post_geo$longitude <- as.numeric(as.character(post_geo$longitude))
 
 # we will make a new dataset with a new name  
-revised_post_geo <- data.frame()
+#revised_post_geo <- data.frame()
 # run the loop
-for (i in 1:length(u_vec)){
-b <- which(post_geo$speciesKey == u_vec[i])
-z <- post_geo[b, ]
-z <- filter(z, latitude > 0, longitude < 0)
-z <- z[!duplicated(round(z[,c("latitude","longitude")], 2)), ]
-revised_post_geo <- rbind(revised_post_geo, z)
-}
+#for (i in 1:length(u_vec)){
+#b <- which(post_geo$speciesKey == u_vec[i])
+#z <- post_geo[b, ]
+#z <- filter(z, latitude > 0, longitude < 0)
+#z <- z[!duplicated(round(z[,c("latitude","longitude")], 2)), ]
+#revised_post_geo <- rbind(revised_post_geo, z)
+#}
 
-length(revised_post_geo$latitude) #4855 occurrences total here
+#length(revised_post_geo$latitude) #4855 occurrences total here
 
 # attempt a function to do the same?
 #updateGL <- function(d.f, speciesKey){
@@ -293,17 +314,15 @@ length(revised_post_geo$latitude) #4855 occurrences total here
 gbif_full$obs_no <- seq(1, length(gbif$basis), 1)
 # Now using the updated revised_post_geo dataset and the observation numbers that 
 # correlate with the gbif rows, tack on the other necessary DarwinCore columns 
-revised_post_geo <- merge(revised_post_geo, gbif_full, by = "obs_no", suffixes = c(".remove", ""))
-#to_change <- names(revised_post_geo)
-#to_change[grep(".remove", to_change)]
-#which((revised_post_geo$county.remove!=revised_post_geo$county)==T)
-#which((revised_post_geo$year.remove!=revised_post_geo$year)==T)
-#which((revised_post_geo$speciesKey.remove!=revised_post_geo$speciesKey)==T)
-# All the duplicate columns have the same information, so we can remove the duplicate columns
-revised_post_geo <- subset(x = revised_post_geo, select = -c(county.remove, year.remove, speciesKey.remove))
+post_geo <- merge(post_geo, gbif_full, by = "obs_no", suffixes = c(".remove", ""))
+post_geo$county <- post_geo$county.remove
+
+# Lastly we will reorder the occurrences here according to their precision, as determined by GeoLocate
+# We will sort "high" precision first, then "medium" then "low" and lastly "NA" or "(blank)"
+
 
 # and write a new dataset
-write.csv(revised_post_geo, file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_DC_post-georef_revised.csv',
+write.csv(post_geo, file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_DC_post-georef_revised.csv',
           row.names = F)
 
 
