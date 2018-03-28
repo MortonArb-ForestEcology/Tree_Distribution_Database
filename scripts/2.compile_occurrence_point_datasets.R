@@ -86,10 +86,21 @@ df <- df[!(is.na(df$speciesKey)),]
 ################
 
 # read in raw occurrence points
-gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_raw_DarwinCore_edit.csv', as.is=T)
+gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_DC_post-georef_revised.csv', as.is=T)
   # for windows? but too big to not use server # more columns than column names
-  # gbif <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_raw_DarwinCore_edit.csv', as.is=T)
-  nrow(gbif) #12195
+  # gbif <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_DC_post-georef_revised.csv', as.is=T)
+  nrow(gbif) #4855
+  # ensure that all the information from geolocate has been translated to the DarwinCore columns
+  names(gbif)[1:13]
+  #which((gbif$locality_string!=gbif$locality)==T)
+  gbif$locality <- gbif$locality_string
+  #which((gbif$country!=gbif$countryCode)==T)
+  #which((gbif$state!=gbif$stateProvince)==T)
+  #which((gbif$latitude!=gbif$decimalLatitude)==T)
+  gbif$decimalLatitude <- gbif$latitude
+  #which((gbif$longitude!=gbif$decimalLongitude)==T)
+  gbif$decimalLongitude <- gbif$longitude
+  
 # remove extraneous columns
 gbif <- subset(gbif, select = c(order,family,genus,specificEpithet,infraspecificEpithet,scientificName,
                                 institutionCode,collectionCode,datasetName,basisOfRecord,catalogNumber,
