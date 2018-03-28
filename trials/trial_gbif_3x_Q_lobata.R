@@ -67,5 +67,6 @@ points(revised_geo$longitude, revised_geo$latitude, col = "indianred3", pch = 20
 title(main = "Quercus lobata revised-GL")
 
 # The revised data looks to be an average of the pre and post geolocation process
+# Using the revised coordinates seems to make the most sense.
 
 
