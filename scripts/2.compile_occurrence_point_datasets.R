@@ -51,7 +51,7 @@ rbind.all.columns <- function(x, y) {
 # read in list of target species
 sp_list <- read.csv(file='./Google Drive/Distributions_TreeSpecies/target_species_list.csv')
 # for windows?
-# sp_list <- as.character(as.list(read.csv(file='G:/My Drive/Distributions_TreeSpecies/target_species_list.csv'))$species)
+#sp_list <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/target_species_list.csv', header = T)
 
 ################
 ### 2. Unify Already-Standardized Datasets
@@ -70,7 +70,7 @@ df <- data.frame()
 for(file in seq_along(file_dfs)){
   df <- rbind(df, file_dfs[[file]])
 }
-  str(df); nrow(df) #94426 #93192 ELT
+  str(df); nrow(df) #93192
 # rename columns to match Darwin Core Archive format
 setnames(df,
   old=c("species","source","basis","lat", "long", "uncert_m", "state","status"),
@@ -91,14 +91,9 @@ gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrenc
   # gbif <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_DC_post-georef_revised.csv', as.is=T)
   nrow(gbif) #4855
   # ensure that all the information from geolocate has been translated to the DarwinCore columns
-  names(gbif)[1:13]
-  #which((gbif$locality_string!=gbif$locality)==T)
   gbif$locality <- gbif$locality_string
-  #which((gbif$country!=gbif$countryCode)==T)
-  #which((gbif$state!=gbif$stateProvince)==T)
-  #which((gbif$latitude!=gbif$decimalLatitude)==T)
+  gbif$stateProvince <- gbif$state
   gbif$decimalLatitude <- gbif$latitude
-  #which((gbif$longitude!=gbif$decimalLongitude)==T)
   gbif$decimalLongitude <- gbif$longitude
   
 # remove extraneous columns
@@ -110,6 +105,7 @@ gbif <- subset(gbif, select = c(order,family,genus,specificEpithet,infraspecific
                                 issue,species,speciesKey))
 # add and fill dataset name column
 gbif$dataset <- "gbif"
+
 # add standard species ID columns
 gbif <- join(gbif, sp_list, by = c("species","speciesKey"), type="full"); str(gbif)                              
 
