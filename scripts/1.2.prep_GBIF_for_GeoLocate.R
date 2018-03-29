@@ -251,16 +251,19 @@ post_geo$gps_determ[issueless] <- "G"
 # At this point, some of the NA coordinates may correspond to occurrences with only state and county locality.
 # Label these points as C for county in "gps_determ"
 check_sc <- post_geo[which(is.na(post_geo$gps_determ)), c("state", "county")]
-length(check_sc$state)
-sum(!is.na(check_sc))
-
+#length(check_sc$state)
+#sum(!is.na(check_sc))
 a <- which(!is.na(check_sc$state))
 b <- which(!is.na(check_sc$county))
 keep_these <- intersect(a,b)
-## how to work this out?
-check_sc[keep_these,]
+## now rewrite check_sc to feature numbers
+check_sc <- which(is.na(post_geo$gps_determ))
+# and write in the c for county
+post_geo[check_sc[keep_these], "gps_determ"] <- "C"
 
-post_geo[check_sc[keep_these, ]]
+# now remove all occurrences that still have NA in gps_determ
+keep_these <- which(!is.na(post_geo$gps_determ))
+post_geo <- post_geo[keep_these, ]
 
 # and run a loop to count the number of occurrences with coordinates for each 
 # species both for the input and the output GeoLocatedatasets
@@ -305,21 +308,29 @@ post_geo[check_sc[keep_these, ]]
 
 #length(revised_post_geo$latitude) #4855 occurrences total here
 
-# attempt a function to do the same?
-#updateGL <- function(d.f, speciesKey){
-#  
-#}
-
 # tack on an observation number here
 gbif_full$obs_no <- seq(1, length(gbif$basis), 1)
 # Now using the updated revised_post_geo dataset and the observation numbers that 
 # correlate with the gbif rows, tack on the other necessary DarwinCore columns 
 post_geo <- merge(post_geo, gbif_full, by = "obs_no", suffixes = c(".remove", ""))
 post_geo$county <- post_geo$county.remove
+post_geo$locality <- post_geo$locality_string
+post_geo$stateProvince <- post_geo$state
+post_geo$decimalLatitude <- post_geo$latitude
+post_geo$decimalLongitude <- post_geo$longitude
 
-# Lastly we will reorder the occurrences here according to their precision, as determined by GeoLocate
-# We will sort "high" precision first, then "medium" then "low" and lastly "NA" or "(blank)"
+# Lastly we will reorder the occurrences here according to their year and precision, as determined by GeoLocate
+# By year
+post_geo <- post_geo[order(post_geo$year, decreasing = T), ]
 
+# Then we will sort "high" precision first, and then "medium" then "low" and lastly "NA" or "(blank)"
+high <- as.numeric(grep(post_geo$precision, pattern = "High"))
+medium1 <- as.numeric(grep(post_geo$precision, pattern = "Medium"))
+medium2 <- as.numeric(grep(post_geo$precision, pattern = "medium"))
+low <- as.numeric(grep(post_geo$precision, pattern = "Low"))
+blank <- as.numeric(which(post_geo$precision==""))
+precise_order <- c(high, medium1, medium2, low, blank)
+post_geo <- post_geo[precise_order, ]
 
 # and write a new dataset
 write.csv(post_geo, file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_DC_post-georef_revised.csv',
