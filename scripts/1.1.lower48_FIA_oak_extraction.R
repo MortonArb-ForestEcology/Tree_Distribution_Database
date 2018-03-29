@@ -10,6 +10,7 @@
 
 
 # working directory cannot be changed on the server, so simply specify the route whenever uploading a CSV file
+source("scripts/set_workingdirectory.R")
 #setwd("C:/Users/Elizabeth/Desktop/2017_CTS_fellowship/FIA_unzipped_postgres_data/FIADB_PG/CSV_DATA")
 
 ######################################################################################
@@ -65,6 +66,7 @@ write.csv(x = trial, file = "FIA_tree_raw.csv")
 # this one will take time to read in
 # treeAL <- read.csv("AL_TREE.csv")
 treeAL <- read.csv("../data/CSV_DATA/AL_TREE.csv")
+treeAL <- read.csv(file.path(data_in, "CSV_DATA/AL_TREE.csv"))#"../data/CSV_DATA/AL_TREE.csv")
 # first we want to ensure that all the trees in this sample are live
 treeAL <- treeAL[treeAL$STATUSCD == 1, ]
 # and make a new Oak data frame
