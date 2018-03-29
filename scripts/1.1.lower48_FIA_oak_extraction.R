@@ -10,6 +10,7 @@
 
 
 # working directory cannot be changed on the server, so simply specify the route whenever uploading a CSV file
+source("scripts/set_workingdirectory.R")
 #setwd("C:/Users/Elizabeth/Desktop/2017_CTS_fellowship/FIA_unzipped_postgres_data/FIADB_PG/CSV_DATA")
 
 ######################################################################################
