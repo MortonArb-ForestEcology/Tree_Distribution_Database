@@ -89,17 +89,13 @@ df <- df[!(is.na(df$speciesKey)),]
 gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_DC_post-georef_revised.csv', as.is=T)
   # for windows? but too big to not use server # more columns than column names
   # gbif <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_DC_post-georef_revised.csv', as.is=T)
-  nrow(gbif) #4855
-  # ensure that all the information from geolocate has been translated to the DarwinCore columns
-  gbif$locality <- gbif$locality_string
-  gbif$stateProvince <- gbif$state
-  gbif$decimalLatitude <- gbif$latitude
-  gbif$decimalLongitude <- gbif$longitude
+  nrow(gbif) #11089
+  # Do anything to the 
   
 # remove extraneous columns
 gbif <- subset(gbif, select = c(order,family,genus,specificEpithet,infraspecificEpithet,scientificName,
                                 institutionCode,collectionCode,datasetName,basisOfRecord,catalogNumber,
-                                recordNumber,decimalLatitude,decimalLongitude,coordinateUncertaintyInMeters,
+                                recordNumber,decimalLatitude,decimalLongitude,gps_determ,coordinateUncertaintyInMeters,
                                 georeferenceSources,year,individualCount,countryCode,stateProvince,county,
                                 municipality,locality,locationRemarks,occurrenceRemarks,habitat,fieldNotes,
                                 issue,species,speciesKey))
@@ -107,8 +103,10 @@ gbif <- subset(gbif, select = c(order,family,genus,specificEpithet,infraspecific
 gbif$dataset <- "gbif"
 
 # add standard species ID columns
-gbif <- join(gbif, sp_list, by = c("species","speciesKey"), type="full"); str(gbif)                              
+gbif_trial <- join(gbif, sp_list, by = c("species","speciesKey"), type="full"); str(gbif)                              
 
+write.csv(gbif_trial, file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_DC_post-trial.csv',
+          row.names = F)
 ################
 ### 4. Standardize Herbaria Consortium Data (SERNEC, SEINet, etc.)
 ################
