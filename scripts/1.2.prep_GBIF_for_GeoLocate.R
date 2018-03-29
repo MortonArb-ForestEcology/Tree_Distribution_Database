@@ -346,11 +346,3 @@ table(post_geo3$country) # okay it remains the same # Consider removing non-US p
 # how many have multiple results?
 sum(post_geo3$multiple_results=="") # all except 2052
 
-# So what does the precision column tell us anyway? Couldn't find anything clear on internet
-unique(post_geo3$precision)
-# not sure, but let's see how many are "high", "low" and "medium"
-length(grep("Low", post_geo3$precision))  # 4734
-length(grep("Medium", post_geo3$precision))  # 2210
-length(grep("High", post_geo3$precision))  # 3181
-
-
