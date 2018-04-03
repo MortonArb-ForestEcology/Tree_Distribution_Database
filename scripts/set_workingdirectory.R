@@ -10,11 +10,13 @@
 ## first is for Elizabeth Tokarz
   if (Sys.info()[4] == "MIA_ATLANTICA") { 
   	## if you want to set the absolute path within your computer, use the following command:
-     setwd("/some/filepath/set/by/elizabeth/pointing/to/her/directory"); print(getwd())
-  	
+     setwd("G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw"); print(getwd())
+    
   	## if you want to set other directories, such as file output folders and such, then you can add them here:
   			## for instance, the output folder (defined by object 'f_out') would be set as 'SDM_output' and this would then typically be 
   					## a subfolder to the main working directory
+      one_up <- "G:/My Drive/Distributions_TreeSpecies"
+      translate_fia <- "G:/My Drive/Distributions_TreeSpecies/fia_translation_data_raw"
       f_out <- "SDM_output"
       
       data_in <- "/main/data/directory/or/folder"
@@ -30,6 +32,8 @@
   	## if you want to set other directories, such as file output folders and such, then you can add them here:
   			## for instance, the output folder (defined by object 'f_out') would be set as 'SDM_output' and this would then typically be 
   					## a subfolder to the main working directory
+      one_up <- 
+      translate_fia <- 
       f_out <- "SDM_output"
       data_in <- "/Users/sstill/Box/Research/Active_Projects/MortonArb_SDM"
 
@@ -43,7 +47,9 @@
   	## if you want to set other directories, such as file output folders and such, then you can add them here:
   			## for instance, the output folder (defined by object 'f_out') would be set as 'SDM_output' and this would then typically be 
   					## a subfolder to the main working directory
-      f_out <- "SDM_output"
+		  one_up <- 
+		  translate_fia <- 
+		  f_out <- "SDM_output"
       data_in <- "/main/data/directory/or/folder"
 
       ## this last command simply prints to the console the working directory that you have set. It's just to let you know that you're in the right spot.
