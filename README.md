@@ -161,3 +161,6 @@ Purpose: Plot the FIA occurrence data for each of the species included and zoom 
 
 ## trial_Q_similis
 Purpose: Compares FIA an GBIF occurrence points where FIA data comes from most recent survey data across the lower 48 and the GBIF data comes from a hand-checked sample where occurences were run through GEOLocate to obtain more coordinates.
+
+## trial_gbif_3x_Q_lobata.R
+Purpose: Map GBIF occurrences of Quercus lobata, comparing points from different combinations of geolocated and given coordinates. The maps created here showed me that the solely GeoLocated points were more condensed, the solely given points were more dispersed and a combination of them represented a decent middling range.
