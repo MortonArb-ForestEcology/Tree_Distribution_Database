@@ -3,8 +3,10 @@ Repository for curating occurrence and predictor data of tree distributions
 
 All scripts are located in folder "scripts"
 Examples and attempts to use similar scripts with data that have not been refined are in folder "trials"
+The "sagebrush" folder contains scripts used in Shannon's sagebrush distribution modeling project, which can serve as an example for our project.
+We will describe the scripts folder first because it is most relevant.
 
-# scripts folder
+# 2. scripts folder
 Within folder "scripts", files have been numbered in the order they are to be used in the workflow.
 
  Occurrence data for our oak species of interest has been downloaded prior to its use in our scripts. 
@@ -125,12 +127,43 @@ Within folder "scripts", files have been numbered in the order they are to be us
   
   Functions: extract_PRISM (This single function will extract the appropriate climatic 
   statistics from each layer of interest and append it to the existing data frame)
+  
+## Compile_occurrencePt_datasets.R
+   Purpose: outdated version of step 2?
 
+## extract_ITRDB.R
+   Purpose: loop example from Shannon, consider removing to sagebrush folder
+  
+## set_workingdirectory.R
+   Purpose: a file to tell the computer which file address to use in each of our workflow scripts 
+   based on the system of the computer that is running during this script. This file still needs to 
+   be filled in for each user's system and the change in file address needs to be implemented across
+   the rest of the workflow scripts.
 
-# trials folder
+# 1. sagebrush folder
+Within folder "sagebrush", files are numbered in order of workflow
+
+Data used in these trials varies with the file, but should come from Shannon's OakCons/data folder on box: https://app.box.com/folder/46543046640
+
+# Files
+## 1sage_set_sdm_model_run.R
+## 2sage_load_climate_data.R
+## 3sage_functions.R
+## 4sage_set_parameters.R
+## 5sage_load_occurrance_data.R
+## 6sage_prep_predictor_variables_and_run.R
+## 7sage_load_proj_climate_data.R
+## ITRDB_extract_workflow.R
+## clim_codes.xlsx
+## model_sets.xlsx
+## sagebrush_sdm_models_MC.R
+## sagebrush_sdm_prj_MC.R
+## variable_sets_sage.xlsx
+
+# 3. trials folder
 Within folder "trials", files are usually not related, so are not meant to be run in any particular order
 
-Data used in these trials varies with the file, bust should come from the Google Drive
+Data used in these trials varies with the file, but should come from the Google Drive
 # Files   
 ## FIA_extraction_loop_example
 Purpose: Early version of making a loop to extract FIA occurrence data state by state
@@ -140,3 +173,6 @@ Purpose: Plot the FIA occurrence data for each of the species included and zoom 
 
 ## trial_Q_similis
 Purpose: Compares FIA an GBIF occurrence points where FIA data comes from most recent survey data across the lower 48 and the GBIF data comes from a hand-checked sample where occurences were run through GEOLocate to obtain more coordinates.
+
+## trial_gbif_3x_Q_lobata.R
+Purpose: Map GBIF occurrences of Quercus lobata, comparing points from different combinations of geolocated and given coordinates. The maps created here showed me that the solely GeoLocated points were more condensed, the solely given points were more dispersed and a combination of them represented a decent middling range.
