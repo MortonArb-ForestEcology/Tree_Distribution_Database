@@ -4,18 +4,29 @@
 ###### Find app here:  http://www.museum.tulane.edu/geolocate/web/WebGeoref.aspx 
 ## Load data like this: http://www.museum.tulane.edu/geolocate/standalone/tutorial.html 
 
+## Be sure to run "set_workingdirectory.R" before running this script
+
+# Round 1 Pre-GeoLocate
 ############### INPUT: gbif_DarwinCore_edit.csv from Google Drive
 ############### OUTPUT: gbif_DC_georef.csv (to be uploaded into GEOLocate application)
 ########                (from GEOLocate application) gbif_DC_post-georef.csv
+# Round 2 Post-GeoLocate
+############### INPUT: gbif_DC_post-georef.csv from Google Drive
+############### OUTPUT: gbif_DC_post-georef_revised.csv (to be loaded into script
+#                       2.compile_occurrence_point_datasets.R)
 
 library(dplyr)
 library(rgbif)
 library(tidyr)
 library(data.table)
 
+######################################################################################
+################# ROUND ONE ##########################################################
+######################################################################################
+
 gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_raw.csv', as.is=T)
-# for windows? but too big to not use server # more columns than column names
-# gbif_full <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_raw_DarwinCore_edit.csv', as.is=T)
+
+gbif_full <- read.csv(file='gbif_raw_DarwinCore_edit.csv', as.is=T)
 nrow(gbif) #12195
 # rename and compress for ease of manipulation
 gbif <- gbif_full
@@ -166,28 +177,14 @@ geo_loc$correction_status <- NA
 geo_loc$precision <- NA
 geo_loc$error_polygon <- NA
 geo_loc$multiple_results <- NA
-# the above are the necessary columns, but we can add more to preserve our data structure
-# However, we have to balance this against the idea that we can add these columns 
-# later and that it may be faster to run the GeoLocate app without all of them.
-# Just keep a few so we can identify the columns.
-#geo_loc$basis <- gbif$basis
-#geo_loc$source <- gbif$source
-#geo_loc$genus <- gbif$genus
-#geo_loc$synonym <- gbif$synonym
-#geo_loc$species <- gbif$species
+# We can add other columns later and it may be faster to run the GeoLocate app 
+# without all of them. Just keep a few so we can identify the columns.
 geo_loc$year <- gbif$year
-#geo_loc$occurrenceRemarks <- gbif$occurrenceRemarks
-#geo_loc$associatedTaxa <- gbif$associatedTaxa
-#geo_loc$uncert_m <- gbif$uncert_m
-#geo_loc$georeferencedSources <- gbif$georeferenceSources
-#geo_loc$issue <- gbif$issue
 geo_loc$speciesKey <- gbif$speciesKey
 geo_loc$obs_no <- seq(1, length(gbif$basis), 1)
 
-
 # write a csv to upload into georeference
-write.csv(geo_loc, file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_DC_georef.csv',
-          row.names = F)
+write.csv(geo_loc, file='gbif_DC_georef.csv', row.names = F)
 
 # note how many coordinates are missing.
 sum(is.na(geo_loc$latitude)) # 5168
@@ -206,11 +203,14 @@ sum(is.na(geo_loc$latitude)) # 5168
 # http://www.museum.tulane.edu/geolocate/web/WebFileGeoref.aspx
 # use the default options when loading the file.
 
+######################################################################################
+################# ROUND TWO ##########################################################
+######################################################################################
+
 # load this file from memory 7DBC9921 (created 3.21.18)
 
 #do a quick comparison with the output file
-# for windows? but too big to not use server # more columns than column names
-  # post_geo <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_DC_post-georef.csv', as.is=T)
+post_geo <- read.csv(file='gbif_DC_post-georef.csv', as.is=T)
 
 sum(is.na(post_geo$latitude)) # 2052 Whoa! This is a big difference, using geolocate gave us over 3000 more occurrences
 
@@ -333,8 +333,7 @@ precise_order <- c(high, medium1, medium2, low, blank)
 post_geo <- post_geo[precise_order, ]
 
 # and write a new dataset
-write.csv(post_geo, file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_DC_post-georef_revised.csv',
-          row.names = F)
+write.csv(post_geo, file='gbif_DC_post-georef_revised.csv', row.names = F)
 
 
 ###### More exploration necessary regarding the following?
