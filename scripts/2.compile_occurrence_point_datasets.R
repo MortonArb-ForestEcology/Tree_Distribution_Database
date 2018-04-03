@@ -106,7 +106,6 @@ gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrenc
 
 gbif <- read.csv(file='gbif_DC_post-georef_revised.csv', as.is=T)
 nrow(gbif) #11089
-# Do anything to the 
 
 # add an observation number to easily restore this order of points after merging
 gbif$obs_no <- seq(1, length(gbif$state), by = 1)
@@ -291,10 +290,10 @@ occur_all$locality<-gsub(",",".",occur_all$locality)
 
 # IDK about this one...
 # remove points with ---less than 2 digits after the decimal for lat and/or long---
-occur_dec <- occur_all[grep("\\.[0-9][1-9]",occur_all$decimalLatitude),]
-nrow(occur_dec) #75696
-occur_dec2 <- occur_all[grep("\\.[0-9][1-9]",occur_dec$decimalLongitude),]
-nrow(occur_dec2) #67379
+occur_all <- occur_all[grep("\\.[0-9][1-9]",occur_all$decimalLatitude),]
+nrow(occur_all) #50178
+occur_all <- occur_all[grep("\\.[0-9][1-9]",occur_dec$decimalLongitude),]
+nrow(occur_all) #44522
 
 # reorder dataset before subsetting in next script to place higher quality datasets and most recent records first
 occur_all <- occur_all[order(factor(occur_all$dataset,levels=c("other","redlist","consortium","fia","ex_situ",
