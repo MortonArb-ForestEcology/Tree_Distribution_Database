@@ -198,10 +198,10 @@ nrow(idigbio) # 29655
 ################
 
 fia <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/fia_tree_raw.csv', as.is=T)   # where species information is stored
-plot <- read.csv(file='./Google Drive/Distributions_TreeSpecies/translation_data_raw/fia_plot_raw.csv', as.is=T)   # where coordinates are stored
+plot <- read.csv(file='./Google Drive/Distributions_TreeSpecies/fia_translation_data_raw/fia_plot_raw.csv', as.is=T)   # where coordinates are stored
 # for windows
 #fia <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/fia_tree_raw.csv', as.is=T)   # where species information is stored
-#plot <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/translation_data_raw/fia_plot_raw.csv', as.is=T)   # where coordinates are stored
+#plot <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/fia_translation_data_raw/fia_plot_raw.csv', as.is=T)   # where coordinates are stored
 # remove unnecessary columns from plot
 plot2 <- plot[, c("INVYR", "STATECD", "UNITCD", "COUNTYCD", "PLOT", "LAT", "LON")]
 # Match the location IDs and merge the species and plot data frames 
@@ -219,9 +219,9 @@ u_plot$density <- t
 fia <- u_plot
 rm(plot, plot2, fia_coord, density_test, u, ID)
 # Match up SPCD using 
-fia_sp <- read.csv(file='./Google Drive/Distributions_TreeSpecies/translation_data_raw/fia_species_raw.csv', as.is=T)    
+fia_sp <- read.csv(file='./Google Drive/Distributions_TreeSpecies/fia_translation_data_raw/fia_species_raw.csv', as.is=T)    
 # for windows
-#fia_sp <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/translation_data_raw/fia_species_raw.csv', as.is=T)    
+#fia_sp <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/fia_translation_data_raw/fia_species_raw.csv', as.is=T)    
 fia <- merge(fia, fia_sp, by = "SPCD", all = F)
 fia <- fia[, 1:16]
 # combine columns into single species name
@@ -232,9 +232,9 @@ fia$family <- "Fagaceae"
 fia$institutionCode <- "USFS"
 fia$country <- "US"
 # Match up STATECD and COUNTYCD using
-fia_cou <- read.csv(file='./Google Drive/Distributions_TreeSpecies/translation_data_raw/fia_county_raw.csv', as.is=T)    
+fia_cou <- read.csv(file='./Google Drive/Distributions_TreeSpecies/fia_translation_data_raw/fia_county_raw.csv', as.is=T)    
 # for windows
-#fia_cou <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/translation_data_raw/fia_county_raw.csv', as.is=T)    
+#fia_cou <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/fia_translation_data_raw/fia_county_raw.csv', as.is=T)    
 fia <- merge(fia, fia_cou, by = c("STATECD", "COUNTYCD"), all = F)
 # remove unnecessary columns
 fia <- subset(fia, select = c(order,family,GENUS,SPECIES,scientificName,institutionCode,
