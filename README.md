@@ -127,6 +127,18 @@ Within folder "scripts", files have been numbered in the order they are to be us
   
   Functions: extract_PRISM (This single function will extract the appropriate climatic 
   statistics from each layer of interest and append it to the existing data frame)
+  
+## Compile_occurrencePt_datasets.R
+   Purpose: outdated version of step 2?
+
+## extract_ITRDB.R
+   Purpose: loop example from Shannon, consider removing to sagebrush folder
+  
+## set_workingdirectory.R
+   Purpose: a file to tell the computer which file address to use in each of our workflow scripts 
+   based on the system of the computer that is running during this script. This file still needs to 
+   be filled in for each user's system and the change in file address needs to be implemented across
+   the rest of the workflow scripts.
 
 # 1. sagebrush folder
 Within folder "sagebrush", files are numbered in order of workflow
