@@ -3,8 +3,10 @@ Repository for curating occurrence and predictor data of tree distributions
 
 All scripts are located in folder "scripts"
 Examples and attempts to use similar scripts with data that have not been refined are in folder "trials"
+The "sagebrush" folder contains scripts used in Shannon's sagebrush distribution modeling project, which can serve as an example for our project.
+We will describe the scripts folder first because it is most relevant.
 
-# scripts folder
+# 2. scripts folder
 Within folder "scripts", files have been numbered in the order they are to be used in the workflow.
 
  Occurrence data for our oak species of interest has been downloaded prior to its use in our scripts. 
@@ -126,11 +128,30 @@ Within folder "scripts", files have been numbered in the order they are to be us
   Functions: extract_PRISM (This single function will extract the appropriate climatic 
   statistics from each layer of interest and append it to the existing data frame)
 
+# 1. sagebrush folder
+Within folder "sagebrush", files are numbered in order of workflow
 
-# trials folder
+Data used in these trials varies with the file, but should come from Shannon's OakCons/data folder on box: https://app.box.com/folder/46543046640
+
+# Files
+## 1sage_set_sdm_model_run.R
+## 2sage_load_climate_data.R
+## 3sage_functions.R
+## 4sage_set_parameters.R
+## 5sage_load_occurrance_data.R
+## 6sage_prep_predictor_variables_and_run.R
+## 7sage_load_proj_climate_data.R
+## ITRDB_extract_workflow.R
+## clim_codes.xlsx
+## model_sets.xlsx
+## sagebrush_sdm_models_MC.R
+## sagebrush_sdm_prj_MC.R
+## variable_sets_sage.xlsx
+
+# 3. trials folder
 Within folder "trials", files are usually not related, so are not meant to be run in any particular order
 
-Data used in these trials varies with the file, bust should come from the Google Drive
+Data used in these trials varies with the file, but should come from the Google Drive
 # Files   
 ## FIA_extraction_loop_example
 Purpose: Early version of making a loop to extract FIA occurrence data state by state
