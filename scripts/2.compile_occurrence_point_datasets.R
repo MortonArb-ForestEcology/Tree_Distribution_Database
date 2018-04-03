@@ -2,10 +2,25 @@
 ########### 3.22.18 Emily Beckman
 ############# compile all occurrence point data into one standardized dataframe 
 
-############### INPUT: 
-############### OUTPUT: 
+## Be sure to run "set_workingdirectory.R" before running this script
 
-
+############### INPUT: several csv files of raw oak occurrence data
+#
+#                     gbif_DC_post-georef_revised.csv
+#                     consortium_raw.csv
+#                     idigbio_raw.csv
+#                     fia_tree_raw.csv
+#                     fia_plot_raw.csv*
+#                     fia_species_raw.csv*
+#                     fia_county_raw.csv*
+#
+#
+# * marks files from fia_translation_data_raw folder
+# All other files from in-use_occurrence_raw folder
+#
+############### OUTPUT: occurence_raw_compiled_test.csv 
+#                 (compilation of all occurrence data to be used in the model)
+#
 ################
 ### LIBRARIES and FUNCTIONS
 ################
@@ -50,8 +65,8 @@ rbind.all.columns <- function(x, y) {
 
 # read in list of target species
 sp_list <- read.csv(file='./Google Drive/Distributions_TreeSpecies/target_species_list.csv')
-# for windows?
-#sp_list <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/target_species_list.csv', header = T)
+
+sp_list <- read.csv(file=paste0(one_up, '/target_species_list.csv'), header = T)
 
 ################
 ### 2. Unify Already-Standardized Datasets
@@ -60,8 +75,8 @@ sp_list <- read.csv(file='./Google Drive/Distributions_TreeSpecies/target_specie
 # read in standardized occurrence point datasets (exactly the same column headers in each file)
 file_list <- list.files(path = "./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/standard_col", 
                         pattern = ".csv", full.names = T)
-# for windows?
-# file_list <- list.files(path = "G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/standard_col", pattern = ".csv", full.names = T)
+
+file_list <- list.files(path = "standard_col", pattern = ".csv", full.names = T)
 file_dfs <- lapply(file_list, read.csv, header = TRUE, fileEncoding="latin1", strip.white = TRUE, colClasses = "character")
 length(file_dfs) #7
 
@@ -88,8 +103,8 @@ nrow(df) #30819
 
 # read in raw occurrence points
 gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_DC_post-georef_revised.csv', as.is=T)
-# for windows? but too big to not use server # more columns than column names
-# gbif <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_DC_post-georef_revised.csv', as.is=T)
+
+gbif <- read.csv(file='gbif_DC_post-georef_revised.csv', as.is=T)
 nrow(gbif) #11089
 # Do anything to the 
 
@@ -124,8 +139,8 @@ str(gbif)
 
 # read in raw occurrence points  
 consortium <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/consortium_raw.csv', as.is=T)
-# for windows
-# consortium <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/consortium_raw.csv', as.is=T)
+
+consortium <- read.csv(file='consortium_raw.csv', as.is=T)
 nrow(consortium) #98500
 # remove extraneous columns
 consortium <- subset(consortium, select = c(order,family,genus,specificEpithet,infraspecificEpithet,
@@ -148,8 +163,8 @@ nrow(consortium) #632
 
 # read in raw occurrence points  
 idigbio <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/idigbio_raw.csv', as.is=T)
-# for windows?
-# idigbio <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/idigbio_raw.csv', as.is=T)
+
+idigbio <- read.csv(file='idigbio_raw.csv', as.is=T)
 nrow(idigbio) #196485
 # remove duplicate column
 idigbio <- subset(idigbio, select = -(dwc.eventDate))
@@ -199,9 +214,9 @@ nrow(idigbio) # 29655
 
 fia <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/fia_tree_raw.csv', as.is=T)   # where species information is stored
 plot <- read.csv(file='./Google Drive/Distributions_TreeSpecies/fia_translation_data_raw/fia_plot_raw.csv', as.is=T)   # where coordinates are stored
-# for windows
-#fia <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/fia_tree_raw.csv', as.is=T)   # where species information is stored
-#plot <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/fia_translation_data_raw/fia_plot_raw.csv', as.is=T)   # where coordinates are stored
+
+fia <- read.csv(file='fia_tree_raw.csv', as.is=T)   # where species information is stored
+plot <- read.csv(file=paste0(translate_fia, '/fia_plot_raw.csv'), as.is=T)   # where coordinates are stored
 # remove unnecessary columns from plot
 plot2 <- plot[, c("INVYR", "STATECD", "UNITCD", "COUNTYCD", "PLOT", "LAT", "LON")]
 # Match the location IDs and merge the species and plot data frames 
@@ -220,8 +235,8 @@ fia <- u_plot
 rm(plot, plot2, fia_coord, density_test, u, ID)
 # Match up SPCD using 
 fia_sp <- read.csv(file='./Google Drive/Distributions_TreeSpecies/fia_translation_data_raw/fia_species_raw.csv', as.is=T)    
-# for windows
-#fia_sp <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/fia_translation_data_raw/fia_species_raw.csv', as.is=T)    
+
+fia_sp <- read.csv(file=paste0(translate_fia, '/fia_species_raw.csv'), as.is=T)    
 fia <- merge(fia, fia_sp, by = "SPCD", all = F)
 fia <- fia[, 1:16]
 # combine columns into single species name
@@ -233,8 +248,8 @@ fia$institutionCode <- "USFS"
 fia$country <- "US"
 # Match up STATECD and COUNTYCD using
 fia_cou <- read.csv(file='./Google Drive/Distributions_TreeSpecies/fia_translation_data_raw/fia_county_raw.csv', as.is=T)    
-# for windows
-#fia_cou <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/fia_translation_data_raw/fia_county_raw.csv', as.is=T)    
+
+fia_cou <- read.csv(file=paste0(translate_fia, '/fia_county_raw.csv'), as.is=T)    
 fia <- merge(fia, fia_cou, by = c("STATECD", "COUNTYCD"), all = F)
 # remove unnecessary columns
 fia <- subset(fia, select = c(order,family,GENUS,SPECIES,scientificName,institutionCode,
@@ -295,9 +310,9 @@ unique(occur_all$year)
 #  nrow(occur_sp) #11508
 
 # write file
-write.csv(occur_all,file="./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/occurence_raw_compiled_test.csv")
+write.csv(occur_all, file="./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/occurence_raw_compiled_test.csv")
 
-
+write.csv(occur_all, file="occurence_raw_compiled_test.csv")
 
 ##REMOVE/MOVE TO NEXT SCRIPT
 
