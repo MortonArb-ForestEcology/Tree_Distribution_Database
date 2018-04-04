@@ -1,6 +1,6 @@
 ############ 2.1
 ########### 3.22.18 Emily Beckman
-############# compile all occurrence point data into one standardized dataframe 
+############# compile all occurrence point data into one standardized dataframe
 
 ## Be sure to run "set_workingdirectory.R" before running this script
 
@@ -18,7 +18,7 @@
 # * marks files from fia_translation_data_raw folder
 # All other files from in-use_occurrence_raw folder
 #
-############### OUTPUT: occurence_raw_compiled_test.csv 
+############### OUTPUT: occurence_raw_compiled_test.csv
 #                 (compilation of all occurrence data to be used in the model)
 #
 ################
@@ -43,7 +43,7 @@ gen_subset <- function(orig_data, action, export_name){
     write.csv(new, file = export_name)
     return(data.frame(new))
   }
-} 
+}
 
 ## Match up column headers, keeping all columns, not just matching ones [stacking] (fills added columns with NAs)
 # SOURCE: https://amywhiteheadresearch.wordpress.com/2013/05/13/combining-dataframes-when-the-columns-dont-match/
@@ -64,8 +64,6 @@ rbind.all.columns <- function(x, y) {
 ################
 
 # read in list of target species
-sp_list <- read.csv(file='./Google Drive/Distributions_TreeSpecies/target_species_list.csv')
-
 sp_list <- read.csv(file=paste0(one_up, '/target_species_list.csv'), header = T)
 
 ################
@@ -73,9 +71,6 @@ sp_list <- read.csv(file=paste0(one_up, '/target_species_list.csv'), header = T)
 ################
 
 # read in standardized occurrence point datasets (exactly the same column headers in each file)
-file_list <- list.files(path = "./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/standard_col", 
-                        pattern = ".csv", full.names = T)
-
 file_list <- list.files(path = "standard_col", pattern = ".csv", full.names = T)
 file_dfs <- lapply(file_list, read.csv, header = TRUE, fileEncoding="latin1", strip.white = TRUE, colClasses = "character")
 length(file_dfs) #7
@@ -85,25 +80,23 @@ df <- data.frame()
 for(file in seq_along(file_dfs)){
   df <- rbind(df, file_dfs[[file]])
 }
-str(df); nrow(df) #93192
+str(df); nrow(df) #93192, 94426
 # rename columns to match Darwin Core Archive format
 setnames(df,
          old=c("source","basis","lat", "long", "uncert_m", "state","status"),
-         new=c("institutionCode","basisOfRecord","decimalLatitude", "decimalLongitude", 
+         new=c("institutionCode","basisOfRecord","decimalLatitude", "decimalLongitude",
                "coordinateUncertaintyInMeters", "stateProvince","occurrenceRemarks"))
 # add standard species ID columns
 df <- join(df, sp_list, by = "species", type="full"); str(df)
 # remove rows with no species name match (i.e. keep records for target species only)
 df <- df[!(is.na(df$speciesKey)),]
-nrow(df) #30819
+nrow(df) #30819, 30900
 
 ################
 ### 3. Standardize GBIF Data
 ################
 
 # read in raw occurrence points
-gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_DC_post-georef_revised.csv', as.is=T)
-
 gbif <- read.csv(file='gbif_DC_post-georef_revised.csv', as.is=T)
 nrow(gbif) #11089
 
@@ -113,10 +106,10 @@ gbif$obs_no <- seq(1, length(gbif$state), by = 1)
 gbif$species <- as.factor(gbif$species)
 # recognize that scientificName refers to something different in sp_list
 
-# The rows will duplicate if their species key duplicates. ex. five lobata lines 
+# The rows will duplicate if their species key duplicates. ex. five lobata lines
 # in sp-list, so each lobata occurrence will spring four duplicates here, unless we add the first match argument.
 # add FIA ID column
-gbif <- join(gbif, sp_list, by = c("species", "speciesKey"), type = "full", match = "first") 
+gbif <- join(gbif, sp_list, by = c("species", "speciesKey"), type = "full", match = "first")
 gbif <- gbif[order(gbif$obs_no), ]
 
 # remove extraneous columns
@@ -136,7 +129,7 @@ str(gbif)
 ### 4. Standardize Herbaria Consortium Data (SERNEC, SEINet, etc.)
 ################
 
-# read in raw occurrence points  
+# read in raw occurrence points
 consortium <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/consortium_raw.csv', as.is=T)
 
 consortium <- read.csv(file='consortium_raw.csv', as.is=T)
@@ -149,7 +142,7 @@ consortium <- subset(consortium, select = c(order,family,genus,specificEpithet,i
                                             individualCount,country,stateProvince,county,municipality,locality,
                                             locationRemarks,occurrenceRemarks,habitat))
 # add and fill dataset name column
-consortium$dataset <- "herbaria" 
+consortium$dataset <- "herbaria"
 consortium$scientificName <- as.factor(consortium$scientificName)
 # add standard species ID columns
 consortium <- join(consortium, sp_list, by = "scientificName", type="full", match = "first"); str(consortium)
@@ -160,7 +153,7 @@ nrow(consortium) #632
 ### 5. Standardize iDigBio Data
 ################
 
-# read in raw occurrence points  
+# read in raw occurrence points
 idigbio <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/idigbio_raw.csv', as.is=T)
 
 idigbio <- read.csv(file='idigbio_raw.csv', as.is=T)
@@ -179,7 +172,7 @@ idigbio$decimalLatitude[which(idigbio$decimalLatitude==unique(idigbio$decimalLat
 # remove the extra symbols and change the column to a numeric variable
 # when using gsub, be sure to include fixed=T to avoid confusion of symbols like "
 idigbio$decimalLatitude <- as.numeric(gsub("{\"lat\": ","",idigbio$decimalLatitude, fixed = T))
-# repeat for longitude ("long" column)    
+# repeat for longitude ("long" column)
 # first remove the bracket at the end
 idigbio$decimalLongitude <- gsub("}", "", idigbio$decimalLongitude)
 # then remove the extra symbols and change to numeric
@@ -194,9 +187,9 @@ idigbio <- subset(idigbio, select = c(order,family,genus,specificEpithet,infrasp
                                       scientificName,institutionCode,collectionCode,basisOfRecord,
                                       catalogNumber,recordNumber,decimalLatitude,decimalLongitude,
                                       coordinateUncertaintyInMeters,year,individualCount,countryCode,
-                                      stateProvince,county,municipality,locality,dataQualityScore)) 
+                                      stateProvince,county,municipality,locality,dataQualityScore))
 # add and fill dataset name column
-idigbio$dataset <- "idigbio" 
+idigbio$dataset <- "idigbio"
 # capitalize first letter of genus
 idigbio$genus <- str_to_title(idigbio$genus, locale = "en")
 # create species column
@@ -218,7 +211,7 @@ fia <- read.csv(file='fia_tree_raw.csv', as.is=T)   # where species information 
 plot <- read.csv(file=paste0(translate_fia, '/fia_plot_raw.csv'), as.is=T)   # where coordinates are stored
 # remove unnecessary columns from plot
 plot2 <- plot[, c("INVYR", "STATECD", "UNITCD", "COUNTYCD", "PLOT", "LAT", "LON")]
-# Match the location IDs and merge the species and plot data frames 
+# Match the location IDs and merge the species and plot data frames
 fia_coord <- merge(fia, plot2, by.y = c("INVYR", "STATECD", "UNITCD", "COUNTYCD", "PLOT"), all = F)
 # Add in density here. First make a dataframe with all unique plots and number them.
 u <- unique(fia_coord[,c('SPCD', 'INVYR','STATECD','UNITCD', 'COUNTYCD', 'PLOT', 'LAT', 'LON')])
@@ -232,10 +225,10 @@ u_plot$density <- t
 # manipulate u_plot further to add onto raw data block; rename as fia
 fia <- u_plot
 rm(plot, plot2, fia_coord, density_test, u, ID)
-# Match up SPCD using 
-fia_sp <- read.csv(file='./Google Drive/Distributions_TreeSpecies/fia_translation_data_raw/fia_species_raw.csv', as.is=T)    
+# Match up SPCD using
+fia_sp <- read.csv(file='./Google Drive/Distributions_TreeSpecies/fia_translation_data_raw/fia_species_raw.csv', as.is=T)
 
-fia_sp <- read.csv(file=paste0(translate_fia, '/fia_species_raw.csv'), as.is=T)    
+fia_sp <- read.csv(file=paste0(translate_fia, '/fia_species_raw.csv'), as.is=T)
 fia <- merge(fia, fia_sp, by = "SPCD", all = F)
 fia <- fia[, 1:16]
 # combine columns into single species name
@@ -246,9 +239,9 @@ fia$family <- "Fagaceae"
 fia$institutionCode <- "USFS"
 fia$country <- "US"
 # Match up STATECD and COUNTYCD using
-fia_cou <- read.csv(file='./Google Drive/Distributions_TreeSpecies/fia_translation_data_raw/fia_county_raw.csv', as.is=T)    
+fia_cou <- read.csv(file='./Google Drive/Distributions_TreeSpecies/fia_translation_data_raw/fia_county_raw.csv', as.is=T)
 
-fia_cou <- read.csv(file=paste0(translate_fia, '/fia_county_raw.csv'), as.is=T)    
+fia_cou <- read.csv(file=paste0(translate_fia, '/fia_county_raw.csv'), as.is=T)
 fia <- merge(fia, fia_cou, by = c("STATECD", "COUNTYCD"), all = F)
 # remove unnecessary columns
 fia <- subset(fia, select = c(order,family,GENUS,SPECIES,scientificName,institutionCode,
@@ -267,7 +260,7 @@ fia <- fia[, 1:18]
 ### 7. Stack All Datasets
 ################
 
-# Create a list of all dataframes you want to stack                            
+# Create a list of all dataframes you want to stack
 datasets <- list(df,gbif,consortium,idigbio,fia)
 # 'Reduce' iterates through list and merges with previous dataframe in the list
 all_data <- Reduce(rbind.all.columns, datasets)
@@ -375,6 +368,4 @@ write.csv(occur_clean,file="./sp_occ/merged_data/occur_dup_counties_removed.csv"
 
 ### TO DO: spatially test to see if points are within counties of occurrence recorded by USDA PLANTS, BONAP, and NatureServe, and
 ### mark points which fall outside these county-level distributions --> check these points to make sure they are not locations of
-### non-natural ex situ collections (remove), then the rest of the 'outliers' can be used as points with less confidence 
-
-
+### non-natural ex situ collections (remove), then the rest of the 'outliers' can be used as points with less confidence
