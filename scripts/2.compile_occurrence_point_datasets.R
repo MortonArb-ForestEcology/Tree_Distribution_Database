@@ -90,7 +90,7 @@ setnames(df,
 df <- join(df, sp_list, by = "species", type="full"); str(df)
 # remove rows with no species name match (i.e. keep records for target species only)
 df <- df[!(is.na(df$speciesKey)),]
-nrow(df) #30819, 30900
+nrow(df) #37326 (ELT), 30900
 
 ################
 ### 3. Standardize GBIF Data
@@ -130,8 +130,6 @@ str(gbif)
 ################
 
 # read in raw occurrence points
-consortium <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/consortium_raw.csv', as.is=T)
-
 consortium <- read.csv(file='consortium_raw.csv', as.is=T)
 nrow(consortium) #98500
 # remove extraneous columns
@@ -143,19 +141,17 @@ consortium <- subset(consortium, select = c(order,family,genus,specificEpithet,i
                                             locationRemarks,occurrenceRemarks,habitat))
 # add and fill dataset name column
 consortium$dataset <- "herbaria"
-consortium$scientificName <- as.factor(consortium$scientificName)
+consortium$synonyms <- consortium$scientificName
 # add standard species ID columns
-consortium <- join(consortium, sp_list, by = "scientificName", type="full", match = "first"); str(consortium)
+consortium <- join(consortium, sp_list, by = "synonyms", type="full", match = "first"); str(consortium)
 # remove rows with no species name match (i.e. keep records for target species only)
 consortium <- consortium[!(is.na(consortium$species)),]
-nrow(consortium) #632
+nrow(consortium) #5083
 ################
 ### 5. Standardize iDigBio Data
 ################
 
 # read in raw occurrence points
-idigbio <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/idigbio_raw.csv', as.is=T)
-
 idigbio <- read.csv(file='idigbio_raw.csv', as.is=T)
 nrow(idigbio) #196485
 # remove duplicate column
@@ -193,12 +189,12 @@ idigbio$dataset <- "idigbio"
 # capitalize first letter of genus
 idigbio$genus <- str_to_title(idigbio$genus, locale = "en")
 # create species column
-idigbio$species <- as.factor(paste(idigbio$genus,idigbio$specificEpithet))
+idigbio$synonyms <- as.factor(paste(idigbio$genus,idigbio$specificEpithet))
 # add standard species ID columns
-idigbio <- join(idigbio, sp_list, by = "species", type="full"); str(idigbio)
+idigbio <- join(idigbio, sp_list, by = "synonyms", type="full"); str(idigbio)
 # remove rows with no species name match (i.e. keep records for target species only)
 idigbio <- idigbio[!(is.na(idigbio$speciesKey)),]
-nrow(idigbio) # 29655
+nrow(idigbio) # 11760
 
 ################
 ### 6. Standardize FIA Data
