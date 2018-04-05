@@ -280,6 +280,6 @@ occur_all <- occur_all[order(occur_all$year, na.last = TRUE, decreasing = T),]
 unique(occur_all$year)
 
 # write file
-write.csv(occur_all, file="occurence_raw_compiled_test.csv")
+write.csv(occur_all, file=paste0(one_up, "in-use_occurrence_compiled/occurrence_compiled.csv"))
 
 ## ON TO THE NEXT SCRIPT TO REMOVE DUPLICATE POINTS
