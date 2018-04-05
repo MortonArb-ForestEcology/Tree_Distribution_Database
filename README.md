@@ -64,18 +64,24 @@ Within folder "scripts", files have been numbered in the order they are to be us
   code must be redownloaded into a new CSV that will be renamed as gbif_DC_post-georef.csv. Some of the existing coordinates 
   may also be affected by running GEOLocate, so a second supplementary script (1.3) will help check for errors.
   
-## 2.compile_occurrence_point_datasets
-  Purpose: Using the FIA data compiled in step 1, and occurrence data from other sources 
-  (gbif, consortium, idigbio, bonap, A. Hipp, exsitu, natureserve, redlist, usdaplants, other),
-  we will make a larger stacked data frame containing all the occurrence data we will need to make
-  our model. Column names will be made uniform.
+## 2.1.compile_occurrence_point_datasets
+  Purpose: Using the FIA and GBIF data compiled in step 1.1 and 1.2, as well as occurrence data 
+  from other sources (gbif, consortium, idigbio, bonap, A. Hipp, exsitu, natureserve, redlist, 
+  usdaplants, other), we will make a larger stacked data frame containing all the occurrence data 
+  we will need to make our model. Column names will be made uniform.
   
   Input: all csv files from in_use_occurrence_raw folder in Google Drive, PLOT.csv (for use in FIA section)
   
-  Output: single csv containing uniform occurrence data for 28 species of interest from several sources
+  Output: occurrence_compiled.csv in in-use_occurrence_compiled folder on Google Drive
+              containing uniform occurrence data for 28 species of interest from several sources
+              To be used in script 2.2 below.
   
-  Column names: dataset, basis, source, genus, species, year, state, county, locality, lat, long,
-  uncert_m, issue, species_no
+  Output Column names: dataset, genus, species, decimalLongitude, decimalLatitude, basisOfRecord, year, locality, 
+                institutionCode, gps_determ, occurrenceRemarks, coordinateUncertaintyInMeters, stateProvince,
+                county, speciesKey, synonyms, fia_codes, order, family, specificEpithet, intraspecificEpithet,
+                scientificName, collectionCode, datasetName, catalogNumber, recordNumber, georeferenceSources,
+                individualCount, countryCode, municipality, locationRemarks, habitat, fieldNotes, issue, 
+                scientificNameAuthorship, geodeticDatum, country, dataQualityScore
   
   Packages: dplyr, rgbif, ridigbio, data.table, tidyr, lubridate
   
@@ -83,7 +89,23 @@ Within folder "scripts", files have been numbered in the order they are to be us
   
   Notes: 
 
-
+## 2.2.subset_occurrence_point_data
+  Purpose: After compiling all the occurrences into one dataset in the above script, we must remove 
+  duplicate occurrences.
+  
+  Input: occurrence_compiled.csv in in-use_occurrence_compiled folder on Google Drive
+  
+  Output:
+  
+  Column Names:
+  
+  Packages:
+  
+  Functions:
+  
+  Notes: In some cases, two different species may occur at the same coordinate, so it
+  is important to consider each subset of coordinates by species before removing any points.
+    
 ## 3.extract_species_from_raw_df
   Purpose: Subset by species from large occurrence pool first 
   and then at different spatial scales second
