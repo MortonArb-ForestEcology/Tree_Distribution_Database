@@ -22,7 +22,7 @@
 ################
 
 # read in occurrence point file, if needed
-#occur_all <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/occurrence_raw_compiled.csv', as.is=T)
+#occur_all <- read.csv(file='occurrence_raw_compiled.csv', as.is=T)
 
 # remove spatial duplicates based on species name and lat/long rounded to 2 digits after the decimal
 occur_dec2_unq<-count.dups(occur_dec2)%>%distinct(SPECIES,lat_round,long_round,.keep_all=TRUE)
