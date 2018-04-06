@@ -92,6 +92,8 @@ df <- join(df, sp_list, by = "species", type="left"); str(df)
 df <- df[!(is.na(df$speciesKey)),]
 nrow(df) #37326 (ELT), 30900
 
+write.csv(df, file=paste0(one_up, "/in-use_occurrence_compiled/standardized_col_compiled.csv"))
+
 ################
 ### 3. Standardize GBIF Data
 ################
@@ -125,6 +127,9 @@ gbif$fia_codes <- as.factor(gbif$fia_codes)
 gbif$gps_determ <- as.factor(gbif$gps_determ)
 str(gbif)
 nrow(gbif) #11089 still (ELT)
+
+write.csv(gbif, file=paste0(one_up, "/in-use_occurrence_compiled/gbif_compiled.csv"))
+
 ################
 ### 4. Standardize Herbaria Consortium Data (SERNEC, SEINet, etc.)
 ################
@@ -140,13 +145,15 @@ consortium <- subset(consortium, select = c(order,family,genus,specificEpithet,i
                                             individualCount,country,stateProvince,county,municipality,locality,
                                             locationRemarks,occurrenceRemarks,habitat))
 # add and fill dataset name column
-consortium$dataset <- "herbaria"
+consortium$dataset <- "consortium"
 consortium$synonyms <- consortium$scientificName
 # add standard species ID columns
 consortium <- join(consortium, sp_list, by = "synonyms", type="left", match = "first"); str(consortium)
 # remove rows with no species name match (i.e. keep records for target species only)
 consortium <- consortium[!(is.na(consortium$species)),]
 nrow(consortium) #5068 (ELT)
+
+write.csv(consortium, file=paste0(one_up, "/in-use_occurrence_compiled/consortium_compiled.csv"))
 
 ################
 ### 5. Standardize iDigBio Data
@@ -197,9 +204,12 @@ idigbio <- join(idigbio, sp_list, by = "synonyms", type="left"); str(idigbio)
 idigbio <- idigbio[!(is.na(idigbio$speciesKey)),]
 nrow(idigbio) # 11733 (ELT)
 
+write.csv(idigbio, file=paste0(one_up, "/in-use_occurrence_compiled/idigbio_compiled.csv"))
+
 ################
 ### 6. Standardize FIA Data
 ################
+
 # read in FIA files
 fia <- read.csv(file='fia_tree_raw.csv', as.is=T)   # where species information is stored
 plot <- read.csv(file=paste0(translate_fia, '/fia_plot_raw.csv'), as.is=T)   # where coordinates are stored
@@ -245,6 +255,8 @@ fia$basisOfRecord <- "WILD_PROVENANCE"
 # add standard species ID columns
 fia <- join(fia, sp_list, by = c("fia_codes", "species"), type="left", match = "first"); str(fia)
 
+write.csv(fia, file=paste0(one_up, "/in-use_occurrence_compiled/fia_compiled.csv"))
+
 ################
 ### 7. Stack All Datasets
 ################
@@ -253,9 +265,12 @@ fia <- join(fia, sp_list, by = c("fia_codes", "species"), type="left", match = "
 datasets <- list(df,gbif,consortium,idigbio,fia)
 # 'Reduce' iterates through list and merges with previous dataframe in the list
 all_data <- Reduce(rbind.all.columns, datasets)
+  nrow(all_data) #65699
 # remove rows with no lat and long
 occur_all <- all_data[!(is.na(all_data$decimalLatitude)),]
+  nrow(occur_all) #55985
 occur_all <- all_data[!(is.na(all_data$decimalLongitude)),]
+  nrow(occur_all) #55985
 # make some changes across this dataset to prevent future errors
 occur_all$year[is.na(occur_all$year)]<-"1111"
 replace <- c("UNKNOWN","\\<0\\>","N/A","NA","^$","is.na(i)")
