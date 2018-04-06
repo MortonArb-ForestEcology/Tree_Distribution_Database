@@ -147,6 +147,7 @@ consortium <- join(consortium, sp_list, by = "synonyms", type="left", match = "f
 # remove rows with no species name match (i.e. keep records for target species only)
 consortium <- consortium[!(is.na(consortium$species)),]
 nrow(consortium) #5068 (ELT)
+
 ################
 ### 5. Standardize iDigBio Data
 ################
@@ -266,20 +267,20 @@ occur_all$decimalLatitude<-as.numeric(occur_all$decimalLatitude)
 occur_all$decimalLongitude<-as.numeric(occur_all$decimalLongitude)
 occur_all$locality<-gsub(",",".",occur_all$locality)
 
-# remove points with ---less than 2 digits after the decimal for lat and/or long---
-occur_all <- occur_all[grep("\\.[0-9][1-9]",occur_all$decimalLatitude),]
+# remove points with less than 2 digits after the decimal for lat and/or long
+occur_dec2 <- occur_all[grep("\\.[0-9][1-9]",occur_all$decimalLatitude),]
 nrow(occur_all) #48065 (ELT)
-occur_all <- occur_all[grep("\\.[0-9][1-9]",occur_all$decimalLongitude),]
-nrow(occur_all) #42581
+occur_dec2 <- occur_dec2[grep("\\.[0-9][1-9]",occur_dec2$decimalLongitude),]
+nrow(occur_dec2) #42581
 
 # reorder dataset before subsetting in next script to place higher quality datasets and most recent records first
-occur_all <- occur_all[order(factor(occur_all$dataset,levels=c("other","redlist","consortium","fia","ex_situ",
+occur_dec2 <- occur_dec2[order(factor(occur_dec2$dataset,levels=c("other","redlist","consortium","fia","ex_situ",
                                                                "gbif","andrew_hipp","natureserve","bonap","usda"))),]
-head(occur_all)
-occur_all <- occur_all[order(occur_all$year, na.last = TRUE, decreasing = T),]
-unique(occur_all$year)
+head(occur_dec2)
+occur_dec2 <- occur_dec2[order(occur_dec2$year, na.last = TRUE, decreasing = T),]
+unique(occur_dec2$year)
 
 # write file
-write.csv(occur_all, file=paste0(one_up, "in-use_occurrence_compiled/occurrence_compiled.csv"))
+write.csv(occur_dec2, file=paste0(one_up, "/in-use_occurrence_compiled/occurrence_compiled_dec2.csv"))
 
 ## ON TO THE NEXT SCRIPT TO REMOVE DUPLICATE POINTS
