@@ -81,6 +81,7 @@ for(file in seq_along(file_dfs)){
   df <- rbind(df, file_dfs[[file]])
 }
 str(df); nrow(df) #93192 (ELT), 94426
+df$gps_determ <- ifelse(df$gps_determ=="", "NA", df$gps_determ)
 # rename columns to match Darwin Core Archive format
 setnames(df,
          old=c("source","basis","lat", "long", "uncert_m", "state","status"),
