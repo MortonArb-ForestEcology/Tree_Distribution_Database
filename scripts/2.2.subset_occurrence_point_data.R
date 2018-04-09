@@ -23,7 +23,6 @@ count.dups <- function(DF) { ### i dont think this is working, just says "1" for
   DT[,.N,by=names(DT)]
 }
 
-
 ## Subset data and (optionally) write a CSV
 gen_subset <- function(orig_data, action, export_name){
   selected_rows <- (action)
@@ -61,35 +60,17 @@ first_match <- occur_dec2_unq$obs_no
 occur_all$duplicate <- "Duplicate"
 occur_all$duplicate[first_match] <- "Unique"
 table(occur_all$duplicate)
-head(occur_all)
 # Now we can find a way to group the duplicates or to count number of duplicates per unique occurrence
+#occur_all[occur_all$duplicate == "Unique", c("lat_round", "long_round", "obs_no", "species")]
+#occur_all[occur_all$duplicate == "Duplicate", c("lat_round", "long_round", "obs_no", "species")]
 # And we can easily subset out the duplicates and write a new file with the unique occurrences only.
 write.csv(occur_dec2_unq, file=paste0(one_up, "/in-use_occurrence_compiled/occurrence_compiled_dec2_unique.csv"))
 
-
-### alternative duplicate removal method
-# we will make a new dataset with a new name  
-revised_occur_all <- data.frame()
-u_vec <- unique(occur_all$speciesKey)
-# run the loop
-for (i in 1:length(u_vec)){
-b <- which(occur_all$speciesKey == u_vec[i])
-z <- occur_all[b, ]
-z <- filter(z, decimalLatitude > 0, decimalLongitude < 0)
-z <- z[!duplicated(round(z[,c("decimalLatitude","decimalLongitude")], 3)), ]
-revised_occur_all <- rbind(revised_occur_all, z)
-}
-
-# check to see the difference
-setdiff(occur_dec2_unq$obs_no, revised_occur_all$obs_no) # 5411 and 18550
+#setdiff(occur_dec2_unq$obs_no, revised_occur_all$obs_no) # 5411 and 18550
 # Not sure why the below are fishy, but will keep an eye on them...
-occur_all[5411, ]
-occur_all[18550, ]
+#occur_all[5411, ]
+#occur_all[18550, ]
 
-
-# 6539 with 2 decimal places, 7906 with 3 decimal places
-# with non_rounded values 6566 with 2 decimal places
-#length(revised_post_geo$latitude) #4855 occurrences total here
 ################
 ### 2. Remove Spatial Duplicates by County #I'm sure there is a way to compress this code, just did it stream of consciousness
 ################
