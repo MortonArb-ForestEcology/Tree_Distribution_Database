@@ -50,6 +50,21 @@ occur_dec2_unq <- count.dups(occur_all)%>%distinct(species,lat_round,long_round,
   str(occur_dec2_unq)
 write.csv(occur_dec2_unq, file=paste0(one_up, "/in-use_occurrence_compiled/occurrence_compiled_dec2_unique.csv"))
 
+
+### alternative duplicate removal method
+# we will make a new dataset with a new name  
+revised_occur_all <- data.frame()
+u_vec <- unique(occur_all$speciesKey)
+# run the loop
+for (i in 1:length(u_vec)){
+b <- which(occur_all$speciesKey == u_vec[i])
+z <- occur_all[b, ]
+z <- filter(z, lat_round > 0, long_round < 0)
+z <- z[!duplicated(round(z[,c("lat_round","long_round")], 3)), ]
+revised_occur_all <- rbind(revised_occur_all, z)
+}
+# 6539 with 2 decimal places, 7906 with 3 decimal places
+#length(revised_post_geo$latitude) #4855 occurrences total here
 ################
 ### 2. Remove Spatial Duplicates by County #I'm sure there is a way to compress this code, just did it stream of consciousness
 ################
