@@ -16,6 +16,7 @@ library(geosphere)
 library(mapview)
 library(data.table)
 library(dplyr)
+library(plyr)
 
 ## Counts number of duplicates removed for each record
 count.dups <- function(DF) { ### i dont think this is working, just says "1" for every record
@@ -104,17 +105,17 @@ proj4string(occur_centroid_join) <- wgs84
 pts.poly <- point.in.poly(occur_centroid_join, counties_wgs)
 # mark occurrence points that are county centroids within counties that are already represented by geolocated points
 occur_counties <- as.data.frame(pts.poly)
-  nrow(occur_counties) #7123
+  nrow(occur_counties) #7908
 duplicates <- occur_counties[duplicated(occur_counties[c(4,15)]),]
-  nrow(duplicates) #6468
+  nrow(duplicates) #6394
 to_remove <- subset(duplicates, gps_determ == "C" | gps_determ == "SC")
-  nrow(to_remove) #644
+  nrow(to_remove) #185
 to_remove$county_centroid_dup <- rep("x")
 occur_dup_marked <- full_join(occur_counties, to_remove)
 write.csv(occur_dup_marked, file=paste0(one_up, "/in-use_occurrence_compiled/occurrence_compiled_dec2_unique_countyDupMarked.csv"))
 # remove county centroid duplicate records
 occur_clean <- anti_join(occur_counties, to_remove, by = "X")
-  nrow(occur_clean) #6479
+  nrow(occur_clean) #7723
 write.csv(occur_clean, file=paste0(one_up, "/in-use_occurrence_compiled/occurrence_compiled_dec2_unique_countyDupRemoved.csv"))
 
 ################
