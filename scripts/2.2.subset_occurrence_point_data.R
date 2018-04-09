@@ -14,6 +14,8 @@ library(rgdal)
 library(spatialEco)
 library(geosphere)
 library(mapview)
+library(data.table)
+library(dplyr)
 
 ## Counts number of duplicates removed for each record
 count.dups <- function(DF) { ### i dont think this is working, just says "1" for every record
