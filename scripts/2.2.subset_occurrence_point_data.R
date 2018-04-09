@@ -67,9 +67,6 @@ head(occur_all)
 write.csv(occur_dec2_unq, file=paste0(one_up, "/in-use_occurrence_compiled/occurrence_compiled_dec2_unique.csv"))
 
 
-# notes on above: keep_all = T means duplicates shouldn't be removed?
-
-
 ### alternative duplicate removal method
 # we will make a new dataset with a new name  
 revised_occur_all <- data.frame()
@@ -79,9 +76,17 @@ for (i in 1:length(u_vec)){
 b <- which(occur_all$speciesKey == u_vec[i])
 z <- occur_all[b, ]
 z <- filter(z, decimalLatitude > 0, decimalLongitude < 0)
-z <- z[!duplicated(round(z[,c("decimalLatitude","decimalLongitude")], 2)), ]
+z <- z[!duplicated(round(z[,c("decimalLatitude","decimalLongitude")], 3)), ]
 revised_occur_all <- rbind(revised_occur_all, z)
 }
+
+# check to see the difference
+setdiff(occur_dec2_unq$obs_no, revised_occur_all$obs_no) # 5411 and 18550
+# Not sure why the below are fishy, but will keep an eye on them...
+occur_all[5411, ]
+occur_all[18550, ]
+
+
 # 6539 with 2 decimal places, 7906 with 3 decimal places
 # with non_rounded values 6566 with 2 decimal places
 #length(revised_post_geo$latitude) #4855 occurrences total here
