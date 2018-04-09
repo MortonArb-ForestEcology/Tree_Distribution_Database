@@ -72,6 +72,9 @@ write.csv(occur_dec2_unq, file=paste0(one_up, "/in-use_occurrence_compiled/occur
 #occur_all[5411, ]
 #occur_all[18550, ]
 
+# see how many occurrences we have for each species
+table(occur_dec2_unq$species)
+
 ################
 ### 2. Remove Spatial Duplicates by County #I'm sure there is a way to compress this code, just did it stream of consciousness
 ################
@@ -118,6 +121,7 @@ occur_clean <- anti_join(occur_counties, to_remove, by = "X")
   nrow(occur_clean) #7723
 write.csv(occur_clean, file=paste0(one_up, "/in-use_occurrence_compiled/occurrence_compiled_dec2_unique_countyDupRemoved.csv"))
 
+table(occur_clean$species)
 ################
 ### 3. Remove Unwanted Years
 ################
