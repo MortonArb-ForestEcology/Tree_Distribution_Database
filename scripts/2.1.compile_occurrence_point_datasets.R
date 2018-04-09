@@ -18,7 +18,7 @@
 # * marks files from fia_translation_data_raw folder
 # All other files from in-use_occurrence_raw folder
 #
-############### OUTPUT: occurence_raw_compiled_test.csv
+############### OUTPUT: occurence_compiled_dec2.csv
 #                 (compilation of all occurrence data to be used in the model)
 #
 ################
@@ -283,7 +283,7 @@ occur_all$decimalLatitude<-as.numeric(occur_all$decimalLatitude)
 occur_all$decimalLongitude<-as.numeric(occur_all$decimalLongitude)
 occur_all$locality<-gsub(",",".",occur_all$locality)
 
-# remove points with less than 2 digits after the decimal for lat and/or long
+# remove points with fewer than 2 digits after the decimal for lat and/or long
 occur_dec2 <- occur_all[grep("\\.[0-9][1-9]",occur_all$decimalLatitude),]
 nrow(occur_all) #48065 (ELT)
 occur_dec2 <- occur_dec2[grep("\\.[0-9][1-9]",occur_dec2$decimalLongitude),]
