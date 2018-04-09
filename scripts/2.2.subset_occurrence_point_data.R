@@ -23,6 +23,7 @@ count.dups <- function(DF) { ### i dont think this is working, just says "1" for
   DT[,.N,by=names(DT)]
 }
 
+
 ## Subset data and (optionally) write a CSV
 gen_subset <- function(orig_data, action, export_name){
   selected_rows <- (action)
@@ -41,14 +42,32 @@ gen_subset <- function(orig_data, action, export_name){
 
 # read in occurrence point file
 occur_all <- read.csv(file=paste0(one_up, '/in-use_occurrence_compiled/occurrence_compiled_dec2.csv'), as.is=T)
+nrow(occur_all) #42661
 # round lat and long to 3 digits after decimal
 occur_all$lat_round <- round(occur_all$decimalLatitude, 3)
 occur_all$long_round <- round(occur_all$decimalLongitude, 3)
-# remove spatial duplicates based on species name and lat/long rounded to 2 digits after the decimal
-occur_dec2_unq <- count.dups(occur_all)%>%distinct(species,lat_round,long_round,.keep_all=TRUE)
-  nrow(occur_dec2_unq) #6579 with 2 dec places, 7923 with 3 dec places
-  str(occur_dec2_unq)
+# remove all coordinates with a positive longitude and a negative latitude
+occur_all <- occur_all[which(occur_all$lat_round >= 0), ]
+occur_all <- occur_all[which(occur_all$long_round <= 0), ]
+nrow(occur_all) #42635
+# before removing duplicates, let's number the occurrences so we know which ones will be saved
+occur_all$obs_no <- seq(1, length(occur_all$X), 1)
+# remove spatial duplicates based on species name and lat/long rounded to 3 digits after the decimal
+occur_dec2_unq <- occur_all%>%distinct(species,lat_round,long_round,.keep_all=TRUE)
+nrow(occur_dec2_unq) #6579 with 2 dec places, 7908 with 3 dec places
+# make a new vector with this unique observations
+first_match <- occur_dec2_unq$obs_no
+# now we can return to our occur_all dataset and label the occurrences as duplicates or not
+occur_all$duplicate <- "Duplicate"
+occur_all$duplicate[first_match] <- "Unique"
+table(occur_all$duplicate)
+head(occur_all)
+# Now we can find a way to group the duplicates or to count number of duplicates per unique occurrence
+# And we can easily subset out the duplicates and write a new file with the unique occurrences only.
 write.csv(occur_dec2_unq, file=paste0(one_up, "/in-use_occurrence_compiled/occurrence_compiled_dec2_unique.csv"))
+
+
+# notes on above: keep_all = T means duplicates shouldn't be removed?
 
 
 ### alternative duplicate removal method
@@ -59,11 +78,12 @@ u_vec <- unique(occur_all$speciesKey)
 for (i in 1:length(u_vec)){
 b <- which(occur_all$speciesKey == u_vec[i])
 z <- occur_all[b, ]
-z <- filter(z, lat_round > 0, long_round < 0)
-z <- z[!duplicated(round(z[,c("lat_round","long_round")], 3)), ]
+z <- filter(z, decimalLatitude > 0, decimalLongitude < 0)
+z <- z[!duplicated(round(z[,c("decimalLatitude","decimalLongitude")], 2)), ]
 revised_occur_all <- rbind(revised_occur_all, z)
 }
 # 6539 with 2 decimal places, 7906 with 3 decimal places
+# with non_rounded values 6566 with 2 decimal places
 #length(revised_post_geo$latitude) #4855 occurrences total here
 ################
 ### 2. Remove Spatial Duplicates by County #I'm sure there is a way to compress this code, just did it stream of consciousness
