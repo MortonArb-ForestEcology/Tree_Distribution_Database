@@ -267,7 +267,11 @@ datasets <- list(df,gbif,consortium,idigbio,fia)
 # 'Reduce' iterates through list and merges with previous dataframe in the list
 all_data <- Reduce(rbind.all.columns, datasets)
   nrow(all_data) #65699
-# remove rows with no lat and long
+
+# Some occurrences do not have coordinate data, but they do have state and county information
+# Write in county centroid coordinates and label them with a C
+  
+# remove rows with no lat and long still
 occur_all <- all_data[!(is.na(all_data$decimalLatitude)),]
   nrow(occur_all) #55985
 occur_all <- all_data[!(is.na(all_data$decimalLongitude)),]
