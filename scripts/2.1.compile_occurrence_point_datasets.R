@@ -259,7 +259,7 @@ fia <- join(fia, sp_list, by = c("fia_codes", "species"), type="left", match = "
 
 write.csv(fia, file=paste0(one_up, "/in-use_occurrence_compiled/fia_compiled.csv"))
 
-### Make FIA absence occurence file
+### Make FIA absence occurence file ###################################################
 # Note that this absence data will only be for the 13 species that FIA included in its search
 rare_oak <- c(6768, 8429, 811, 6782, 851, 6785, 8514, 821, 844, 8492, 836, 8455, 8457)
 # we will make a new dataset for absence occurrences
@@ -316,9 +316,10 @@ rare_oak <- c(6768, 8429, 811, 6782, 851, 6785, 8514, 821, 844, 8492, 836, 8455,
    absence <- join(absence, sp_list, by = c("fia_codes", "species"), type="left", match = "first"); str(fia)
    fia_absence <- rbind(fia_absence, absence)
  }
- 
+ # takes about 90 minutes to run--my computer can only fit absences for the first 12
+ # So I uploaded the compiled list of the first 12 species and absences for the 13th were uploaded separately.
+ # result includes all absences besides for spcd == 8457
  write.csv(fia_absence, file=paste0(one_up, "/in-use_occurrence_compiled/fia_absence_compiled.csv"))
-
 ################
 ### 7. Stack All Datasets
 ################
