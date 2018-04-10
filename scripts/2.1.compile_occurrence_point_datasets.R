@@ -32,6 +32,7 @@ library(ridigbio)
 library(data.table)
 library(tidyr)
 library(stringr)
+library(lubridate)
 
 ## Subset data and (optionally) write a CSV
 gen_subset <- function(orig_data, action, export_name){
@@ -229,7 +230,7 @@ t <- as.numeric(table(density_test$ID))
 u_plot$density <- t
 # manipulate u_plot further to add onto raw data block; rename as fia
 fia <- u_plot
-rm(plot, fia_coord, density_test, u, ID)
+rm(density_test, u, ID)
 # Match up SPCD using
 fia_sp <- read.csv(file=paste0(translate_fia, '/fia_species_raw.csv'), as.is=T)
 fia <- merge(fia, fia_sp, by = "SPCD", all = F)
@@ -257,6 +258,66 @@ fia$basisOfRecord <- "WILD_PROVENANCE"
 fia <- join(fia, sp_list, by = c("fia_codes", "species"), type="left", match = "first"); str(fia)
 
 write.csv(fia, file=paste0(one_up, "/in-use_occurrence_compiled/fia_compiled.csv"))
+
+### Make FIA absence occurence file
+# Note that this absence data will only be for the 13 species that FIA included in its search
+rare_oak <- c(6768, 8429, 811, 6782, 851, 6785, 8514, 821, 844, 8492, 836, 8455, 8457)
+# we will make a new dataset for absence occurrences
+ fia_absence <- data.frame()
+
+ # be sure that fia_cou, fia_sp and plot have already been loaded before running loop
+
+ # run the loop
+ for (i in 1:length(rare_oak)){
+   # find the unique coordinates where each species is present
+   presence <- fia[fia$fia_codes==rare_oak[i], c("decimalLatitude", "decimalLongitude")]
+   presence <- paste(presence$decimalLatitude, presence$decimalLongitude, sep = "_")
+   # combine the coordinates of plot into single values for easy comparison
+   all <- paste(plot$LAT, plot$LON, sep = "_")
+   # find which plot coordinates did not have the species present
+   absence <- setdiff(all, presence)
+   # split the absence coordinates and make a list
+   abs_list <- strsplit(absence, "_")
+   #Transform the list into a data frame and set appropriate column names:
+   absence <- ldply(abs_list)
+   colnames(absence) <- c("LAT", "LON")
+   # Now merge the above coordinates with the rest of the plot information
+   absence <- join(absence, plot, by = c("LAT", "LON"), type="left", match = "first")
+   # Now merge the data frame with state and county data
+   absence <- merge(absence, fia_cou, by = c("STATECD", "COUNTYCD", "UNITCD"), all = F)
+   # add the fia_code column
+   absence$SPCD <- rare_oak[i]
+   # add the rest of the species information
+   absence <- merge(absence, fia_sp, by = "SPCD", all = F)
+   absence <- absence[, 1:23]
+   absence$scientificName <- paste(absence$GENUS, absence$SPECIES, absence$VARIETY, absence$SUBSPECIES)
+   absence$species <- paste(absence$GENUS, absence$SPECIES)
+   absence$order <- "Fagales"
+   absence$family <- "Fagaceae"
+   absence$institutionCode <- "USFS"
+   absence$country <- "US"
+   # remove unnecessary columns
+   absence <- subset(absence, select = c(order,family,GENUS,SPECIES,scientificName,institutionCode,
+                                         LAT,LON,CREATED_DATE.x,country,STATENM,COUNTYNM,species,SPCD))
+   # rename remaining columns to match other data sets
+   setnames(absence,
+            old=c("LAT","LON", "CREATED_DATE.x", "STATENM", "COUNTYNM", "SPCD", "GENUS","SPECIES", "country"),
+            new=c("decimalLatitude","decimalLongitude", "year", "stateProvince", "county", "fia_codes", "genus","specificEpithet", "countryCode"))
+   # fix year column
+   # first we have to remove the characters that are not the year, month or day
+   absence$year <- mdy(absence$year)
+   absence <- absence %>% separate("year", c("year", "delete"), sep="-", fill="right", extra="merge")
+   # remove unwanted "delete" column
+   absence <- subset(absence, select = -(delete))
+   # I'm not sure how helpful this year column is.
+   absence$dataset <- "fia"
+   absence$basisOfRecord <- "WILD_PROVENANCE"
+   # add standard species ID columns
+   absence <- join(absence, sp_list, by = c("fia_codes", "species"), type="left", match = "first"); str(fia)
+   fia_absence <- rbind(fia_absence, absence)
+ }
+ 
+ write.csv(fia_absence, file=paste0(one_up, "/in-use_occurrence_compiled/fia_absence_compiled.csv"))
 
 ################
 ### 7. Stack All Datasets
