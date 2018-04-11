@@ -33,6 +33,8 @@ library(data.table)
 library(tidyr)
 library(stringr)
 library(lubridate)
+library(rgdal)
+library(geosphere)
 
 ## Subset data and (optionally) write a CSV
 gen_subset <- function(orig_data, action, export_name){
@@ -119,7 +121,7 @@ gbif <- gbif[order(gbif$obs_no), ]
 # remove extraneous columns
 gbif <- subset(gbif, select = c(order,family,genus,specificEpithet,infraspecificEpithet,scientificName,
                                 institutionCode,collectionCode,datasetName,basisOfRecord,catalogNumber,
-                                recordNumber,decimalLatitude,decimalLongitude,gps_determ,coordinateUncertaintyInMeters,
+                                recordNumber,decimalLatitude,decimalLongitude,precision,gps_determ,coordinateUncertaintyInMeters,
                                 georeferenceSources,year,individualCount,countryCode,stateProvince,county,
                                 municipality,locality,locationRemarks,occurrenceRemarks,habitat,fieldNotes,
                                 issue,species,speciesKey,fia_codes))
@@ -328,16 +330,64 @@ rare_oak <- c(6768, 8429, 811, 6782, 851, 6785, 8514, 821, 844, 8492, 836, 8455,
 datasets <- list(df,gbif,consortium,idigbio,fia)
 # 'Reduce' iterates through list and merges with previous dataframe in the list
 all_data <- Reduce(rbind.all.columns, datasets)
-  nrow(all_data) #65699
+  nrow(all_data) #65609
 
 # Some occurrences do not have coordinate data, but they do have state and county information
 # Write in county centroid coordinates and label them with a C
+  # FIRST make dataframe of county centroids
+  # load shapefile of US county boundaries
+  counties_map <- readOGR(paste0(one_up, '/cb_2016_us_county_5m/cb_2016_us_county_5m.shp'))
+  # project to WGS84
+  wgs84 <- CRS("+init=epsg:4326 +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")
+  counties_wgs <- spTransform(counties_map, wgs84)
+  # make dataframe of county centroids (lat and long)
+  centroids <- as.data.frame(centroid(counties_wgs))
+  colnames(centroids) <- c("centroid_long", "centroid_lat")
+  # round centroid lat and long to 3 digits after decimal
+  centroids$long_round <- round(centroids$centroid_long, 3)
+  centroids$lat_round <- round(centroids$centroid_lat, 3)
+  # add county names to data frame
+    # remove the 0s from the county FP codes--twice to eliminte double zeros
+  centroids$STATECD <- counties_wgs$STATEFP
+  # ID which have zeroes at the start of the number
+  less_than <- which(as.numeric(centroids$STATECD) < 10)
+  #centroids$STATECD[less_than] <- sub("0", "", centroids$STATECD[less_than]) # not working because two different class types
+  centroids$STATECD <- as.factor(centroids$STATECD)
+  centroids$COUNTYCD <- counties_wgs$COUNTYFP
+  centroids$COUNTYCD <- sub("0", "", centroids$COUNTYCD)
+  centroids$COUNTYCD <- sub("0", "", centroids$COUNTYCD)
+  centroids$COUNTYCD <- as.factor(centroids$COUNTYCD)
+  fia_cou$STATECD <- as.factor(fia_cou$STATECD)
+  fia_cou$COUNTYCD <- as.factor(fia_cou$COUNTYCD)
+  # Luckily these state and county codes align with the fia_county file from above
+  # So let's tack on the names to these coordinates with fia_cou
+  centroids6 <- join(centroids, fia_cou, by = c("STATECD", "COUNTYCD"), type = "left")
+  # columns don't seem to align perfectly, so maybe there is a difference between the lists?
   
+  centroids6[1:30, c("STATECD", "COUNTYCD")]
+  
+  
+  
+  # Second we can make a subset of the occurrences that lack coordinates, but have state and county.
+  fill_in_county_coord <- which(is.na(all_data$decimalLatitude)) # this is the rows to subset of all_data
+  match_these_counties <-  all_data[(is.na(all_data$decimalLatitude)),c("stateProvince", "county")] # this is a dataframe of the state and county pairs we have to match
+  colnames(match_these_counties) <- c("STATENM", "COUNTYNM")
+  match_these_counties2 <- join(match_these_counties, centroids, by = c("STATENM", "COUNTYNM"), type ="left")
+  
+  all_data[fill_in_county_coord, "decimalLatitude"] <- 
+  all_data[fill_in_county_coord, "decimalLongitude"] <- 
+  
+  # join occurrence points to centroid dataframe based on rounded lat and long
+  occur_centroid_join <- join(occur_dec2_unq, centroids, by = c("long_round", "lat_round"), type="left", match = "first")
+  str(occur_centroid_join)
+  unique(occur_centroid_join$gps_determ)
+  
+    
 # remove rows with no lat and long still
 occur_all <- all_data[!(is.na(all_data$decimalLatitude)),]
-  nrow(occur_all) #55985
+  nrow(occur_all) #55895
 occur_all <- all_data[!(is.na(all_data$decimalLongitude)),]
-  nrow(occur_all) #55985
+  nrow(occur_all) #55895
 # make some changes across this dataset to prevent future errors
 occur_all$year[is.na(occur_all$year)]<-"1111"
 replace <- c("UNKNOWN","\\<0\\>","N/A","NA","^$","is.na(i)")
