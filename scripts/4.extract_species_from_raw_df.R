@@ -1,13 +1,13 @@
-############ 3. extract species from raw data frame
+############ 4. extract species from raw data frame
 ########### 2.27.18 Elizabeth Tokarz
 ###########
 ###########
-###########
+###########   rework this--is this step necssary?
 ###########
 
 
 ############### INPUT: raw "occur_all" data csv (a large file holding all the data we could
-#               possibly need for our 28 species; including location, source)
+#               possibly need for our 28 species; including location, source, climatic variables)
 #
 #     package: dplyr
 #

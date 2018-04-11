@@ -1,4 +1,4 @@
-############ 4. add climate predictors to species data frames
+############ 3. add climate predictors to species data frames
 ########### 2.27.18 Elizabeth Tokarz
 ###########
 ###########
