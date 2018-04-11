@@ -347,47 +347,37 @@ all_data <- Reduce(rbind.all.columns, datasets)
   centroids$long_round <- round(centroids$centroid_long, 3)
   centroids$lat_round <- round(centroids$centroid_lat, 3)
   # add county names to data frame
-    # remove the 0s from the county FP codes--twice to eliminte double zeros
-  centroids$STATECD <- counties_wgs$STATEFP
-  # ID which have zeroes at the start of the number
-  less_than <- which(as.numeric(centroids$STATECD) < 10)
-  #centroids$STATECD[less_than] <- sub("0", "", centroids$STATECD[less_than]) # not working because two different class types
-  centroids$STATECD <- as.factor(centroids$STATECD)
-  centroids$COUNTYCD <- counties_wgs$COUNTYFP
-  centroids$COUNTYCD <- sub("0", "", centroids$COUNTYCD)
-  centroids$COUNTYCD <- sub("0", "", centroids$COUNTYCD)
-  centroids$COUNTYCD <- as.factor(centroids$COUNTYCD)
+    # remove the 0s from the county FP codes by making the factors characters, then numeric, then factors again.
+    centroids$STATECD <- as.factor(as.numeric(as.character(counties_wgs$STATEFP)))
+    centroids$COUNTYCD <- as.factor(as.numeric(as.character(counties_wgs$COUNTYFP)))
   fia_cou$STATECD <- as.factor(fia_cou$STATECD)
   fia_cou$COUNTYCD <- as.factor(fia_cou$COUNTYCD)
   # Luckily these state and county codes align with the fia_county file from above
   # So let's tack on the names to these coordinates with fia_cou
-  centroids6 <- join(centroids, fia_cou, by = c("STATECD", "COUNTYCD"), type = "left")
-  # columns don't seem to align perfectly, so maybe there is a difference between the lists?
-  
-  centroids6[1:30, c("STATECD", "COUNTYCD")]
-  
-  
+  centroids <- join(centroids, fia_cou, by = c("STATECD", "COUNTYCD"), type = "left")
+  # It looks like some numbers are still not quite aligning, there may be errors in states with a lot of counties--VA and AK and FL (Dade)
   
   # Second we can make a subset of the occurrences that lack coordinates, but have state and county.
   fill_in_county_coord <- which(is.na(all_data$decimalLatitude)) # this is the rows to subset of all_data
   match_these_counties <-  all_data[(is.na(all_data$decimalLatitude)),c("stateProvince", "county")] # this is a dataframe of the state and county pairs we have to match
   colnames(match_these_counties) <- c("STATENM", "COUNTYNM")
-  match_these_counties2 <- join(match_these_counties, centroids, by = c("STATENM", "COUNTYNM"), type ="left")
+  # clean counties
+  match_these_counties$COUNTYNM <- gsub(" County", "", match_these_counties$COUNTYNM, fixed = T)
+  match_these_counties$COUNTYNM <- gsub(" Co.", "", match_these_counties$COUNTYNM, fixed = T)
+  match_these_counties <- join(match_these_counties, centroids, by = c("STATENM", "COUNTYNM"), type ="left")
+  # Note that any misspelled counties will not be found. Some rows were still unable to match data.
   
-  all_data[fill_in_county_coord, "decimalLatitude"] <- 
-  all_data[fill_in_county_coord, "decimalLongitude"] <- 
+  # now fill in these coordainte gaps
+  all_data[fill_in_county_coord, "decimalLatitude"] <- match_these_counties$lat_round
+  all_data[fill_in_county_coord, "decimalLongitude"] <- match_these_counties$long_round
+  # and label the points as gps_determ = "C"
+  all_data[fill_in_county_coord, "gps_determ"] <- "C"
   
-  # join occurrence points to centroid dataframe based on rounded lat and long
-  occur_centroid_join <- join(occur_dec2_unq, centroids, by = c("long_round", "lat_round"), type="left", match = "first")
-  str(occur_centroid_join)
-  unique(occur_centroid_join$gps_determ)
-  
-    
 # remove rows with no lat and long still
 occur_all <- all_data[!(is.na(all_data$decimalLatitude)),]
-  nrow(occur_all) #55895
+  nrow(occur_all) #59357
 occur_all <- all_data[!(is.na(all_data$decimalLongitude)),]
-  nrow(occur_all) #55895
+  nrow(occur_all) #59357
 # make some changes across this dataset to prevent future errors
 occur_all$year[is.na(occur_all$year)]<-"1111"
 replace <- c("UNKNOWN","\\<0\\>","N/A","NA","^$","is.na(i)")
@@ -401,9 +391,9 @@ occur_all$locality<-gsub(",",".",occur_all$locality)
 
 # remove points with fewer than 2 digits after the decimal for lat and/or long
 occur_dec2 <- occur_all[grep("\\.[0-9][1-9]",occur_all$decimalLatitude),]
-nrow(occur_all) #48065 (ELT)
+nrow(occur_all) #59357 (ELT)
 occur_dec2 <- occur_dec2[grep("\\.[0-9][1-9]",occur_dec2$decimalLongitude),]
-nrow(occur_dec2) #42581
+nrow(occur_dec2) #45390
 
 # reorder dataset before subsetting in next script to place higher quality datasets and most recent records first
 occur_dec2 <- occur_dec2[order(factor(occur_dec2$dataset,levels=c("other","redlist","consortium","fia","ex_situ",
