@@ -16,6 +16,7 @@
   			## for instance, the output folder (defined by object 'f_out') would be set as 'SDM_output' and this would then typically be
   					## a subfolder to the main working directory
       one_up <- "G:/My Drive/Distributions_TreeSpecies"
+      compiled <- "G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_compiled"
       translate_fia <- "G:/My Drive/Distributions_TreeSpecies/fia_translation_data_raw"
       f_out <- "SDM_output"
       data_in <- "/main/data/directory/or/folder"
@@ -33,6 +34,7 @@
   					## a subfolder to the main working directory
       #one_up <-
       #translate_fia <-
+    #compiled <- 
       f_out <- "SDM_output"
       data_in <- "/Users/sstill/Box/Research/Active_Projects/MortonArb_SDM"
 
@@ -47,6 +49,7 @@
   			## for instance, the output folder (defined by object 'f_out') would be set as 'SDM_output' and this would then typically be
   					## a subfolder to the main working directory
 		  one_up <- "/Volumes/GoogleDrive/My Drive/Distributions_TreeSpecies"
+		  compiled <- "/Volumes/GoogleDrive/My Drive/Distributions_TreeSpecies/in-use_occurrence_compiled"
 		  translate_fia <- "/Volumes/GoogleDrive/My Drive/Distributions_TreeSpecies/fia_translation_data_raw"
 		  f_out <- "SDM_output"
       data_in <- "/main/data/directory/or/folder"
