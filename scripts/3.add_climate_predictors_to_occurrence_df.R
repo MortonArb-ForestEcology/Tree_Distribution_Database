@@ -89,5 +89,23 @@ occur_all$mean_annual_temp <- all_prism$mean_annual_temp
 occur_all$max_annual_temp <- all_prism$max_annual_temp
 occur_all$min_annual_temp <- all_prism$min_annual_temp
 
+# now repeat with the absences
+absent_12$long_round <- round(absent_12$decimalLongitude, 3)
+absent_12$lat_round <- round(absent_12$decimalLatitude, 3)
+absent_12_prism <- extract_PRISM(absent_12)
+absent_12$annual_ppt <- absent_12_prism$annual_ppt
+absent_12$mean_annual_temp <- absent_12_prism$mean_annual_temp
+absent_12$max_annual_temp <- absent_12_prism$max_annual_temp
+absent_12$min_annual_temp <- absent_12_prism$min_annual_temp
+
+absent_13$long_round <- round(absent_13$decimalLongitude, 3)
+absent_13$lat_round <- round(absent_13$decimalLatitude, 3)
+absent_13_prism <- extract_PRISM(absent_13)
+absent_13$annual_ppt <- absent_13_prism$annual_ppt
+absent_13$mean_annual_temp <- absent_13_prism$mean_annual_temp
+absent_13$max_annual_temp <- absent_13_prism$max_annual_temp
+absent_13$min_annual_temp <- absent_13_prism$min_annual_temp
+
+
 # Now write a csv for future use.
 write.csv(occur_all, file = paste0(compiled, "/occur_prism.csv"))
