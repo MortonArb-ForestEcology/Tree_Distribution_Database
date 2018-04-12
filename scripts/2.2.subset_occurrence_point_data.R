@@ -2,8 +2,11 @@
 ########### 4.2.18 Emily Beckman
 ############# subset occurrence point data to remove duplicates, etc.
 
-############### INPUT: Google Drive/Distributions_TreeSpecies/in-use_occurrence_compiled/occurence_raw_compiled.csv
-############### OUTPUT:
+############### INPUT: occurrence_compiled_dec2.csv
+############### OUTPUT: occurrence_compiled_dec2_unique.csv
+#                       occurrence_compiled_dec2_unique_countyDupMarked.csv
+#                       occurrence_compiled_dec2_unique_countyDupRemoved.csv
+#                       occurrence_compiled_dec2_unique_countyDupRemoved_acceptedDistMarked.csv
 
 ################
 ### LIBRARIES and FUNCTIONS
