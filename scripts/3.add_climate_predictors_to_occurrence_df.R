@@ -5,6 +5,8 @@
 
 
 ############### INPUT: occurrence_compiled_dec2_unique_countyDupRemoved.csv
+#                       fia_absence_compiled_first12.csv
+#                       fia_absence_compiled_thirteenth.csv
 #               (from script 2.2_subset_occurrence_point_data.R)
 #
 #
@@ -39,6 +41,10 @@ library(plyr)
 
 # read in occurrence data
 occur_all <- read.csv(file=paste0(compiled, '/occurrence_compiled_dec2_unique_countyDupRemoved.csv'), as.is=T)
+
+# read in absence data
+absent_12 <- read.csv(file=paste0(compiled, '/fia_absence_compiled_first12.csv'), as.is=T)
+absent_13 <- read.csv(file=paste0(compiled, '/fia_absence_compiled_thirteenth.csv'), as.is=T)
 
 # set wd for PRISM data
 # setwd("C:/Users/Elizabeth/Desktop/2017_CTS_fellowship/PRISM")
