@@ -367,7 +367,7 @@ all_data <- Reduce(rbind.all.columns, datasets)
   match_these_counties <- join(match_these_counties, centroids, by = c("STATENM", "COUNTYNM"), type ="left")
   # Note that any misspelled counties will not be found. Some rows were still unable to match data.
   
-  # now fill in these coordainte gaps
+  # now fill in these coordinate gaps
   all_data[fill_in_county_coord, "decimalLatitude"] <- match_these_counties$lat_round
   all_data[fill_in_county_coord, "decimalLongitude"] <- match_these_counties$long_round
   # and label the points as gps_determ = "C"
