@@ -41,7 +41,7 @@ gen_subset <- function(orig_data, action, export_name){
 ################
 
 # read in occurrence point file
-occur_all <- read.csv(file=paste0(one_up, '/in-use_occurrence_compiled/occurrence_compiled_dec2.csv'), as.is=T)
+occur_all <- read.csv(file=paste0(compiled, '/occurrence_compiled_dec2.csv'), as.is=T)
 nrow(occur_all) #45390
 # round lat and long to 3 digits after decimal
 occur_all$lat_round <- round(occur_all$decimalLatitude, 3)
@@ -65,7 +65,7 @@ table(occur_all$duplicate)
 #occur_all[occur_all$duplicate == "Unique", c("lat_round", "long_round", "obs_no", "species")]
 #occur_all[occur_all$duplicate == "Duplicate", c("lat_round", "long_round", "obs_no", "species")]
 # And we can easily subset out the duplicates and write a new file with the unique occurrences only.
-write.csv(occur_dec2_unq, file=paste0(one_up, "/in-use_occurrence_compiled/occurrence_compiled_dec2_unique.csv"))
+write.csv(occur_dec2_unq, file=paste0(compiled, "/occurrence_compiled_dec2_unique.csv"))
 
 # see how many occurrences we have for each species
 table(occur_dec2_unq$species)
@@ -110,11 +110,11 @@ to_remove <- subset(duplicates, gps_determ == "C" | gps_determ == "SC")
   nrow(to_remove) #362
 to_remove$county_centroid_dup <- rep("x")
 occur_dup_marked <- full_join(occur_counties, to_remove)
-write.csv(occur_dup_marked, file=paste0(one_up, "/in-use_occurrence_compiled/occurrence_compiled_dec2_unique_countyDupMarked.csv"))
+write.csv(occur_dup_marked, file=paste0(compiled, "/occurrence_compiled_dec2_unique_countyDupMarked.csv"))
 # remove county centroid duplicate records
 occur_clean <- anti_join(occur_counties, to_remove, by = "X")
   nrow(occur_clean) #7845
-write.csv(occur_clean, file=paste0(one_up, "/in-use_occurrence_compiled/occurrence_compiled_dec2_unique_countyDupRemoved.csv"))
+write.csv(occur_clean, file=paste0(compiled, "/occurrence_compiled_dec2_unique_countyDupRemoved.csv"))
 
 table(occur_clean$species)
 ################
@@ -147,4 +147,4 @@ accepted_dist_cty$inside_accepted_dist <- "x"
 # join marked counties to whole list (with dups removed)
 accepted_dist_marked <- join(occur_clean, accepted_dist_cty, type="left", match = "first")
   str(accepted_dist_marked)
-write.csv(accepted_dist_marked, file=paste0(one_up, "/in-use_occurrence_compiled/occurrence_compiled_dec2_unique_countyDupRemoved_acceptedDistMarked.csv"))
+write.csv(accepted_dist_marked, file=paste0(compiled, "/occurrence_compiled_dec2_unique_countyDupRemoved_acceptedDistMarked.csv"))

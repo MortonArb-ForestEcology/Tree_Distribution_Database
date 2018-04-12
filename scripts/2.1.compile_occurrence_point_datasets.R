@@ -403,6 +403,6 @@ occur_dec2 <- occur_dec2[order(occur_dec2$year, na.last = TRUE, decreasing = T),
 unique(occur_dec2$year)
 
 # write file
-write.csv(occur_dec2, file=paste0(one_up, "/in-use_occurrence_compiled/occurrence_compiled_dec2.csv"))
+write.csv(occur_dec2, file=paste0(compiled, "/occurrence_compiled_dec2.csv"))
 
 ## ON TO THE NEXT SCRIPT TO REMOVE DUPLICATE POINTS
