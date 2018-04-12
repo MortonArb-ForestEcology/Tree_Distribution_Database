@@ -4,14 +4,9 @@
 ###########
 
 
-############### INPUT: species data csv in any of the three levels of certainty
-#               (from script #3)
+############### INPUT: occurrence_compiled_dec2_unique_countyDupRemoved.csv
+#               (from script 2.2_subset_occurrence_point_data.R)
 #
-#               first three letters of species epithet + number representing level 
-#               of certainty + _coord.csv
-#               ex. Quercus arkansana at county level: ark1_coord.csv 
-#                 Quercus arkansana at localized level: ark2_coord.csv
-#                 Quercus arkansana at edited localized level: ark3_coord.csv
 #
 #               Also: climate RasterLayers from PRISM database (.bil files)
 ####### Find PRISM data on ULMUS server in  /home/data/PRISM
@@ -30,18 +25,19 @@
 #
 #     package: dplyr, raster, rgdal, sp
 #
-#     ############### OUTPUT: above files with extra columns holding climate and
+#     ############### OUTPUT: occurrence_compiled_dec2_unique_countyDupRemoved_wClimate.csv
+#                     above file with extra columns holding climate and
 #                     environmental predictor data
 #
-#                     ex. ark1_cp.csv
-#                         ark2_cp.csv
-#                         ark3_cp.csv
+#
 
 library(sp)
 library(raster)
 library(rgdal)
 library(dplyr)
 
+# read in occurrence data
+occur_all <- read.csv(file=paste0(compiled, '/occurrence_compiled_dec2_unique_countyDupRemoved.csv'), as.is=T)
 # setwd("C:/Users/Elizabeth/Desktop/2017_CTS_fellowship/compilation_eb")
 # decide which species data you would like to work with
 #ark1 <- read.csv("ark1_coord.csv")
