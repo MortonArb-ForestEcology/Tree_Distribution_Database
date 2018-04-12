@@ -224,13 +224,6 @@ sum(geo_loc$latitude==post_geo$latitude) #NA  Wow--everything has changed...This
 post_geo$gps_determ <- NA
 post_geo$gps_determ[!is.na(post_geo$latitude)] <- "L"
 
-# Let's look at how the occurrence quantities changed per each species, but first 
-# remove all duplicate coordinates and replace pre-existing coordinates 
-# that lacked coordinate issues in the post_geo dataset
-
-# set up species comparison chart
-#u_vec <- unique(post_geo$speciesKey)
-#comp_df <- data.frame(pre = rep(NA, length(u_vec)), post = rep(NA, length(u_vec)))
 # find which coordinates existed in the input document
 pre_filled <- which(!is.na(geo_loc$latitude))
 # Recognize that pre_existing coordinates were probably more precise than the 
@@ -265,49 +258,6 @@ post_geo[check_sc[keep_these], "gps_determ"] <- "C"
 keep_these <- which(!is.na(post_geo$gps_determ))
 post_geo <- post_geo[keep_these, ]
 
-# and run a loop to count the number of occurrences with coordinates for each 
-# species both for the input and the output GeoLocatedatasets
-#for (i in 1:length(u_vec)){
-#  a <- which(geo_loc$speciesKey == u_vec[i]) 
-#  y <- geo_loc[a, ]
-#  y$lat <- as.numeric(as.character(y$latitude))
-#  y$lon <- as.numeric(as.character(y$longitude))
-#  y <- filter(y, lat > 0, lon < 0)
-#  y <- y[!duplicated(round(y[,c("lat","lon")], 2)), ]
-#  w <- sum(!is.na(y$lat))
-#  b <- which(post_geo$speciesKey == u_vec[i])
-#  z <- post_geo[b, ]
-#  z$lat <- as.numeric(as.character(z$latitude))
-#  z$lon <- as.numeric(as.character(z$longitude))
-#  z <- filter(z, lat > 0, lon < 0)
-#  z <- z[!duplicated(round(z[,c("lat","lon")], 2)), ]
-#  x <- sum(!is.na(z$lat))
-#  comp_df[i, 1] <- w
-#  comp_df[i, 2] <- x
-#}
-
-#comp_df
-#summary(comp_df) # overall there is an increase in quantity of occurrences
-
-# No need to remove duplicates for now.
-# The post_geo dataset must be run through the above changes, one species at a 
-# time because duplicate coordinates for different species counts as two distinct occurrences.
-#post_geo$latitude <- as.numeric(as.character(post_geo$latitude))
-#post_geo$longitude <- as.numeric(as.character(post_geo$longitude))
-
-# we will make a new dataset with a new name  
-#revised_post_geo <- data.frame()
-# run the loop
-#for (i in 1:length(u_vec)){
-#b <- which(post_geo$speciesKey == u_vec[i])
-#z <- post_geo[b, ]
-#z <- filter(z, latitude > 0, longitude < 0)
-#z <- z[!duplicated(round(z[,c("latitude","longitude")], 2)), ]
-#revised_post_geo <- rbind(revised_post_geo, z)
-#}
-
-#length(revised_post_geo$latitude) #4855 occurrences total here
-
 # tack on an observation number here
 gbif_full$obs_no <- seq(1, length(gbif$basis), 1)
 # Now using the updated revised_post_geo dataset and the observation numbers that 
@@ -334,14 +284,3 @@ post_geo <- post_geo[precise_order, ]
 
 # and write a new dataset
 write.csv(post_geo, file='gbif_DC_post-georef_revised.csv', row.names = F)
-
-
-###### More exploration necessary regarding the following?
-# Other findings...
-# let's see how many are in the countries
-table(geo_loc$country) # 10,712 in the US, 602 in Mexico. The rest are other counties and NAs
-table(post_geo3$country) # okay it remains the same # Consider removing non-US points here
-
-# how many have multiple results?
-sum(post_geo3$multiple_results=="") # all except 2052
-
