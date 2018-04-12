@@ -35,22 +35,20 @@ library(sp)
 library(raster)
 library(rgdal)
 library(dplyr)
+library(plyr)
 
 # read in occurrence data
 occur_all <- read.csv(file=paste0(compiled, '/occurrence_compiled_dec2_unique_countyDupRemoved.csv'), as.is=T)
-# setwd("C:/Users/Elizabeth/Desktop/2017_CTS_fellowship/compilation_eb")
-# decide which species data you would like to work with
-#ark1 <- read.csv("ark1_coord.csv")
-#ino1 <- read.csv("ino1_coord.csv")
-#ark2 <- read.csv("ark2_coord.csv")
-#ino2 <- read.csv("ino2_coord.csv")
-#ark3 <- 
-#ino3 <- 
 
 # set wd for PRISM data
 # setwd("C:/Users/Elizabeth/Desktop/2017_CTS_fellowship/PRISM")
+# /home/data/PRISM/yearly_calculated/PRISM_ppt_2016.gri (example)... load each variable and each year?
+# /home/data/PRISM/normal_4km/ppt/PRISM_ppt_30yr_normal_4kmM2_annual_bil.bil
+# /home/data/PRISM/normal_4km/tmean/PRISM_tmean_30yr_normal_4kmM2_annual_bil.bil
+# /home/data/PRISM/normal_4km/tmax/PRISM_tmax_30yr_normal_4kmM2_annual_bil.bil
+# /home/data/PRISM/normal_4km/tmin/PRISM_tmin_30yr_normal_4kmM2_annual_bil.bil
 
-# and extract the appropriate climate RasterLayers
+# and extract the appropriate climate RasterLayers INSERT APPROPRIATE FILE ADDRESSES BELOW
 annual_ppt <- raster("PRISM_ppt_30yr_normal_4kmM2_annual_bil.bil")
 annual_mean_temp <- raster("PRISM_tmean_30yr_normal_4kmM2_annual_bil.bil")
 annual_max_temp <- raster("PRISM_tmax_30yr_normal_4kmM2_annual_bil.bil")
@@ -60,7 +58,7 @@ annual_min_temp <- raster("PRISM_tmin_30yr_normal_4kmM2_annual_bil.bil")
 # in this function, extract all PRISM values that you want
 extract_PRISM <- function(d.f){
   # make sure order is LON LAT
-    d.f_coord <- d.f[, c("long", "lat")]  
+    d.f_coord <- d.f[, c("long_round", "lat_round")]  
     # extract precipitation data from PRISM
     d.f_ppt <- extract(annual_ppt, d.f_coord)
     # extract mean temperature data
@@ -79,8 +77,11 @@ extract_PRISM <- function(d.f){
     print(d.f_coord)
 }
 
-ark2_prism <- extract_PRISM(ark2)
+all_prism <- extract_PRISM(occur_all)
+occur_all$annual_ppt <- all_prism$annual_ppt
+occur_all$mean_annual_temp <- all_prism$mean_annual_temp
+occur_all$max_annual_temp <- all_prism$max_annual_temp
+occur_all$min_annual_temp <- all_prism$min_annual_temp
 
 # Now write a csv for future use.
-write.csv(ark2_prism, file = "ark2_prism.csv")
-
+write.csv(occur_all, file = paste0(compiled, "/occur_prism.csv"))
