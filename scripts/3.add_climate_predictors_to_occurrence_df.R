@@ -60,6 +60,17 @@ annual_mean_temp <- raster("PRISM_tmean_30yr_normal_4kmM2_annual_bil.bil")
 annual_max_temp <- raster("PRISM_tmax_30yr_normal_4kmM2_annual_bil.bil")
 annual_min_temp <- raster("PRISM_tmin_30yr_normal_4kmM2_annual_bil.bil")
 
+# make shapefile of occurrence data we need for each model
+occ_shapefile <- function(d.f, subset){
+  d.f <- d.f[subset,]
+  d.f_coord <- d.f[, c("long_round", "lat_round")]
+  spdf <- SpatialPointsDataFrame(coords = d.f_coord, data = d.f, 
+                                 proj4string = CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"))
+  
+}
+
+occ_shapefile(occur_all, unique(occur_all$speciesKey)[1])
+
 
 # in this function, extract all PRISM values that you want
 extract_PRISM <- function(d.f){
