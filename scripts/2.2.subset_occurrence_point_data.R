@@ -56,23 +56,33 @@ nrow(occur_all) #45374
 # before removing duplicates, let's number the occurrences so we know which ones will be saved
 occur_all$obs_no <- seq(1, length(occur_all$X), 1)
 # remove spatial duplicates based on species name and lat/long rounded to 3 digits after the decimal
-occur_dec2_unq <- occur_all%>%distinct(species,lat_round,long_round,.keep_all=TRUE)
+occur_dec2_unq6 <- occur_all%>%distinct(speciesKey,lat_round,long_round,.keep_all=TRUE)
 occur_dec2_unq2 <- occur_all%>%distinct(lat_round,long_round,.keep_all=TRUE)
-occur_dec2_unq3 <- occur_all%>%distinct(species,.keep_all=TRUE)
-occur_dec2_unq4 <- occur_all[occur_all$species=="Quercus engelmannii", ] %>% distinct(lat_round,long_round,.keep_all = T)
+
 # Do a loop to consider each species separately
 sp_vec <- unique(occur_all$speciesKey)
+
+occur_dec2_unq3 <- data.frame()
+for (i in 1:length(sp_vec)){
+  unq_sp_coord <- occur_all[occur_all$speciesKey==sp_vec[i], ] %>% distinct(lat_round,long_round,.keep_all = T)  
+  occur_dec2_unq3 <- rbind(occur_dec2_unq3, unq_sp_coord)
+}
+
 occur_dec2_unq4 <- data.frame()
 for (i in 1:length(sp_vec)){
   unq_sp_coord <- occur_all[occur_all$speciesKey==sp_vec[i], ]
-  unq_sp_coord <- unq_sp_coord[!duplicated(c("lat_round", "long_round")),]
+  unq_sp_coord <- unq_sp_coord[!duplicated(c(unq_sp_coord$lat_round, unq_sp_coord$long_round)),]
   occur_dec2_unq4 <- rbind(occur_dec2_unq4, unq_sp_coord)
-  }
+}
+# lots of NAs?
 
-unq_sp_coord <- occur_all[occur_all$speciesKey==sp_vec[i], ] %>% distinct(lat_round,long_round,.keep_all = T)  
+occur_dec2_unq5 <- data.frame()
+for (i in 1:length(unique(occur_all$species))){
+unq_sp_coord <- occur_all[occur_all$species==unique(occur_all$species)[i], ] %>% distinct(lat_round,long_round,.keep_all = T)
+occur_dec2_unq5 <- rbind(occur_dec2_unq5, unq_sp_coord)
+}
+# why so different??
 
-unq_sp_coord <- occur_all[occur_all$speciesKey==sp_vec[i], ] 
-unq_sp_coord <- unq_sp_coord[!duplicated(c("lat_round", "long_round")),]
 
 nrow(occur_dec2_unq) #8207 with 2 dec places, 7908 with 3 dec places
 # make a new vector with this unique observations
