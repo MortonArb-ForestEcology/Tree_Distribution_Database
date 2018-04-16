@@ -395,7 +395,7 @@ occur_all$locality<-gsub(",",".",occur_all$locality)
 
 # remove points with fewer than 2 digits after the decimal for lat and/or long
 occur_dec2 <- occur_all[grep("\\.[0-9][1-9]",occur_all$decimalLatitude),]
-nrow(occur_all) #59357 (ELT)
+nrow(occur_dec2) #51215 (ELT)
 occur_dec2 <- occur_dec2[grep("\\.[0-9][1-9]",occur_dec2$decimalLongitude),]
 nrow(occur_dec2) #45390
 
