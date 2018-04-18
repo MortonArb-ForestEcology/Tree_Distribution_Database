@@ -300,6 +300,8 @@ presence$dumosa <- 1
 fia_absence_joint <- join(fia_absence_joint, presence, by = c("LAT", "LON", "INVYR"), type = "left")
 # remove extra columns
 fia_absence_joint <- subset(fia_absence_joint, select = -c(species, SPCD))
+#lastly change NAs to 0s
+fia_absence_joint[which(is.na(fia_absence_joint$dumosa)), "dumosa"] <- 0
 
 presence <- fia_pres[fia_pres$SPCD==rare_oak[4],]
 nrow(presence)
@@ -310,6 +312,7 @@ nrow(presence)
 presence$graciliformis <- 1
 fia_absence_joint <- join(fia_absence_joint, presence, by = c("LAT", "LON", "INVYR"), type = "left")
 fia_absence_joint <- subset(fia_absence_joint, select = -c(species, SPCD))
+fia_absence_joint[which(is.na(fia_absence_joint$graciliformis)), "graciliformis"] <- 0
 
 presence <- fia_pres[fia_pres$SPCD==rare_oak[6],]
 nrow(presence)
@@ -320,18 +323,21 @@ nrow(presence)
 presence$laceyi <- 1
 fia_absence_joint <- join(fia_absence_joint, presence, by = c("LAT", "LON", "INVYR"), type = "left")
 fia_absence_joint <- subset(fia_absence_joint, select = -c(species, SPCD))
+fia_absence_joint[which(is.na(fia_absence_joint$laceyi)), "laceyi"] <- 0
 
 presence <- fia_pres[fia_pres$SPCD==rare_oak[8],]
 nrow(presence)
 presence$lobata <- 1
 fia_absence_joint <- join(fia_absence_joint, presence, by = c("LAT", "LON", "INVYR"), type = "left")
 fia_absence_joint <- subset(fia_absence_joint, select = -c(species, SPCD))
+fia_absence_joint[which(is.na(fia_absence_joint$lobata)), "lobata"] <- 0
 
 presence <- fia_pres[fia_pres$SPCD==rare_oak[9],]
 nrow(presence)
 presence$oglethorpensis <- 1
 fia_absence_joint <- join(fia_absence_joint, presence, by = c("LAT", "LON", "INVYR"), type = "left")
 fia_absence_joint <- subset(fia_absence_joint, select = -c(species, SPCD))
+fia_absence_joint[which(is.na(fia_absence_joint$oglethorpensis)), "oglethorpensis"] <- 0
 
 presence <- fia_pres[fia_pres$SPCD==rare_oak[10],]
 nrow(presence)
@@ -342,6 +348,7 @@ nrow(presence)
 presence$similis <- 1
 fia_absence_joint <- join(fia_absence_joint, presence, by = c("LAT", "LON", "INVYR"), type = "left")
 fia_absence_joint <- subset(fia_absence_joint, select = -c(species, SPCD))
+fia_absence_joint[which(is.na(fia_absence_joint$similis)), "similis"] <- 0
 
 presence <- fia_pres[fia_pres$SPCD==rare_oak[12],]
 nrow(presence)
@@ -351,66 +358,8 @@ presence <- fia_pres[fia_pres$SPCD==rare_oak[13],]
 nrow(presence)
 fia_absence_joint$toumeyi <- 0
 
-write.csv(fia_absence, file=paste0(one_up, "/in-use_occurrence_compiled/fia_absence_compiled.csv"))
+write.csv(fia_absence_joint, file=paste0(one_up, "/in-use_occurrence_compiled/fia_absence_compiled.csv"))
 
-# we will make a new dataset for absence occurrences
- fia_absence <- data.frame()
-
- # be sure that fia_cou, fia_sp and plot have already been loaded before running loop
-
- # run the loop
- for (i in 1:length(rare_oak)){
-   # find the unique coordinates where each species is present
-   presence <- fia[fia$fia_codes==rare_oak[i], c("decimalLatitude", "decimalLongitude")]
-   presence <- paste(presence$decimalLatitude, presence$decimalLongitude, sep = "_")
-   # combine the coordinates of plot into single values for easy comparison
-   all <- paste(plot$LAT, plot$LON, sep = "_")
-   # find which plot coordinates did not have the species present
-   absence <- setdiff(all, presence)
-   # split the absence coordinates and make a list
-   abs_list <- strsplit(absence, "_")
-   #Transform the list into a data frame and set appropriate column names:
-   absence <- ldply(abs_list)
-   colnames(absence) <- c("LAT", "LON")
-   # Now merge the above coordinates with the rest of the plot information
-   absence <- join(absence, plot, by = c("LAT", "LON"), type="left", match = "first")
-   # Now merge the data frame with state and county data
-   absence <- merge(absence, fia_cou, by = c("STATECD", "COUNTYCD", "UNITCD"), all = F)
-   # add the fia_code column
-   absence$SPCD <- rare_oak[i]
-   # add the rest of the species information
-   absence <- merge(absence, fia_sp, by = "SPCD", all = F)
-   absence <- absence[, 1:23]
-   absence$scientificName <- paste(absence$GENUS, absence$SPECIES, absence$VARIETY, absence$SUBSPECIES)
-   absence$species <- paste(absence$GENUS, absence$SPECIES)
-   absence$order <- "Fagales"
-   absence$family <- "Fagaceae"
-   absence$institutionCode <- "USFS"
-   absence$country <- "US"
-   # remove unnecessary columns
-   absence <- subset(absence, select = c(order,family,GENUS,SPECIES,scientificName,institutionCode,
-                                         LAT,LON,CREATED_DATE.x,country,STATENM,COUNTYNM,species,SPCD))
-   # rename remaining columns to match other data sets
-   setnames(absence,
-            old=c("LAT","LON", "CREATED_DATE.x", "STATENM", "COUNTYNM", "SPCD", "GENUS","SPECIES", "country"),
-            new=c("decimalLatitude","decimalLongitude", "year", "stateProvince", "county", "fia_codes", "genus","specificEpithet", "countryCode"))
-   # fix year column
-   # first we have to remove the characters that are not the year, month or day
-   absence$year <- mdy(absence$year)
-   absence <- absence %>% separate("year", c("year", "delete"), sep="-", fill="right", extra="merge")
-   # remove unwanted "delete" column
-   absence <- subset(absence, select = -(delete))
-   # I'm not sure how helpful this year column is.
-   absence$dataset <- "fia"
-   absence$basisOfRecord <- "WILD_PROVENANCE"
-   # add standard species ID columns
-   absence <- join(absence, sp_list, by = c("fia_codes", "species"), type="left", match = "first"); str(fia)
-   fia_absence <- rbind(fia_absence, absence)
- }
- # takes about 90 minutes to run--my computer can only fit absences for the first 12
- # So I uploaded the compiled list of the first 12 species and absences for the 13th were uploaded separately.
- # result includes all absences besides for spcd == 8457
- write.csv(fia_absence, file=paste0(one_up, "/in-use_occurrence_compiled/fia_absence_compiled.csv"))
 ################
 ### 7. Stack All Datasets
 ################
