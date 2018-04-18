@@ -268,6 +268,46 @@ write.csv(fia, file=paste0(one_up, "/in-use_occurrence_compiled/fia_compiled.csv
 ### Make FIA absence occurence file ###################################################
 # Note that this absence data will only be for the 13 species that FIA included in its search
 rare_oak <- c(6768, 8429, 811, 6782, 851, 6785, 8514, 821, 844, 8492, 836, 8455, 8457)
+
+# make a new function to minimize adding too many rows to this data frame
+# function will compare presence coordinates to the coordinates of each plot 
+# and determine which rows can be called absences for each species
+# Then concatenate 4 letter code onto species column
+fia_absence_joint <- plot
+
+# rare_sp will be the fia SPCD
+# be sure plot and fia_sp are loaded before running this.
+find_absence <- function(rare_sp, plot_file){
+  presence <- fia[fia$fia_codes==rare_sp, c("decimalLatitude", "decimalLongitude")]
+  presence <- paste(presence$decimalLatitude, presence$decimalLongitude, sep = "_")
+# combine the coordinates of plot into single values for easy comparison
+  all <- paste(plot_file$LAT, plot_file$LON, sep = "_")
+# find which plot coordinates did not have the species present
+  absence <- setdiff(all, presence)
+  abs_list <- strsplit(absence, "_")
+  #Transform the list into a data frame and set appropriate column names:
+  absence <- ldply(abs_list)
+  colnames(absence) <- c("LAT", "LON")
+  # label the absent rows now
+  absence$absent <- 1
+  absence2 <- join(plot, absence, by = c("LAT", "LON"), type  ="full")
+  # Even though this resulting data frame is slightly longer, its only the last row
+  # that differs from plot, so we can use it to find out which row numbers represent absences
+abs_count <- which(absence2$absent == 1)
+  print(abs_count)
+  print(fia_sp[fia_sp$SPCD==rare_sp, "SPECIES"])
+}
+
+test <- find_absence(6768, plot)
+
+
+
+
+
+
+
+
+
 # we will make a new dataset for absence occurrences
  fia_absence <- data.frame()
 
