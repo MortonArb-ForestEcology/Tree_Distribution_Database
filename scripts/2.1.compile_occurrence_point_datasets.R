@@ -277,11 +277,11 @@ fia_absence_joint <- plot
 
 # rare_sp will be the fia SPCD
 # be sure plot and fia_sp are loaded before running this.
-find_absence <- function(rare_sp, plot_file){
+find_absence <- function(rare_sp){
   presence <- fia[fia$fia_codes==rare_sp, c("decimalLatitude", "decimalLongitude")]
   presence <- paste(presence$decimalLatitude, presence$decimalLongitude, sep = "_")
 # combine the coordinates of plot into single values for easy comparison
-  all <- paste(plot_file$LAT, plot_file$LON, sep = "_")
+  all <- paste(plot$LAT, plot$LON, sep = "_")
 # find which plot coordinates did not have the species present
   absence <- setdiff(all, presence)
   abs_list <- strsplit(absence, "_")
@@ -294,14 +294,14 @@ find_absence <- function(rare_sp, plot_file){
   # Even though this resulting data frame is slightly longer, its only the last row
   # that differs from plot, so we can use it to find out which row numbers represent absences
 abs_count <- which(absence2$absent == 1)
-  print(abs_count)
   print(fia_sp[fia_sp$SPCD==rare_sp, "SPECIES"])
+  print(abs_count)
 }
 
-test <- find_absence(6768, plot)
+test <- find_absence(6768)
 
 
-
+###sapply(find_absence(rare_oak)) how does this work?
 
 
 
