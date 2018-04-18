@@ -303,8 +303,23 @@ test <- find_absence(6768)
 
 ###sapply(find_absence(rare_oak)) how does this work?
 
+## Try out Shannon's suggestions
+# remove most rows from exisiting fia dataset
+fia2 <- subset(fia, select = c(decimalLatitude, decimalLongitude,
+                              species,fia_codes, year))
+setnames(fia2,
+         old=c("decimalLatitude","decimalLongitude", "year", "fia_codes"),
+          new=c("LAT","LON", "INVYR", "SPCD"))
 
-
+#subset fia2 by species and label with a one
+presence <- fia2[fia2$fia_codes==rare_oak[1],]
+nrow(presence)
+# if greater than 0, make an extra column indicating presence of the species in that plot
+#presence$rare_sp <- 1  
+# then join it to the larger plot
+#plot2 <- join(plot, presence, by = c("LAT", "LON", "INVYR") type = "left")
+# if the nrow is 0, then simply add a column directly to the plot data frame
+plot$arkansana <- 0
 
 
 
