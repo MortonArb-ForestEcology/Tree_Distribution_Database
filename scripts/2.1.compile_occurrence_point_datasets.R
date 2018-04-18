@@ -269,59 +269,89 @@ write.csv(fia, file=paste0(one_up, "/in-use_occurrence_compiled/fia_compiled.csv
 # Note that this absence data will only be for the 13 species that FIA included in its search
 rare_oak <- c(6768, 8429, 811, 6782, 851, 6785, 8514, 821, 844, 8492, 836, 8455, 8457)
 
-# make a new function to minimize adding too many rows to this data frame
-# function will compare presence coordinates to the coordinates of each plot 
-# and determine which rows can be called absences for each species
-# Then concatenate 4 letter code onto species column
+# name new absence file
 fia_absence_joint <- plot
 
-# rare_sp will be the fia SPCD
-# be sure plot and fia_sp are loaded before running this.
-find_absence <- function(rare_sp){
-  presence <- fia[fia$fia_codes==rare_sp, c("decimalLatitude", "decimalLongitude")]
-  presence <- paste(presence$decimalLatitude, presence$decimalLongitude, sep = "_")
-# combine the coordinates of plot into single values for easy comparison
-  all <- paste(plot$LAT, plot$LON, sep = "_")
-# find which plot coordinates did not have the species present
-  absence <- setdiff(all, presence)
-  abs_list <- strsplit(absence, "_")
-  #Transform the list into a data frame and set appropriate column names:
-  absence <- ldply(abs_list)
-  colnames(absence) <- c("LAT", "LON")
-  # label the absent rows now
-  absence$absent <- 1
-  absence2 <- join(plot, absence, by = c("LAT", "LON"), type  ="full")
-  # Even though this resulting data frame is slightly longer, its only the last row
-  # that differs from plot, so we can use it to find out which row numbers represent absences
-abs_count <- which(absence2$absent == 1)
-  print(fia_sp[fia_sp$SPCD==rare_sp, "SPECIES"])
-  print(abs_count)
-}
-
-test <- find_absence(6768)
-
-
-###sapply(find_absence(rare_oak)) how does this work?
-
-## Try out Shannon's suggestions
 # remove most rows from exisiting fia dataset
-fia2 <- subset(fia, select = c(decimalLatitude, decimalLongitude,
+fia_pres <- subset(fia, select = c(decimalLatitude, decimalLongitude,
                               species,fia_codes, year))
-setnames(fia2,
+setnames(fia_pres,
          old=c("decimalLatitude","decimalLongitude", "year", "fia_codes"),
           new=c("LAT","LON", "INVYR", "SPCD"))
 
-#subset fia2 by species and label with a one
-presence <- fia2[fia2$fia_codes==rare_oak[1],]
+#subset by species
+presence <- fia_pres[fia_pres$SPCD==rare_oak[1],]
 nrow(presence)
 # if greater than 0, make an extra column indicating presence of the species in that plot
 #presence$rare_sp <- 1  
 # then join it to the larger plot
-#plot2 <- join(plot, presence, by = c("LAT", "LON", "INVYR") type = "left")
+#fia_absence_joint <- join(fia_absence_joint, presence, by = c("LAT", "LON", "INVYR") type = "left")
 # if the nrow is 0, then simply add a column directly to the plot data frame
-plot$arkansana <- 0
+fia_absence_joint$arkansana <- 0
 
+# next species
+presence <- fia_pres[fia_pres$SPCD==rare_oak[2],]
+nrow(presence)
+fia_absence_joint$austrina <- 0
 
+presence <- fia_pres[fia_pres$SPCD==rare_oak[3],]
+nrow(presence)
+presence$dumosa <- 1  
+fia_absence_joint <- join(fia_absence_joint, presence, by = c("LAT", "LON", "INVYR"), type = "left")
+# remove extra columns
+fia_absence_joint <- subset(fia_absence_joint, select = -c(species, SPCD))
+
+presence <- fia_pres[fia_pres$SPCD==rare_oak[4],]
+nrow(presence)
+fia_absence_joint$georgiana <- 0
+
+presence <- fia_pres[fia_pres$SPCD==rare_oak[5],]
+nrow(presence)
+presence$graciliformis <- 1
+fia_absence_joint <- join(fia_absence_joint, presence, by = c("LAT", "LON", "INVYR"), type = "left")
+fia_absence_joint <- subset(fia_absence_joint, select = -c(species, SPCD))
+
+presence <- fia_pres[fia_pres$SPCD==rare_oak[6],]
+nrow(presence)
+fia_absence_joint$havardii <- 0
+
+presence <- fia_pres[fia_pres$SPCD==rare_oak[7],]
+nrow(presence)
+presence$laceyi <- 1
+fia_absence_joint <- join(fia_absence_joint, presence, by = c("LAT", "LON", "INVYR"), type = "left")
+fia_absence_joint <- subset(fia_absence_joint, select = -c(species, SPCD))
+
+presence <- fia_pres[fia_pres$SPCD==rare_oak[8],]
+nrow(presence)
+presence$lobata <- 1
+fia_absence_joint <- join(fia_absence_joint, presence, by = c("LAT", "LON", "INVYR"), type = "left")
+fia_absence_joint <- subset(fia_absence_joint, select = -c(species, SPCD))
+
+presence <- fia_pres[fia_pres$SPCD==rare_oak[9],]
+nrow(presence)
+presence$oglethorpensis <- 1
+fia_absence_joint <- join(fia_absence_joint, presence, by = c("LAT", "LON", "INVYR"), type = "left")
+fia_absence_joint <- subset(fia_absence_joint, select = -c(species, SPCD))
+
+presence <- fia_pres[fia_pres$SPCD==rare_oak[10],]
+nrow(presence)
+fia_absence_joint$robusta <- 0
+ 
+presence <- fia_pres[fia_pres$SPCD==rare_oak[11],]
+nrow(presence)
+presence$similis <- 1
+fia_absence_joint <- join(fia_absence_joint, presence, by = c("LAT", "LON", "INVYR"), type = "left")
+fia_absence_joint <- subset(fia_absence_joint, select = -c(species, SPCD))
+
+presence <- fia_pres[fia_pres$SPCD==rare_oak[12],]
+nrow(presence)
+fia_absence_joint$tardifolia <- 0
+
+presence <- fia_pres[fia_pres$SPCD==rare_oak[13],]
+nrow(presence)
+fia_absence_joint$toumeyi <- 0
+
+write.csv(fia_absence, file=paste0(one_up, "/in-use_occurrence_compiled/fia_absence_compiled.csv"))
 
 # we will make a new dataset for absence occurrences
  fia_absence <- data.frame()
