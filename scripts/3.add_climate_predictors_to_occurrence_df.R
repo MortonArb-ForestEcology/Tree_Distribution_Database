@@ -43,8 +43,7 @@ library(plyr)
 occur_all <- read.csv(file=paste0(compiled, '/occurrence_compiled_dec2_unique_countyDupRemoved.csv'), as.is=T)
 
 # read in absence data
-absent_12 <- read.csv(file=paste0(compiled, '/fia_absence_compiled_first12.csv'), as.is=T)
-absent_13 <- read.csv(file=paste0(compiled, '/fia_absence_compiled_thirteenth.csv'), as.is=T)
+absent <- read.csv(file=paste0(compiled, '/fia_absence_compiled.csv'), as.is=T)
 
 # set wd for PRISM data
 # setwd("C:/Users/Elizabeth/Desktop/2017_CTS_fellowship/PRISM")
@@ -105,22 +104,13 @@ write.csv(occur_all, file = paste0(compiled, "/occur_prism.csv"))
 
 
 # now repeat with the absences
-absent_12$long_round <- round(absent_12$decimalLongitude, 3)
-absent_12$lat_round <- round(absent_12$decimalLatitude, 3)
-absent_12_prism <- extract_PRISM(absent_12)
-absent_12$annual_ppt <- absent_12_prism$annual_ppt
-absent_12$mean_annual_temp <- absent_12_prism$mean_annual_temp
-absent_12$max_annual_temp <- absent_12_prism$max_annual_temp
-absent_12$min_annual_temp <- absent_12_prism$min_annual_temp
-
-absent_13$long_round <- round(absent_13$decimalLongitude, 3)
-absent_13$lat_round <- round(absent_13$decimalLatitude, 3)
-absent_13_prism <- extract_PRISM(absent_13)
-absent_13$annual_ppt <- absent_13_prism$annual_ppt
-absent_13$mean_annual_temp <- absent_13_prism$mean_annual_temp
-absent_13$max_annual_temp <- absent_13_prism$max_annual_temp
-absent_13$min_annual_temp <- absent_13_prism$min_annual_temp
+absent$long_round <- round(absent$LON, 3)
+absent$lat_round <- round(absent$LAT, 3)
+absent_prism <- extract_PRISM(absent)
+absent$annual_ppt <- absent_prism$annual_ppt
+absent$mean_annual_temp <- absent_prism$mean_annual_temp
+absent$max_annual_temp <- absent_prism$max_annual_temp
+absent$min_annual_temp <- absent_prism$min_annual_temp
 
 # Write csvs for the absence data too
-write.csv(absent_12, file = paste0(compiled, "/absent_12_prism.csv"))
-write.csv(absent_13, file = paste0(compiled, "/absent_13_prism.csv"))
+write.csv(absent, file = paste0(compiled, "/absent_prism.csv"))
