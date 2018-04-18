@@ -1,4 +1,5 @@
 ## set_workingdirectory.R
+# Shannon Still
 
 ## set the working environment for the computer on which you are working.
 	## here we are just setting the working directoary and maybe an output folder. But we could also add links specific to operating systems or other computers.
