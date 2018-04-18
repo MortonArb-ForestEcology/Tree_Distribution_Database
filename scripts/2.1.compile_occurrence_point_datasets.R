@@ -304,58 +304,48 @@ fia_absence_joint <- subset(fia_absence_joint, select = -c(species, SPCD))
 fia_absence_joint[which(is.na(fia_absence_joint$dumosa)), "dumosa"] <- 0
 
 presence <- fia_pres[fia_pres$SPCD==rare_oak[4],]
-nrow(presence)
 fia_absence_joint$georgiana <- 0
 
 presence <- fia_pres[fia_pres$SPCD==rare_oak[5],]
-nrow(presence)
 presence$graciliformis <- 1
 fia_absence_joint <- join(fia_absence_joint, presence, by = c("LAT", "LON", "INVYR"), type = "left")
 fia_absence_joint <- subset(fia_absence_joint, select = -c(species, SPCD))
 fia_absence_joint[which(is.na(fia_absence_joint$graciliformis)), "graciliformis"] <- 0
 
 presence <- fia_pres[fia_pres$SPCD==rare_oak[6],]
-nrow(presence)
 fia_absence_joint$havardii <- 0
 
 presence <- fia_pres[fia_pres$SPCD==rare_oak[7],]
-nrow(presence)
 presence$laceyi <- 1
 fia_absence_joint <- join(fia_absence_joint, presence, by = c("LAT", "LON", "INVYR"), type = "left")
 fia_absence_joint <- subset(fia_absence_joint, select = -c(species, SPCD))
 fia_absence_joint[which(is.na(fia_absence_joint$laceyi)), "laceyi"] <- 0
 
 presence <- fia_pres[fia_pres$SPCD==rare_oak[8],]
-nrow(presence)
 presence$lobata <- 1
 fia_absence_joint <- join(fia_absence_joint, presence, by = c("LAT", "LON", "INVYR"), type = "left")
 fia_absence_joint <- subset(fia_absence_joint, select = -c(species, SPCD))
 fia_absence_joint[which(is.na(fia_absence_joint$lobata)), "lobata"] <- 0
 
 presence <- fia_pres[fia_pres$SPCD==rare_oak[9],]
-nrow(presence)
 presence$oglethorpensis <- 1
 fia_absence_joint <- join(fia_absence_joint, presence, by = c("LAT", "LON", "INVYR"), type = "left")
 fia_absence_joint <- subset(fia_absence_joint, select = -c(species, SPCD))
 fia_absence_joint[which(is.na(fia_absence_joint$oglethorpensis)), "oglethorpensis"] <- 0
 
 presence <- fia_pres[fia_pres$SPCD==rare_oak[10],]
-nrow(presence)
 fia_absence_joint$robusta <- 0
  
 presence <- fia_pres[fia_pres$SPCD==rare_oak[11],]
-nrow(presence)
 presence$similis <- 1
 fia_absence_joint <- join(fia_absence_joint, presence, by = c("LAT", "LON", "INVYR"), type = "left")
 fia_absence_joint <- subset(fia_absence_joint, select = -c(species, SPCD))
 fia_absence_joint[which(is.na(fia_absence_joint$similis)), "similis"] <- 0
 
 presence <- fia_pres[fia_pres$SPCD==rare_oak[12],]
-nrow(presence)
 fia_absence_joint$tardifolia <- 0
 
 presence <- fia_pres[fia_pres$SPCD==rare_oak[13],]
-nrow(presence)
 fia_absence_joint$toumeyi <- 0
 
 write.csv(fia_absence_joint, file=paste0(one_up, "/in-use_occurrence_compiled/fia_absence_compiled.csv"))
