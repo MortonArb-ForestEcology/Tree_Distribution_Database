@@ -63,9 +63,12 @@ nos <- seq(9, 21, 1)
 create_absence_shp <- function(ab_sp, no){
   # First unique(occur_all$species)[1]
   sp_subset <- absent[absent[, no] < 1,7:8]
+  # remove NA coordinates from plot so can round without error
+  sp_subset <- sp_subset[!is.na(sp_subset$LON),]
+  sp_subset <- sp_subset[!is.na(sp_subset$LAT),]
   sp_subset$long_round <- round(sp_subset$LON, 3)
   sp_subset$lat_round <- round(sp_subset$LAT, 3)
-    coordinates(sp_subset)=~long_round+lat_round
+  coordinates(sp_subset)=~long_round+lat_round
   proj4string(sp_subset)<- CRS("+proj=longlat +datum=WGS84")
   LLcoor<-spTransform(sp_subset,CRS("+proj=longlat"))
   writeOGR(LLcoor, dsn = paste0(compiled, "/species_shapefiles/", ab_sp, "_absence.shp"), layer ='toumeyi', driver = 'ESRI Shapefile')
@@ -80,4 +83,5 @@ for (i in 1:length(nos)){
   create_absence_shp(absent_sp[i], nos[i])
 }
 
-create_absence_shp(absent_sp[1], nos[1])
+create_absence_shp(absent_sp[2], nos[2])
+# takes about 40 minutes to do 1, but the loop should work!
