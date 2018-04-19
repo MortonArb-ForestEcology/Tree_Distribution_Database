@@ -2,16 +2,20 @@
 ########### 2.27.18 Elizabeth Tokarz
 ###########
 ###########
-###########   rework this--is this step necssary?
+###########   make species shapefiles
 ###########
 
 
-############### INPUT: raw "occur_all" data csv (a large file holding all the data we could
-#               possibly need for our 28 species; including location, source, climatic variables)
+############### INPUT: raw "occur_all" data csv 
+#                 occurrence_compiled_dec2_unique_countyDupRemoved.csv             
 #
 #     package: dplyr
 #
-#     ############### OUTPUT: edited species-specific csv at three levels of certainty 
+#     ############### OUTPUT:shapefiles for each species of interest
+#
+#
+#
+#                     edited species-specific csv at three levels of certainty 
 #                     (a smaller file containing all occurrence data necessary 
 #                     for our model, having removed unreasonable occurrence 
 #                     outliers)
@@ -21,18 +25,34 @@
 #                     3. Given and localized coordinates from reliable sources
 
 
-# setwd("C:/Users/Elizabeth/Desktop/2017_CTS_fellowship/compilation_eb")
-# raw <- read.csv("raw_data_temp_0218.csv")
-
-raw <- read.csv("../data/raw_data_temp_0218.csv")
-#raw <- read.csv("gbif_arkansana_inopina.csv")
-
-## a. Read in occurrence point file -IF- you've added coordinates for species with locality info but no given lat/long
-occur_all <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/standard_col/datasets_combined/occurrence_raw_compiled_edit.csv', as.is=T)
-# windows
-# occur_all <- read.csv(file='G:/My Drive/Distributions_TreeSpecies/in-use_occurrence_raw/standard_col/datasets_combined/occurrence_raw_compiled_edit.csv', as.is=T)
 
 library(dplyr)
+library(raster)
+library(maptools)
+library(rgdal)
+library(sp)
+
+occur_all <- read.csv(file=paste0(compiled, '/occurrence_compiled_dec2_unique_countyDupRemoved.csv'), as.is=T)
+
+# We want to make a shapefile for each of the species occurrences, so let's make a function for that
+
+create_species_shp <- function(no){
+# First unique(occur_all$species)[1]
+sp_subset <- occur_all[occur_all$species==unique(occur_all$species)[no],]
+
+coordinates(sp_subset)=~long_round+lat_round
+proj4string(sp_subset)<- CRS("+proj=longlat +datum=WGS84")
+LLcoor<-spTransform(sp_subset,CRS("+proj=longlat"))
+writeOGR(LLcoor, dsn = paste0(compiled, "/species_shapefiles/", unique(occur_all$species[no]), ".shp"), layer ='toumeyi', driver = 'ESRI Shapefile')
+}
+
+# Now we can make a loop
+
+for (i in 1:length(unique(occur_all$species))){
+  create_species_shp(i)
+}
+
+
 
 # First we will sort through the data at the county level.
 county <- filter(raw, gps_determ=="C")
