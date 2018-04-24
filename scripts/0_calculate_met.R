@@ -26,10 +26,12 @@
 library(raster); 
 #library(rgdal); library(rgeos)
 
-path.met <- "/home/data/PRISM"
-in.base <- file.path(path.met, "daily")
-out.base <- file.path(path.met, "yearly_calculated")
-if(!dir.exists(out.base)) dir.create(out.base, recursive = T)
+path.met  <- "/home/data/PRISM"
+in.base   <- file.path(path.met, "daily")
+yr.base   <- file.path(path.met, "yearly_calculated")
+clim.base <- file.path(path.met, "normals_4km_1981-2010_calculated")
+if(!dir.exists(yr.base  )) dir.create(yr.base, recursive = T)
+if(!dir.exists(clim.base)) dir.create(clim.base, recursive = T)
 
 # Set some raster Options to speed up calcs
 rasterOptions(maxmemory = 2e10)
@@ -193,16 +195,47 @@ for(yr in yrs.ppt){
   # NOTE: This will be VERY slow because I couldn't figure out how to skip a loop
   # tmax.test <- crop(tmax.all, extent(-90.5, -90, 37, 37.5))
   # temp.test <- temp.rainless(ppt.stats[[1]], met.summary[[2]], tmax.test)
-  met.summary[["tmax.drought"]] <- temp.rainless(met.summary$dry.date, met.summary$dry.dur, tmax.all)
+  # met.summary[["tmax.drought"]] <- temp.rainless(met.summary$dry.date, met.summary$dry.dur, tmax.all)
 
   # Using our drought function to also get the duration of the freeze-free period
-  warm.rast <- calc(tmin.all, dur.warm)
-  met.summary[["warm.dur"]] <- warm.rast
-  rm(warm.rast)
+  # warm.rast <- calc(tmin.all, dur.warm)
+  met.summary[["warm.dur"]] <- calc(tmin.all, dur.warm)
+  # rm(warm.rast)
   
-  writeRaster(met.summary, filename=file.path(out.base, paste0("PRISM_Yr_Stats_", yr)))
+  writeRaster(met.summary, filename=file.path(yr.base, paste0("PRISM_Yr_Stats_", yr)))
   
   rm(met.summary)
 }
 
+# -----------------------------------------------------
+
+# -----------------------------------------------------
+# Calculating the 30-year climatic norms
+# -----------------------------------------------------
+files.yr <- unlist(lapply(strsplit(dir(yr.base, ".gri"), "[.]"), function(x) x[[1]][1]))
+files.yr <- files.yr[1:30] # just getting the 1981-2010 climatic mean
+
+
+vars.clim <- c("ppt.ann", "ppt.jan", "ppt.jul", "tmin.ann", "tmin.jan", "tmin.jul", "tmax.ann", "tmax.jan", "tmax.jul", "rainless.n", "dry.dur", "warm.dur")
+met.all <- raster::stack(file.path(yr.base, files.yr))
+met.names <- names(met.all)
+
+layers.var <- grep(vars.clim[1], met.names)
+met.clim <- stack(calc(met.all[[layers.var]], mean))
+names(met.clim) <- paste0(VAR, ".mean")
+met.clim[[paste0(VAR, ".sd")]] <- calc(met.all[[layers.var]], sd)
+met.clim[[paste0(VAR, ".min")]] <- calc(met.all[[layers.var]], min)
+met.clim[[paste0(VAR, ".max")]] <- calc(met.all[[layers.var]], max)
+
+pb <- txtProgressBar(min=0, max=length(vars.clim), style = 3)
+pb.ind=2
+for(VAR in vars.clim[2:length(vars.clim)]){
+  setTxtProgressBar(pb, pb.ind); pb.ind = pb.ind+1
+  layers.var <- grep(VAR, met.names)
+  met.clim[[paste0(VAR, ".mean")]] <- calc(met.all[[layers.var]], mean)
+  met.clim[[paste0(VAR, ".sd"  )]] <- calc(met.all[[layers.var]], sd  )
+  met.clim[[paste0(VAR, ".min" )]] <- calc(met.all[[layers.var]], min )
+  met.clim[[paste0(VAR, ".max" )]] <- calc(met.all[[layers.var]], max )
+}
+writeRaster(met.clim, filename=file.path(clim.base, paste0("PRISM_ClimateNormals_4km_1981-2010_calculated")))
 # -----------------------------------------------------
