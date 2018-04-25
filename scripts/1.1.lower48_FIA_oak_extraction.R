@@ -21,6 +21,12 @@ source("scripts/set_workingdirectory.R")
 # read in our rare oak vector
 rare_oak <- c(6768, 8429, 811, 6782, 851, 6785, 8514, 821, 844, 8492, 836, 8455, 8457)
 
+# for more oak species counts
+#rare_oak <- c(801, 802, 803, 804, 8513, 805, 806, 807, 809, 810, 812, 8438, 814, 
+#              815, 8441, 8511, 846, 8449, 816, 817, 842, 818, 819, 820, 822, 823, 840,
+#              824, 825, 841, 832, 826, 6791, 827, 829, 813, 830, 831, 8512, 845, 8453,
+#              833, 847, 834, 8487, 6799, 808, 835, 828, 8459, 8461, 837, 838, 839, 843)
+
 # Now try making this a function for all states at once
 # have vector of state data frame names for df and a vector of rare_oak for sp
 
@@ -84,6 +90,7 @@ unique(IUCN_oak$SPCD)
 # Looks good!!
 rm(treeAL)
 ############### New state
+
 # treeAZ <- read.csv("AZ_TREE.csv")
 treeAZ <- read.csv("../data/CSV_DATA/AZ_TREE.csv")
 treeAZ <- treeAZ[treeAZ$STATUSCD == 1, ]
