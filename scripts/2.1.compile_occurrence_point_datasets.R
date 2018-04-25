@@ -239,7 +239,7 @@ fia <- merge(fia, fia_sp, by = "SPCD", all = F)
 fia <- fia[, 1:16]
 # count individuals per species
 #unique(fia$SPECIES) # see order of species for below counts
-#sum(fia[fia$SPECIES==unique(fia$SPECIES)[1], "density"]) # count number of individual trees reported per species
+#sum(fia[fia$SPECIES==unique(fia$SPECIES)[9], "density"]) # count number of individual trees reported per species
 #table(fia$SPECIES) # count how many plots with unique coordinates contain the above individual trees
 # combine columns into single species name
 fia$scientificName <- paste(fia$GENUS, fia$SPECIES, fia$VARIETY, fia$SUBSPECIES)

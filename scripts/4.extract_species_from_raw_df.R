@@ -83,5 +83,5 @@ for (i in 1:length(nos)){
   create_absence_shp(absent_sp[i], nos[i])
 }
 
-create_absence_shp(absent_sp[2], nos[2])
+create_absence_shp(absent_sp[9], nos[9])
 # takes about 40 minutes to do 1, but the loop should work!
