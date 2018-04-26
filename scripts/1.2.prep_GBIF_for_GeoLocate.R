@@ -23,9 +23,6 @@ library(data.table)
 ######################################################################################
 ################# ROUND ONE ##########################################################
 ######################################################################################
-
-gbif <- read.csv(file='./Google Drive/Distributions_TreeSpecies/in-use_occurrence_raw/gbif_raw.csv', as.is=T)
-
 gbif_full <- read.csv(file='gbif_raw_DarwinCore_edit.csv', as.is=T)
 nrow(gbif) #12195
 # rename and compress for ease of manipulation
@@ -71,6 +68,7 @@ gbif$state <- extract_state(gbif, "TX", "Texas")
 gbif$state <- extract_state(gbif, "FL", "Florida")
 gbif$state <- extract_state(gbif, "Florida", "Florida")
 gbif$state <- extract_state(gbif, "AZ", "Arizona")
+gbif$state <- extract_state(gbif, "Arizona", "Arizona")
 gbif$state <- extract_state(gbif, "UT", "Utah")
 gbif$state <- extract_state(gbif, "Utah", "Utah")
 gbif$state <- extract_state(gbif, "AL", "Alabama")
@@ -78,10 +76,21 @@ gbif$state <- extract_state(gbif, "Alabama", "Alabama")
 gbif$state <- extract_state(gbif, "Arkansas", "Arkansas")
 gbif$state <- extract_state(gbif, "Georgia", "Georgia")
 gbif$state <- extract_state(gbif, "LA", "Louisiana")
-sum(is.na(gbif$state)) # 1137 We filled in almost 1000 blanks
-sum(is.na(gbif$locality[is.na(gbif$state)])) # 928 localities are NAs anyway, but what about the 209 others?
-gbif$locality[!is.na(gbif$locality[is.na(gbif$state)])]
-# The states aren't listed, but I can still tell that many of them are in CA.##### DO SOMETHING WITH THIS?
+gbif$state <- extract_state(gbif, "Louisiana", "Louisiana")
+gbif$state <- extract_state(gbif, "NM", "New Mexico")
+gbif$state <- extract_state(gbif, "New Mexico", "New Mexico")
+gbif$state <- extract_state(gbif, "South Carolina", "South Carolina")
+gbif$state <- extract_state(gbif, "Santa Barbara", "California")
+gbif$state <- extract_state(gbif, "San Francisco", "California")
+gbif$state <- extract_state(gbif, "Oklahoma", "Oklahoma")
+gbif$state <- extract_state(gbif, "Oregon", "Oregon")
+gbif$state <- extract_state(gbif, "OSP", "Oregon")
+gbif$state <- extract_state(gbif, "North Carolina", "North Carolina")
+sum(is.na(gbif$state)) # 1108 We filled in almost 1000 blanks
+which(is.na(gbif$state))
+sum(is.na(gbif$locality[which(is.na(gbif$state))])) # 928 localities are NAs anyway, but what about the 180 others?
+gbif$locality[!is.na(gbif$locality) & is.na(gbif$state)]
+# some remaining localities are foreign countries, some are typos.
 
 # COUNTY
 sum(is.na(gbif$county)) # 2587
@@ -98,9 +107,9 @@ extract_county <- function(d.f, loc){
 }
 
 gbif$county <- extract_county(gbif, "County")
-sum(is.na(gbif$county)) # 
+sum(is.na(gbif$county)) # 2256
 gbif$county <- extract_county(gbif, "county")
-sum(is.na(gbif$county)) # 
+sum(is.na(gbif$county)) # 2252
 gbif$county <- extract_county(gbif, "Co.")
 sum(is.na(gbif$county)) # 2135
 
