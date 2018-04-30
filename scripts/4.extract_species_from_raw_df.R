@@ -14,7 +14,6 @@
 #     ############### OUTPUT:shapefiles for each species of interest
 #
 #
-#
 
 library(dplyr)
 library(raster)
@@ -51,10 +50,11 @@ writeOGR(LLcoor, dsn = paste0(compiled, "/species_shapefiles/Quercus graciliform
 
 #################################################################################
 # We can also make shapefiles for absence data by species
+# this file was created in 2.1 at the end of the fia section.
 absent <- read.csv(file=paste0(compiled, '/fia_absence_compiled.csv'), as.is=T)
 str(absent)
 # make vector of species column names in absent
-absent_sp <- c("arkansana","austrina", "dumosa", "georgiana", "graciliformis", 
+absent_sp <- c("arkansana","austrina", "engelmannii", "georgiana", "graciliformis", 
                "havardii", "laceyi", "lobata", "oglethorpensis", "robusta", 
                "similis", "tardifolia", "toumeyi")
 # these represent columns 9 to 21
@@ -78,10 +78,11 @@ create_absence_shp <- function(ab_sp, no){
 ##sapply(absent_sp, create_absence_shp(absent_sp, nos)) #does something that takes up a lot of memory
 
 # how about a loop instead
+#
+#for (i in 1:length(nos)){
+#  create_absence_shp(absent_sp[i], nos[i])
+#}
 
-for (i in 1:length(nos)){
-  create_absence_shp(absent_sp[i], nos[i])
-}
-
-create_absence_shp(absent_sp[9], nos[9])
+create_absence_shp(absent_sp[3], nos[3])
 # takes about 40 minutes to do 1, but the loop should work!
+# start 2:21
