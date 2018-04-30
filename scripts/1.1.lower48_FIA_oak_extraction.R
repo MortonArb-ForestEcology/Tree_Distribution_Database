@@ -25,6 +25,9 @@ rare_oak <- c(6768, 8429, 811, 6782, 851, 6785, 8514, 821, 844, 8492, 836, 8455,
 #              824, 825, 841, 832, 826, 6791, 827, 829, 813, 830, 831, 8512, 845, 8453,
 #              833, 847, 834, 8487, 6799, 808, 835, 828, 8459, 8461, 837, 838, 839, 843)
 
+# carya for emily
+rare_oak <- c(400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 531, 5983)
+
 # make state vector
 lower_48 <- c("AL_TREE.csv", "AZ_TREE.csv", "AR_TREE.csv", "CA_TREE.csv", "CO_TREE.csv",
               "CT_TREE.csv", "DE_TREE.csv", "FL_TREE.csv", "GA_TREE.csv", "ID_TREE.csv",
@@ -479,7 +482,6 @@ for (sp in 1:length(rare_oak)){
 }
 rm(treeRI)
 
-# skip SC
 # treeSC <- read.csv("SC_TREE.csv")
 treeSC <- read.csv("/home/data/FIA_CSV_DATA/SC_TREE.csv")
 treeSC <- treeSC[treeSC$STATUSCD == 1, ]
@@ -500,7 +502,6 @@ for (sp in 1:length(rare_oak)){
 }
 rm(treeSD)
 
-# error TN
 # treeTN <- read.csv("TN_TREE.csv")
 treeTN <- read.csv("/home/data/FIA_CSV_DATA/TN_TREE.csv")
 treeTN <- treeTN[treeTN$STATUSCD == 1, ]
@@ -571,7 +572,6 @@ for (sp in 1:length(rare_oak)){
 }
 rm(treeWV)
 
-# error?
 # treeWI <- read.csv("WI_TREE.csv")
 treeWI <- read.csv("/home/data/FIA_CSV_DATA/WI_TREE.csv")
 treeWI <- treeWI[treeWI$STATUSCD == 1, ]
