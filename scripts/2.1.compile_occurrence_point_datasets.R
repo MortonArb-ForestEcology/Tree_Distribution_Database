@@ -106,8 +106,6 @@ write.csv(df, file=paste0(one_up, "/in-use_occurrence_compiled/standardized_col_
 gbif <- read.csv(file='gbif_DC_post-georef_revised.csv', as.is=T)
 nrow(gbif) #11089
 
-# add an observation number to easily restore this order of points after merging
-gbif$obs_no <- seq(1, length(gbif$state), by = 1)
 # make sure species is a factor
 gbif$species <- as.factor(gbif$species)
 # recognize that scientificName refers to something different in sp_list
@@ -115,8 +113,8 @@ gbif$species <- as.factor(gbif$species)
 # The rows will duplicate if their species key duplicates. ex. five lobata lines
 # in sp-list, so each lobata occurrence will spring four duplicates here, unless we add the first match argument.
 # add FIA ID column
+# The order will not be changed when using the join function
 gbif <- join(gbif, sp_list, by = c("speciesKey"), type = "full", match = "first")
-gbif <- gbif[order(gbif$obs_no), ]
 
 # remove extraneous columns
 gbif <- subset(gbif, select = c(order,family,genus,specificEpithet,infraspecificEpithet,scientificName,
@@ -383,7 +381,7 @@ all_data <- Reduce(rbind.all.columns, datasets)
   # Luckily these state and county codes align with the fia_county file from above
   # So let's tack on the names to these coordinates with fia_cou
   centroids <- join(centroids, fia_cou, by = c("STATECD", "COUNTYCD"), type = "left")
-  # It looks like some numbers are still not quite aligning, there may be errors in states with a lot of counties--VA and AK and FL (Dade)
+  # It looks like some numbers are still not quite aligning, there may be errors in states with a lot of counties--VA and AK and FL (Dade)--see NAs
   
   # Second we can make a subset of the occurrences that lack coordinates, but have state and county.
   fill_in_county_coord <- which(is.na(all_data$decimalLatitude)) # this is the rows to subset of all_data
