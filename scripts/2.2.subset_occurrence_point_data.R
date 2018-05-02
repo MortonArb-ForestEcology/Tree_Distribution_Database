@@ -57,7 +57,7 @@ nrow(occur_all) #45374
 occur_all$obs_no <- seq(1, length(occur_all$X), 1)
 # remove spatial duplicates based on species key and lat/long rounded to 3 digits after the decimal
 occur_dec2_unq <- occur_all%>%distinct(speciesKey,lat_round,long_round,.keep_all=TRUE)
-nrow(occur_dec2_unq) #8231 with 2 dec places, (previously 7908 with 3 dec places)
+nrow(occur_dec2_unq) #8231 with 3 dec places
 # make a new vector with this unique observations
 first_match <- occur_dec2_unq$obs_no
 # now we can return to our occur_all dataset and label the occurrences as duplicates or not
