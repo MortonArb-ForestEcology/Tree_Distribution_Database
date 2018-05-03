@@ -50,14 +50,17 @@ nrow(occur_all) #45390
 occur_all$lat_round <- round(occur_all$decimalLatitude, 3)
 occur_all$long_round <- round(occur_all$decimalLongitude, 3)
 # remove all coordinates with a positive longitude and a negative latitude
-occur_all <- occur_all[which(occur_all$lat_round >= 0), ]
+occur_all <- occur_all[which(occur_all$lat_round >= 0), ] # removes point in Brazil
+occur_all[which(occur_all$long_round >= 0), ] # notice errors in MS entries, longitude should be -89...
+occur_all[which(occur_all$long_round >= 89 & occur_all$long_round <90), "long_round"] <- -(occur_all[which(occur_all$long_round >= 89 & occur_all$long_round <90), "long_round"])
+occur_all[which(occur_all$long_round >= 0), "locality"] #remaining entries in Europe and Asia
 occur_all <- occur_all[which(occur_all$long_round <= 0), ]
-nrow(occur_all) #45374
+nrow(occur_all) #45385
 # before removing duplicates, let's number the occurrences so we know which ones will be saved
 occur_all$obs_no <- seq(1, length(occur_all$X), 1)
 # remove spatial duplicates based on species key and lat/long rounded to 3 digits after the decimal
 occur_dec2_unq <- occur_all%>%distinct(speciesKey,lat_round,long_round,.keep_all=TRUE)
-nrow(occur_dec2_unq) #8231 with 3 dec places
+nrow(occur_dec2_unq) #8242 with 3 dec places
 # make a new vector with this unique observations
 first_match <- occur_dec2_unq$obs_no
 # now we can return to our occur_all dataset and label the occurrences as duplicates or not
@@ -103,9 +106,9 @@ proj4string(occur_centroid_join) <- wgs84
 pts.poly <- point.in.poly(occur_centroid_join, counties_wgs)
 # mark occurrence points that are county centroids within counties that are already represented by geolocated points
 occur_counties <- as.data.frame(pts.poly)
-  nrow(occur_counties) #8231
+  nrow(occur_counties) #8242
 duplicates <- occur_counties[duplicated(occur_counties[c("speciesKey", "stateProvince", "county")]),]
-nrow(duplicates) #6128
+nrow(duplicates) #6138
 to_remove <- subset(duplicates, gps_determ == "C" | gps_determ == "SC")
 nrow(to_remove) #158
 to_remove$county_centroid_dup <- rep("x")
@@ -113,7 +116,7 @@ occur_dup_marked <- full_join(occur_counties, to_remove)
 write.csv(occur_dup_marked, file=paste0(compiled, "/occurrence_compiled_dec2_unique_countyDupMarked.csv"))
 # remove county centroid duplicate records
 occur_clean <- anti_join(occur_counties, to_remove, by = "X")
-nrow(occur_clean) #8073
+nrow(occur_clean) #8084
 write.csv(occur_clean, file=paste0(compiled, "/occurrence_compiled_dec2_unique_countyDupRemoved.csv"))
 
 table(occur_clean$species)
