@@ -62,30 +62,21 @@ extract_state <- function(d.f, loc, repl){
 sum(is.na(gbif$state)) # 2030
 gbif$state <- extract_state(gbif, "CA", "California")
 sum(is.na(gbif$state))
-gbif$state <- extract_state(gbif, "California", "California")
-gbif$state <- extract_state(gbif, "Texas", "Texas")
-gbif$state <- extract_state(gbif, "TX", "Texas")
-gbif$state <- extract_state(gbif, "FL", "Florida")
-gbif$state <- extract_state(gbif, "Florida", "Florida")
-gbif$state <- extract_state(gbif, "AZ", "Arizona")
-gbif$state <- extract_state(gbif, "Arizona", "Arizona")
-gbif$state <- extract_state(gbif, "UT", "Utah")
-gbif$state <- extract_state(gbif, "Utah", "Utah")
-gbif$state <- extract_state(gbif, "AL", "Alabama")
-gbif$state <- extract_state(gbif, "Alabama", "Alabama")
-gbif$state <- extract_state(gbif, "Arkansas", "Arkansas")
-gbif$state <- extract_state(gbif, "Georgia", "Georgia")
-gbif$state <- extract_state(gbif, "LA", "Louisiana")
-gbif$state <- extract_state(gbif, "Louisiana", "Louisiana")
-gbif$state <- extract_state(gbif, "NM", "New Mexico")
-gbif$state <- extract_state(gbif, "New Mexico", "New Mexico")
-gbif$state <- extract_state(gbif, "South Carolina", "South Carolina")
-gbif$state <- extract_state(gbif, "Santa Barbara", "California")
-gbif$state <- extract_state(gbif, "San Francisco", "California")
-gbif$state <- extract_state(gbif, "Oklahoma", "Oklahoma")
-gbif$state <- extract_state(gbif, "Oregon", "Oregon")
-gbif$state <- extract_state(gbif, "OSP", "Oregon")
-gbif$state <- extract_state(gbif, "North Carolina", "North Carolina")
+
+# make a loop for the rest:
+change_it <- c("California", "Texas", "TX", "FL", "Florida", "AZ", "Arizona", "UT", "Utah",
+               "AL", "Alabama", "Arkansas", "Georgia", "LA", "Louisiana", "NM",
+               "New Mexico", "South Carolina", "Santa Barbara", "San Francisco", "Oklahoma",
+               "Oregon", "OSP", "North Carolina") 
+to_this <- c("California", "Texas", "Texas", "Florida", "Florida", "Arizona", "Arizona", "Utah", "Utah",
+             "Alabama", "Alabama", "Arkansas", "Georgia", "Louisiana", "Louisiana", "New Mexico",
+             "New Mexico", "South Carolina", "California", "California", "Oklahoma",
+             "Oregon", "Oregon", "North Carolina")
+
+for (i in 1:length(to_this)){
+    gbif$state <- extract_state(gbif, change_it[i], to_this[i])
+  }
+
 sum(is.na(gbif$state)) # 1108 We filled in almost 1000 blanks
 which(is.na(gbif$state))
 sum(is.na(gbif$locality[which(is.na(gbif$state))])) # 928 localities are NAs anyway, but what about the 180 others?
@@ -144,46 +135,24 @@ sum(is.na(gbif$locality))  #959
 # county column, the information should be sufficient to use geolocate.
 
 # Finally, to prevent some errors, let's write out some basic abbreviations in locality
-# remove commas!
+# remove commas first
 gbif$locality <- gsub(pattern = ",", x = gbif$locality, replacement = " ")
-gbif$locality <- gsub(pattern = "mtn", x = gbif$locality, replacement = "mountain")
-gbif$locality <- gsub(pattern = "Mtn", x = gbif$locality, replacement = "mountain")
-gbif$locality <- gsub(pattern = "Mts.", x = gbif$locality, replacement = "mountains")
-gbif$locality <- gsub(pattern = "cyn", x = gbif$locality, replacement = "canyon")
-gbif$locality <- gsub(pattern = "Cyn", x = gbif$locality, replacement = "canyon")
-gbif$locality <- gsub(pattern = "jct", x = gbif$locality, replacement = "junction")
-gbif$locality <- gsub(pattern = "junc. ", x = gbif$locality, replacement = "junction ")
-gbif$locality <- gsub(pattern = "Rte ", x = gbif$locality, replacement = "route ")
-gbif$locality <- gsub(pattern = "hwy", x = gbif$locality, replacement = "highway")
-gbif$locality <- gsub(pattern = "Hwy", x = gbif$locality, replacement = "highway")
 gbif$locality <- gsub(pattern = "\\'", x = gbif$locality, fixed = T, replacement = "")
-gbif$locality <- gsub(pattern = " N ", x = gbif$locality, replacement = " north ")
-gbif$locality <- gsub(pattern = " N. ", x = gbif$locality, replacement = " north ")
-gbif$locality <- gsub(pattern = " S ", x = gbif$locality, replacement = " south ")
-gbif$locality <- gsub(pattern = " S. ", x = gbif$locality, replacement = " south ")
-gbif$locality <- gsub(pattern = " s ", x = gbif$locality, replacement = " south ")
-gbif$locality <- gsub(pattern = " E ", x = gbif$locality, replacement = " east ")
-gbif$locality <- gsub(pattern = " E. ", x = gbif$locality, replacement = " east ")
-gbif$locality <- gsub(pattern = " W ", x = gbif$locality, replacement = " west ")
-gbif$locality <- gsub(pattern = " W. ", x = gbif$locality, replacement = " west ")
-gbif$locality <- gsub(pattern = " SE ", x = gbif$locality, replacement = " southeast ")
-gbif$locality <- gsub(pattern = " SW ", x = gbif$locality, replacement = " southwest ")
-gbif$locality <- gsub(pattern = " NE ", x = gbif$locality, replacement = " northeast ")
-gbif$locality <- gsub(pattern = " NW ", x = gbif$locality, replacement = " northwest ")
-gbif$locality <- gsub(pattern = " ca. ", x = gbif$locality, replacement = " ")
-gbif$locality <- gsub(pattern = " ca ", x = gbif$locality, replacement = " ")
-gbif$locality <- gsub(pattern = " Ca. ", x = gbif$locality, replacement = " ")
-gbif$locality <- gsub(pattern = " mi. ", x = gbif$locality, replacement = " miles ")
-gbif$locality <- gsub(pattern = " mi ", x = gbif$locality, replacement = " miles ")
-gbif$locality <- gsub(pattern = " km ", x = gbif$locality, replacement = " kilometers ")
-gbif$locality <- gsub(pattern = " Rd. ", x = gbif$locality, replacement = " road ")
-gbif$locality <- gsub(pattern = " rd. ", x = gbif$locality, replacement = " road ")
-gbif$locality <- gsub(pattern = " St. ", x = gbif$locality, replacement = " street ")
-gbif$locality <- gsub(pattern = " Ave. ", x = gbif$locality, replacement = " avenue ")
-gbif$locality <- gsub(pattern = " Fk. ", x = gbif$locality, replacement = " fork ")
-gbif$locality <- gsub(pattern = " fk. ", x = gbif$locality, replacement = " fork ")
-gbif$locality <- gsub(pattern = " Mt. ", x = gbif$locality, replacement = " Mount ")
-gbif$locality <- gsub(pattern = " Pk. ", x = gbif$locality, replacement = " Peak ")
+# now make a loop
+change_it <- c("mtn", "Mtn", "Mts.", "cyn", "Cyn", "jct", "junc.",
+               "Rte", "hwy", "Hwy", " N ", " N. ", " S ", " S. ", " s ",
+               " E ", " E. ", " W ", " W. ", " SE ", " SW ", " NE ",
+               " NW ", " ca. ", " ca ", " Ca. ", " mi. ", " mi ", " km ", " Rd. ",
+               " rd. ",  " Ave. ", " Fk. ", " fk. ", " Mt. ", " Pk. ") 
+to_this <- c("mountain", "mountain", "mountains", "canyon", "canyon", "junction", "junction",
+             "route", "highway", "highway", " north ", " north ", " south ", " south ", " south ",
+             " east ", " east ", " west ", " west ", " southeast ", " southwest ", " northeast ",
+             " northwest ", " ", " ", " ", " miles ", " miles ", " kilometers ", " road ",
+             " road ", " avenue ", " fork ", " fork ", " Mount ", " Peak ")
+
+for (i in 1: length(to_this)){
+  gbif$locality <- gsub(pattern = change_it[i], x = gbif$locality, replacement = to_this[i])
+}
 
 
 # make a new data frame for use in geolocate
