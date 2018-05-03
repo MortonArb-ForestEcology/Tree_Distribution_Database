@@ -24,7 +24,7 @@ library(data.table)
 ################# ROUND ONE ##########################################################
 ######################################################################################
 gbif_full <- read.csv(file='gbif_raw_DarwinCore_edit.csv', as.is=T)
-nrow(gbif) #12195
+nrow(gbif_full) #12195
 # rename and compress for ease of manipulation
 gbif <- gbif_full
 # remove extraneous columns
@@ -91,9 +91,16 @@ which(is.na(gbif$state))
 sum(is.na(gbif$locality[which(is.na(gbif$state))])) # 928 localities are NAs anyway, but what about the 180 others?
 gbif$locality[!is.na(gbif$locality) & is.na(gbif$state)]
 # some remaining localities are foreign countries, some are typos.
+# checking for typos/errors in non-NAs
+unique(gbif[!is.na(gbif$state), "state"] )
+# Oregon SW--remove SW
+# Caldwell--means LA
+gbif[which(gbif[, "state"] =="Caldwell"), "county"] <- "Caldwell"
+gbif[which(gbif[, "state"] =="Caldwell"), "state"] <- "Louisiana"
+gbif[which(gbif[, "state"] =="Oregon, SW"), "state"] <- "Oregon"
 
 # COUNTY
-sum(is.na(gbif$county)) # 2587
+sum(is.na(gbif$county)) # 2586
 
 extract_county <- function(d.f, loc){
   gbif_c_na <- which(is.na(d.f$county))
@@ -112,6 +119,12 @@ gbif$county <- extract_county(gbif, "county")
 sum(is.na(gbif$county)) # 2252
 gbif$county <- extract_county(gbif, "Co.")
 sum(is.na(gbif$county)) # 2135
+# check county names now
+unique(gbif$county)
+# for some reason, some of the counties are bracketed. We can remove the brackets.
+# Other counties may include the word county, which is not an issue, or several extra words, which we cannot target easily.
+gbif$county <- gsub("[", "", gbif$county,fixed = T)
+gbif$county <- gsub("]", "", gbif$county,fixed = T)
 
 # Next, if the county is NA, but the municipality is not, then we can rewrite municipality into the county column
 gbif_c_na <- which(is.na(gbif$county))
