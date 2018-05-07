@@ -257,7 +257,7 @@ setnames(fia,
          old=c("LAT","LON", "INVYR", "STATENM", "COUNTYNM", "SPCD", "GENUS","SPECIES", "density", "country"),
          new=c("decimalLatitude","decimalLongitude", "year", "stateProvince", "county", "fia_codes", "genus","specificEpithet", "individualCount", "countryCode"))
 fia$dataset <- "fia"
-fia$basisOfRecord <- "WILD_PROVENANCE"
+fia$basisOfRecord <- "observation"
 # add standard species ID columns
 fia <- join(fia, sp_list, by = c("fia_codes", "species"), type="left", match = "first"); str(fia)
 
