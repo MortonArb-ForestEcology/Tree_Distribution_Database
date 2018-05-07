@@ -1,8 +1,8 @@
 ############ 1.2
 ########### 3.15.18 Elizabeth Tokarz
 ############# prepare GBIF for loading into GeoLocate Application
-###### Find app here:  http://www.museum.tulane.edu/geolocate/web/WebGeoref.aspx 
-## Load data like this: http://www.museum.tulane.edu/geolocate/standalone/tutorial.html 
+###### Find app here:  http://www.museum.tulane.edu/geolocate/web/WebGeoref.aspx
+## Load data like this: http://www.museum.tulane.edu/geolocate/standalone/tutorial.html
 
 ## Be sure to run "set_workingdirectory.R" before running this script
 
@@ -28,10 +28,10 @@ nrow(gbif_full) #12195
 # rename and compress for ease of manipulation
 gbif <- gbif_full
 # remove extraneous columns
-gbif <- subset(gbif, select = c(basisOfRecord, institutionCode, genus, 
-                                scientificName, speciesKey, species, year, countryCode, 
-                                stateProvince, county, municipality, 
-                                locality, verbatimLocality, occurrenceRemarks, 
+gbif <- subset(gbif, select = c(basisOfRecord, institutionCode, genus,
+                                scientificName, speciesKey, species, year, countryCode,
+                                stateProvince, county, municipality,
+                                locality, verbatimLocality, occurrenceRemarks,
                                 associatedTaxa, decimalLatitude, decimalLongitude,
                                 coordinateUncertaintyInMeters,
                                 georeferenceSources, issue))
@@ -39,7 +39,7 @@ gbif <- subset(gbif, select = c(basisOfRecord, institutionCode, genus,
 setnames(gbif,
          old=c("decimalLatitude","decimalLongitude","basisOfRecord","institutionCode","coordinateUncertaintyInMeters", "countryCode", "stateProvince", "scientificName"),
          new=c("lat","long","basis","source","uncert_m", "country", "state", "synonym"))
-# FIX LOCALITY DATA as much as possible  
+# FIX LOCALITY DATA as much as possible
 sum(is.na(gbif$locality)) #3044
 # when there is no locality information other than that of the verbatim locality column, copy that information to locality
 gbif$locality[is.na(gbif$locality)]  <- gbif$verbatimLocality[is.na(gbif$locality)]
@@ -48,11 +48,11 @@ sum(is.na(gbif$locality)) #1835, better
 # STATE
 # for columns with NA in state, look in locality data for a state abbreviation or name and copy it into the empty column
 # write a function to take the state from the locality
-# note that characters cannot be read directly into functions, 
+# note that characters cannot be read directly into functions,
 # so some adjustments must be made.
 extract_state <- function(d.f, loc, repl){
   gbif_s_na <- which(is.na(d.f$state))
-  rows <- grep(pattern = loc, x = d.f$locality) 
+  rows <- grep(pattern = loc, x = d.f$locality)
   overlap <- intersect(gbif_s_na, rows)
   d.f$state[overlap] <- repl
   return(d.f$state)
@@ -67,11 +67,22 @@ sum(is.na(gbif$state))
 change_it <- c("California", "Texas", "TX", "FL", "Florida", "AZ", "Arizona", "UT", "Utah",
                "AL", "Alabama", "Arkansas", "Georgia", "LA", "Louisiana", "NM",
                "New Mexico", "South Carolina", "Santa Barbara", "San Francisco", "Oklahoma",
-               "Oregon", "OSP", "North Carolina") 
+               "Oregon", "OSP", "North Carolina")
 to_this <- c("California", "Texas", "Texas", "Florida", "Florida", "Arizona", "Arizona", "Utah", "Utah",
              "Alabama", "Alabama", "Arkansas", "Georgia", "Louisiana", "Louisiana", "New Mexico",
              "New Mexico", "South Carolina", "California", "California", "Oklahoma",
              "Oregon", "Oregon", "North Carolina")
+
+# all states and abbreviations
+state_names <- c("ALABAMA","ALASKA","ARIZONA","ARKANSAS","CALIFORNIA","COLORADO","CONNECTICUT","DELAWARE","FLORIDA","GEORGIA","HAWAII","IDAHO","ILLINOIS","INDIANA","IOWA","KANSAS",
+                "KENTUCKY","LOUISIANA","MAINE","MARYLAND","MASSACHUSETTS","MICHIGAN","MINNESOTA","MISSISSIPPI","MISSOURI","MONTANA","NEBRASKA","NEVADA","NEW HAMPSHIRE","NEW JERSEY","NEW MEXICO",
+                "NEW YORK","NORTH CAROLINA","NORTH DAKOTA","OHIO","OKLAHOMA","OREGON","PENNSYLVANIA","RHODE ISLAND","SOUTH CAROLINA","SOUTH DAKOTA","TENNESSEE","TEXAS","UTAH",
+                "VERMONT","VIRGINIA","WASHINGTON","WEST VIRGINIA","WISCONSIN","WYOMING")
+state_abb <- c("AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS",
+              "MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA",
+              "WV","WI","WY")
+
+
 
 for (i in 1:length(to_this)){
     gbif$state <- extract_state(gbif, change_it[i], to_this[i])
@@ -95,7 +106,7 @@ sum(is.na(gbif$county)) # 2586
 
 extract_county <- function(d.f, loc){
   gbif_c_na <- which(is.na(d.f$county))
-  rows <- grep(pattern = loc, x = d.f$locality) 
+  rows <- grep(pattern = loc, x = d.f$locality)
   overlap <- intersect(gbif_c_na, rows)
   # the difference between this function and extract_state is that the entire locality
   # string before the key word is written into the county column here.
@@ -143,7 +154,7 @@ change_it <- c("mtn", "Mtn", "Mts.", "cyn", "Cyn", "jct", "junc.",
                "Rte", "hwy", "Hwy", " N ", " N. ", " S ", " S. ", " s ",
                " E ", " E. ", " W ", " W. ", " SE ", " SW ", " NE ",
                " NW ", " ca. ", " ca ", " Ca. ", " mi. ", " mi ", " km ", " Rd. ",
-               " rd. ",  " Ave. ", " Fk. ", " fk. ", " Mt. ", " Pk. ") 
+               " rd. ",  " Ave. ", " Fk. ", " fk. ", " Mt. ", " Pk. ")
 to_this <- c("mountain", "mountain", "mountains", "canyon", "canyon", "junction", "junction",
              "route", "highway", "highway", " north ", " north ", " south ", " south ", " south ",
              " east ", " east ", " west ", " west ", " southeast ", " southwest ", " northeast ",
@@ -168,7 +179,7 @@ geo_loc$correction_status <- NA
 geo_loc$precision <- NA
 geo_loc$error_polygon <- NA
 geo_loc$multiple_results <- NA
-# We can add other columns later and it may be faster to run the GeoLocate app 
+# We can add other columns later and it may be faster to run the GeoLocate app
 # without all of them. Just keep a few so we can identify the columns.
 geo_loc$year <- gbif$year
 geo_loc$speciesKey <- gbif$speciesKey
@@ -184,10 +195,10 @@ sum(is.na(geo_loc$latitude)) # 5168
 
 # Instructions for GeoLocate
 # After the page is loaded and before beginning to GeoLocate, check "options" and unmark "do error polygon".
-# The application can only process 128 entries at a time, so you will have to go 
-# through and change the page, select "Page Georeference" and let it run. 
+# The application can only process 128 entries at a time, so you will have to go
+# through and change the page, select "Page Georeference" and let it run.
 # It should take about two to fifteen minutes per page of 128 entries, depending on the computer.
-# After, on the bottom there should be an export option. The file should be 
+# After, on the bottom there should be an export option. The file should be
 # exported as a csv and it can be renamed then as "gbif_DC_post-georef.csv".
 
 # proceed here to run the file:
@@ -206,10 +217,10 @@ post_geo <- read.csv(file='gbif_DC_post-georef.csv', as.is=T)
 sum(is.na(post_geo$latitude)) # 2052 Whoa! This is a big difference, using geolocate gave us over 3000 more occurrences
 
 # Now let's see how many of the coordinates we had before have changed.
-sum(geo_loc$latitude==post_geo$latitude) #NA  Wow--everything has changed...This 
+sum(geo_loc$latitude==post_geo$latitude) #NA  Wow--everything has changed...This
 # means that some of our pre-existing coordinates that were uploaded into GeoLocate were changed.
 # We may need to change some back, but we also should be aware that some of those were
-# associated with certain issues that could have been coordinate-related. 
+# associated with certain issues that could have been coordinate-related.
 
 # let's give all of these non-NA coordinates an L for localized in new column "gps_determ"
 post_geo$gps_determ <- NA
@@ -217,8 +228,8 @@ post_geo$gps_determ[!is.na(post_geo$latitude)] <- "L"
 
 # find which coordinates existed in the input document
 pre_filled <- which(!is.na(geo_loc$latitude))
-# Recognize that pre_existing coordinates were probably more precise than the 
-# geolocated coordinates, unless an issue was designated to it. We will want to 
+# Recognize that pre_existing coordinates were probably more precise than the
+# geolocated coordinates, unless an issue was designated to it. We will want to
 # retain the pre-existing coordinates that had no issues
 # Remove from this above vector the coordinates that had issues.
 # problematic issues here would be "COORDINATE_ROUNDED" and "COORDINATE_MISMATCH")
@@ -251,8 +262,8 @@ post_geo <- post_geo[keep_these, ]
 
 # tack on an observation number here
 gbif_full$obs_no <- seq(1, length(gbif$basis), 1)
-# Now using the updated revised_post_geo dataset and the observation numbers that 
-# correlate with the gbif rows, tack on the other necessary DarwinCore columns 
+# Now using the updated revised_post_geo dataset and the observation numbers that
+# correlate with the gbif rows, tack on the other necessary DarwinCore columns
 post_geo <- merge(post_geo, gbif_full, by = "obs_no", suffixes = c(".remove", ""))
 post_geo$county <- post_geo$county.remove
 post_geo$locality <- post_geo$locality_string
