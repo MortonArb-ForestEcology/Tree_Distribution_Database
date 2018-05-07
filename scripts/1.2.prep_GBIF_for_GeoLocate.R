@@ -46,21 +46,13 @@ gbif$locality[is.na(gbif$locality)]  <- gbif$verbatimLocality[is.na(gbif$localit
 sum(is.na(gbif$locality)) #1835, better
 
 # STATE
-# for columns with NA in state, look in locality data for a state abbreviation or name and copy it into the empty column
-# write a function to take the state from the locality
-# note that characters cannot be read directly into functions,
-# so some adjustments must be made.
-extract_state <- function(d.f, loc, repl){
-  gbif_s_na <- which(is.na(d.f$state))
-  rows <- grep(pattern = loc, x = d.f$locality)
-  overlap <- intersect(gbif_s_na, rows)
-  d.f$state[overlap] <- repl
-  return(d.f$state)
-}
+# First check the state column for a direct match to one of the lower 48 states
+# Fill in matches in a new column.
+# For remaining NAs in the new state column, check the locality of those rows for state names or abbreviations
+# Finally, for any remaining NAs in the new state column, check the verbatim locality again.
 
 # make a new column before running this function
 gbif$state_new <- NA
-
 # use this one for full state names.
 extract_state_new_anyCase <- function(d.f, loc, repl){
   rows <- grep(pattern = loc, x = d.f$state, ignore.case = T) 
@@ -91,13 +83,10 @@ extract_state_new <- function(d.f, loc, repl){
   return(d.f$state_new)
 }
 
-
 # Run the function several times
-sum(is.na(gbif$state)) # 2030
 sum(is.na(gbif$state_new)) # 12195
 gbif$state_new <- extract_state_new(gbif, "CA", "California")
-sum(is.na(gbif$state)) # 2030
-sum(is.na(gbif$state_new)) # 2566
+sum(is.na(gbif$state_new)) # 11465
 
 # make a loop for the rest:
 change_it <- c("California", "Texas", "TX", "FL", "Florida", "AZ", "Arizona", "UT", "Utah",
