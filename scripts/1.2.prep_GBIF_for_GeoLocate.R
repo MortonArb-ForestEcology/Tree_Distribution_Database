@@ -83,53 +83,50 @@ extract_state_new <- function(d.f, loc, repl){
   return(d.f$state_new)
 }
 
-# Run the function several times
-sum(is.na(gbif$state_new)) # 12195
-gbif$state_new <- extract_state_new(gbif, "CA", "California")
-sum(is.na(gbif$state_new)) # 11465
-
-# make a loop for the rest:
-change_it <- c("California", "Texas", "TX", "FL", "Florida", "AZ", "Arizona", "UT", "Utah",
-               "AL", "Alabama", "Arkansas", "Georgia", "LA", "Louisiana", "NM",
-               "New Mexico", "South Carolina", "Santa Barbara", "San Francisco", "Oklahoma",
-               "Oregon", "OSP", "North Carolina")
-to_this <- c("California", "Texas", "Texas", "Florida", "Florida", "Arizona", "Arizona", "Utah", "Utah",
-             "Alabama", "Alabama", "Arkansas", "Georgia", "Louisiana", "Louisiana", "New Mexico",
-             "New Mexico", "South Carolina", "California", "California", "Oklahoma",
-             "Oregon", "Oregon", "North Carolina")
+# Test the function
+#sum(is.na(gbif$state_new)) # 12195
+#gbif$state_new <- extract_state_new(gbif, "CA", "California")
+#sum(is.na(gbif$state_new)) # 11465
 
 # all states and abbreviations
 state_names <- c("ALABAMA","ALASKA","ARIZONA","ARKANSAS","CALIFORNIA","COLORADO","CONNECTICUT","DELAWARE","FLORIDA","GEORGIA","HAWAII","IDAHO","ILLINOIS","INDIANA","IOWA","KANSAS",
                 "KENTUCKY","LOUISIANA","MAINE","MARYLAND","MASSACHUSETTS","MICHIGAN","MINNESOTA","MISSISSIPPI","MISSOURI","MONTANA","NEBRASKA","NEVADA","NEW HAMPSHIRE","NEW JERSEY","NEW MEXICO",
                 "NEW YORK","NORTH CAROLINA","NORTH DAKOTA","OHIO","OKLAHOMA","OREGON","PENNSYLVANIA","RHODE ISLAND","SOUTH CAROLINA","SOUTH DAKOTA","TENNESSEE","TEXAS","UTAH",
-                "VERMONT","VIRGINIA","WASHINGTON","WEST VIRGINIA","WISCONSIN","WYOMING")
+                "VERMONT","VIRGINIA","WASHINGTON","WEST VIRGINIA","WISCONSIN","WYOMING", "DISTRICT OF COLUMBIA")
 state_abb <- c("AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS",
               "MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA",
-              "WV","WI","WY")
+              "WV","WI","WY", "DC")
 
-
-
-for (i in 1:length(to_this)){
-    gbif$state_new <- extract_state_new(gbif, change_it[i], to_this[i])
+sum(is.na(gbif$state_new)) # 12195
+# first for the state names
+for (i in 1:length(state_names)){
+    gbif$state_new <- extract_state_new_anyCase(gbif, state_names[i], state_names[i])
   }
 
-# see what happened..
-write.csv(gbif, "New_state_extract_fxn.csv", row.names = F)
+sum(is.na(gbif$state_new)) # 2083
+# then for the state abbreviations
+for (i in 1:length(state_names)){
+  gbif$state_new <- extract_state_new(gbif, state_abb[i], state_names[i])
+}
 
-sum(is.na(gbif$state)) # 1108 We filled in almost 1000 blanks
-sum(is.na(gbif$state_new)) # 1108 We filled in almost 1000 blanks
-
-which(is.na(gbif$state))
+sum(is.na(gbif$state_new)) # 1361
 sum(is.na(gbif$locality[which(is.na(gbif$state))])) # 928 localities are NAs anyway, but what about the 180 others?
-gbif$locality[!is.na(gbif$locality) & is.na(gbif$state)]
-# some remaining localities are foreign countries, some are typos.
+#unique(gbif$locality[!is.na(gbif$locality) & is.na(gbif$state_new)]) # a lot of these localities are outside the US
+
+# There are a couple of funny outliers--you may change these vectors based on your dataset and the above output
+# make a loop for the rest:
+change_it <- c("Santa Barbara", "San Francisco", "OSP")
+to_this <- c( "California", "California", "Oregon")
+
+for (i in 1:length(to_this)){
+  gbif$state_new <- extract_state_new(gbif, change_it[i], to_this[i])
+}
+
+sum(is.na(gbif$state_new)) # 1347
+
 # checking for typos/errors in non-NAs
-unique(gbif[!is.na(gbif$state), "state"] )
-# Oregon SW--remove SW
-# Caldwell--means LA
-gbif[which(gbif[, "state"] =="Caldwell"), "county"] <- "Caldwell"
-gbif[which(gbif[, "state"] =="Caldwell"), "state"] <- "Louisiana"
-gbif[which(gbif[, "state"] =="Oregon, SW"), "state"] <- "Oregon"
+unique(gbif[is.na(gbif$state_new), "state"] )
+# these states represent non-US locations, so we can cut them out later and save time in GeoLocate
 
 # COUNTY
 sum(is.na(gbif$county)) # 2586
@@ -140,19 +137,49 @@ extract_county <- function(d.f, loc){
   overlap <- intersect(gbif_c_na, rows)
   # the difference between this function and extract_state is that the entire locality
   # string before the key word is written into the county column here.
-  find_cou <- separate(d.f[overlap, ], locality, into = "loca", sep = "County", remove = F)
-  d.f$county[overlap]  <- find_cou$loca
+  find_cou <- separate(d.f[overlap, ], locality, into = "loca", sep = loc, remove = F)
+  d.f$county_new[overlap]  <- find_cou$loca
   return(d.f$county)
 }
 
-gbif$county <- extract_county(gbif, "County")
-sum(is.na(gbif$county)) # 2256
-gbif$county <- extract_county(gbif, "county")
-sum(is.na(gbif$county)) # 2252
-gbif$county <- extract_county(gbif, "Co.")
-sum(is.na(gbif$county)) # 2135
+gbif$county_new <- NA
+
+# read in county and state vectors
+fia_cou <- read.csv(file=paste0(translate_fia, '/fia_county_raw.csv'), as.is=T)
+cou_state_names <- fia_cou$STATENM
+cou_county_names <- fia_cou$COUNTYNM
+
+extract_county_new_v2 <- function(d.f, loc){
+  rows <- grep(pattern = loc, x = d.f$locality)
+  # the difference between this function and extract_state is that the entire locality
+  # string before the key word is written into the county column here.
+  find_cou <- separate(d.f[rows, ], locality, into = "loca", sep = loc, remove = F)
+  d.f$county_new[rows]  <- find_cou$loca
+  return(d.f$county_new)
+}
+
+
+
+extract_county_new <- function(d.f, loc){
+   rows <- grep(pattern = loc, x = d.f$locality)
+  # the difference between this function and extract_state is that the entire locality
+  # string before the key word is written into the county column here.
+  find_cou <- separate(d.f[rows, ], locality, into = "loca", sep = loc, remove = F)
+  d.f$county_new[rows]  <- find_cou$loca
+  return(d.f$county_new)
+}
+
+sum(is.na(gbif$county_new)) # 12195
+gbif$county_new <- extract_county_new(gbif, "County")
+sum(is.na(gbif$county_new)) # 11134
+
+
+gbif$county_new <- extract_county_new(gbif, "county")
+sum(is.na(gbif$county_new)) # 11107
+gbif$county_new <- extract_county_new(gbif, "Co.")
+sum(is.na(gbif$county_new)) # 10145
 # check county names now
-unique(gbif$county)
+unique(gbif$county_new)
 # for some reason, some of the counties are bracketed. We can remove the brackets.
 # Other counties may include the word county, which is not an issue, or several extra words, which we cannot target easily.
 gbif$county <- gsub("[", "", gbif$county,fixed = T)
