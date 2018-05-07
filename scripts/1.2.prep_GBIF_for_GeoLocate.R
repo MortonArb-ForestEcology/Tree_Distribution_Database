@@ -89,10 +89,10 @@ extract_state_new <- function(d.f, loc, repl){
 #sum(is.na(gbif$state_new)) # 11465
 
 # all states and abbreviations
-state_names <- c("ALABAMA","ALASKA","ARIZONA","ARKANSAS","CALIFORNIA","COLORADO","CONNECTICUT","DELAWARE","FLORIDA","GEORGIA","HAWAII","IDAHO","ILLINOIS","INDIANA","IOWA","KANSAS",
-                "KENTUCKY","LOUISIANA","MAINE","MARYLAND","MASSACHUSETTS","MICHIGAN","MINNESOTA","MISSISSIPPI","MISSOURI","MONTANA","NEBRASKA","NEVADA","NEW HAMPSHIRE","NEW JERSEY","NEW MEXICO",
-                "NEW YORK","NORTH CAROLINA","NORTH DAKOTA","OHIO","OKLAHOMA","OREGON","PENNSYLVANIA","RHODE ISLAND","SOUTH CAROLINA","SOUTH DAKOTA","TENNESSEE","TEXAS","UTAH",
-                "VERMONT","VIRGINIA","WASHINGTON","WEST VIRGINIA","WISCONSIN","WYOMING", "DISTRICT OF COLUMBIA")
+state_names <- c("Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut","Delaware","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa","Kansas",
+                "Kentucky","Louisiana","Maine","Maryland","Massachusetts","Michigan","Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada","New Hampshire","New Jersey","New Mexico",
+                "New York","North Carolina","North Dakota","Ohio","Oklahoma","Oregon","Pennsylvania","Rhode Island","South Carolina","South Dakota","Tennessee","Texas","Utah",
+                "Vermont","Virginia","Washington","West Virginia","Wisconsin","Wyoming", "District Of Columbia")
 state_abb <- c("AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS",
               "MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA",
               "WV","WI","WY", "DC")
@@ -131,7 +131,7 @@ unique(gbif[is.na(gbif$state_new), "state"] )
 # COUNTY
 sum(is.na(gbif$county)) # 2586
 
-extract_county <- function(d.f, loc){
+#extract_county <- function(d.f, loc){
   gbif_c_na <- which(is.na(d.f$county))
   rows <- grep(pattern = loc, x = d.f$locality)
   overlap <- intersect(gbif_c_na, rows)
@@ -149,18 +149,29 @@ fia_cou <- read.csv(file=paste0(translate_fia, '/fia_county_raw.csv'), as.is=T)
 cou_state_names <- fia_cou$STATENM
 cou_county_names <- fia_cou$COUNTYNM
 
-extract_county_new_v2 <- function(d.f, loc){
-  rows <- grep(pattern = loc, x = d.f$locality)
-  # the difference between this function and extract_state is that the entire locality
-  # string before the key word is written into the county column here.
-  find_cou <- separate(d.f[rows, ], locality, into = "loca", sep = loc, remove = F)
-  d.f$county_new[rows]  <- find_cou$loca
+extract_county_new_v2 <- function(d.f, state_loc, loc){
+  gbif_c_look <- which(d.f$state_new == state_loc)
+  rows <- grep(pattern = loc, x = d.f$locality, ignore.case = T)
+  overlap <- intersect(gbif_c_look, rows)
+  d.f$county_new[overlap]  <- loc
   return(d.f$county_new)
 }
 
 
+which(gbif$state_new == cou_state_names[1])
+sum(gbif$state_new == "Alabama")
 
-extract_county_new <- function(d.f, loc){
+
+which(!is.na(extract_county_new_v2(gbif, cou_state_names[4], cou_county_names[4])))
+
+# try loop
+for (i in 1:length(cou_state_names)){
+gbif$county_new <- extract_county_new_v2(gbif, cou_state_names[i], cou_county_names[i])
+
+}
+
+
+#extract_county_new <- function(d.f, loc){
    rows <- grep(pattern = loc, x = d.f$locality)
   # the difference between this function and extract_state is that the entire locality
   # string before the key word is written into the county column here.
