@@ -58,10 +58,46 @@ extract_state <- function(d.f, loc, repl){
   return(d.f$state)
 }
 
+# make a new column before running this function
+gbif$state_new <- NA
+
+# use this one for full state names.
+extract_state_new_anyCase <- function(d.f, loc, repl){
+  rows <- grep(pattern = loc, x = d.f$state, ignore.case = T) 
+  d.f$state_new[rows] <- repl
+  gbif_s_na <- which(is.na(d.f$state_new))
+  rows <- grep(pattern = loc, x = d.f$locality, ignore.case = T) 
+  overlap <- intersect(gbif_s_na, rows)
+  d.f$state_new[overlap] <- repl
+  gbif_s_na <- which(is.na(d.f$state_new))
+  rows <- grep(pattern = loc, x = d.f$verbatimLocality, ignore.case = T) 
+  overlap <- intersect(gbif_s_na, rows)
+  d.f$state_new[overlap] <- repl
+    return(d.f$state_new)
+  }
+
+# use this one for state abbreviations
+extract_state_new <- function(d.f, loc, repl){
+  rows <- grep(pattern = loc, x = d.f$state) 
+  d.f$state_new[rows] <- repl
+  gbif_s_na <- which(is.na(d.f$state_new))
+  rows <- grep(pattern = loc, x = d.f$locality) 
+  overlap <- intersect(gbif_s_na, rows)
+  d.f$state_new[overlap] <- repl
+  gbif_s_na <- which(is.na(d.f$state_new))
+  rows <- grep(pattern = loc, x = d.f$verbatimLocality) 
+  overlap <- intersect(gbif_s_na, rows)
+  d.f$state_new[overlap] <- repl
+  return(d.f$state_new)
+}
+
+
 # Run the function several times
 sum(is.na(gbif$state)) # 2030
-gbif$state <- extract_state(gbif, "CA", "California")
-sum(is.na(gbif$state))
+sum(is.na(gbif$state_new)) # 12195
+gbif$state_new <- extract_state_new(gbif, "CA", "California")
+sum(is.na(gbif$state)) # 2030
+sum(is.na(gbif$state_new)) # 2566
 
 # make a loop for the rest:
 change_it <- c("California", "Texas", "TX", "FL", "Florida", "AZ", "Arizona", "UT", "Utah",
@@ -74,10 +110,15 @@ to_this <- c("California", "Texas", "Texas", "Florida", "Florida", "Arizona", "A
              "Oregon", "Oregon", "North Carolina")
 
 for (i in 1:length(to_this)){
-    gbif$state <- extract_state(gbif, change_it[i], to_this[i])
+    gbif$state_new <- extract_state_new(gbif, change_it[i], to_this[i])
   }
 
+# see what happened..
+write.csv(gbif, "New_state_extract_fxn.csv", row.names = F)
+
 sum(is.na(gbif$state)) # 1108 We filled in almost 1000 blanks
+sum(is.na(gbif$state_new)) # 1108 We filled in almost 1000 blanks
+
 which(is.na(gbif$state))
 sum(is.na(gbif$locality[which(is.na(gbif$state))])) # 928 localities are NAs anyway, but what about the 180 others?
 gbif$locality[!is.na(gbif$locality) & is.na(gbif$state)]
