@@ -204,7 +204,7 @@ should contain references to their proper locations
           absence shapefiles:    "(species epithet)_ absence"
           Found in folder in-use_occurrence_compiled/species_shapefiles
   
-  Packages: dplyr
+  Packages: dplyr, raster, maptools, rgdal, sp
   
   Functions: create_species_shp (input the species name and make a shapefile of all occurrences in a dataset)
            
