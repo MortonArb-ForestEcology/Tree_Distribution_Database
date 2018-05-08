@@ -1,4 +1,4 @@
-Updated: 12 April 2018
+Updated: 8 May 2018
 
 # Tree_Distribution_Database
 Repository for curating occurrence and predictor data of tree distributions
@@ -10,14 +10,23 @@ We will describe the scripts folder first because it is most relevant.
 
 # 2. scripts folder
 Within folder "scripts", files have been numbered in the order they are to be used in the workflow.
-Data files used in these scripts are on the Google Drive "Distributions_TreeSpecies" and the scripts 
+Data files used in these scripts are on the Google Drive "Distributions_TreeSpecies" and/or server and the scripts 
 should contain references to their proper locations
 
  Occurrence data for our oak species of interest has been downloaded prior to its use in our scripts. 
    None of the data comes from API currently, but we hope to update these file paths when API becomes available, we hope.
    
 # Workflow   
-## 	1.0.set_workingdirectory
+## 	0.calculate_met by Christy
+   Purpose: To calculate yearly statistics from daily mean temperature values
+   
+   Input: PRISM data
+   
+   Output: Climate normal raster
+   
+   Packages: raster
+   
+## 	1.0.set_workingdirectory by Shannon
   Purpose: Customize the file paths depending on who is running the scripts and which computers they are using.
   
   Input: Run if-else script on the computer you will be using. The script will read your Sys.info()
@@ -26,85 +35,92 @@ should contain references to their proper locations
   
   Packages: None
   
-## 1.1.lower48_FIA_oak_extraction
+## 1.1.lower48_FIA_oak_extraction by Elizabeth
   Purpose: FIA data comes in a unique form, where individual trees are not directly linked with their
   coordinates. Here we first cycle through the tree occurrence data from 48 states and extract all
-  occurrences labeled as a species of interest. The trees are not linked with their coordinates until step 2.
+  occurrences labeled as one of our species of interest. The trees are not linked with their coordinates until step 2.
   
   Input: TREE.csv files for lower 48 states from FIA datamart
+         Found in fia_translation_data_raw/FIA TREES--January 2018 folder in Google Drive
   
-  Output: single csv containing FIA occurrence data for 28 species of interest, without coordinates; fia_tree_raw.csv
-  
+  Output: fia_tree_raw.csv; single csv containing FIA occurrence data for 28 species of interest, without coordinates; 
+          Found in in-use_occurrence_raw folder in Google Drive
+          
   Packages: none
   
-  Functions: fia_extract (This function cycles through each state TREE.csv, one at a time, removes all trees marked as not living, and then   goes through all the remaining occurrences, checking for each of our 13 species of interest with FIA codes, one at a time. If it finds a 
+  Functions: fia_extract (This function cycles through each state TREE.csv, one at a time, removes all trees marked as not living, and then   
+  goes through all the remaining occurrences, checking for each of our 13 species of interest with FIA codes, one at a time. If it finds a 
   match, it pulls the occurrence and saves it to a new data frame. As it goes through each state and finds more occurrences, the data frame 
-  grows until it reaches its final size.)
+  grows until it reaches its final size.) Note: This function may take a while to run and may stop if there is not enough memory to run it.
+  The file can also be built state by state with the long-hand version of the function, included immediately following the function.
   
-  Notes: 1) This output will not lead to the later inclusion the coordinates of surveyed plots 
-  that did not contain the species of interest. Consider altering this script by also finding 
-  coordinates in step 1.1 if decide to use empty plots as absence data. 2) This script may need 
-  to be updated if FIA API becomes available.
-  3) Keep in mind that the coordinates used here by FIA may differ from the actual location of 
-  occurrence, up to a mile, due to "data fuzzing". 4) Only six of our 28 species of interest were 
-  observed in the most recent FIA surveys, though 13 of the 28 have been assigned species codes, 
-  which suggests that other species have been observed during different survey years. Several of 
+  Notes: 1) This script may need to be updated if FIA API becomes available.
+  2) Keep in mind that the coordinates used for these FIA occurrences may differ from the actual location of 
+  an occurrence, up to a mile, due to "data fuzzing". 3) Only six of our 28 species of interest were 
+  observed in the most recent FIA surveys, though 13 of the 28 had been assigned species codes, 
+  which suggests that the other seven species have been observed during previous survey years. Several of 
   the 28 species are shrubs and would not be expected to be recorded in the surveys anyway.
   Species represented by positive occurrences in FIA: Quercus engelmannii, Q. graciliformis, 
-  Q. laceyi, Q. lobata, Q. oglethorpensis, Q. similis
+  Q. laceyi, Q. lobata, Q. oglethorpensis, Q. similis.
 
-## 1.2.prep_GBIF_for_GeoLocate
-  Purpose: STEP ONE--After downloading GBIF occurrence data from website in Darwin Core format, several occurrences
+## 1.2.prep_GBIF_for_GeoLocate by Elizabeth
+  Purpose: STEP ONE--After downloading GBIF occurrence data from the website in Darwin Core format, several occurrences
   have locality information, such as state, county and a description of where it was found, but lack coordinates. 
   Tulane's GEOLocate online application finds coordinates of places based on a description of state, county 
   and other locality information. In an effort to augment our occurrence datasets, we edited the Darwin Core 
   columns to fit the format necessary to use the GEOLocate application, creating a CSV to load into the web application.
   The CSV we download from the application after it has reassigned coordinates to the occurrences (gbif_DC_post-georef.csv)
-  will be used in step 2 of this script. STEP TWO--Further revision was done to the geo-referenced coordinates to reinstate
-  coordinates that were issueless
+  is used in step 2 of this script. STEP TWO--Further revision was done to the geo-referenced coordinates to reinstate
+  coordinates that had previously lacked "issues". After labelling county-specific occurrences that lack coordinates, all remaining
+  occurreces lacking coordinates were removed. Finally, the remaining occurrences were re-ordered according to year and precision.
   
   Input: STEP ONE--gbif_DarwinCore_edit.csv
          STEP TWO--gbif_DC_post-georef.csv
+                   Found in in-use_occurrence_raw folder on Google Drive
   
-  Output: STEP ONE--gbif_DC_georef.csv
+  Output: STEP ONE--gbif_DC_cleaned.csv; gbif_DC_georef.csv
           STEP TWO--gbif_DC_post-georef_revised.csv
+                    Found in in-use_occurrence_raw folder on Google Drive
   
   Packages: dplyr, rgbif, tidyr, data.table
   
-  Functions: extract_state (Search in the state column for NAs and in the locality column for a state name or abbreviation. If a row has an    NA for state and a state listed in the locality, then write in that state's name in the state column.)
+  Functions: extract_state_new (Search in the state column, locality and verbatim locality columns for a state name or abbreviation. Write 
+  in that state's name in the new state column.)
   
-   extract_county (Search in the county column for NAs and in the locality column for the words "County", "county" or the abbreviation "Co." If any of the above are found, then create a new data frame "find_cou" where the locality column is split by that word. If a row has an NA for county and corresponds to a split column in find_cou, then write in the characters from the first part of the splut column into the original county column.)
+  extract_county_new_v2 (Search in the state and county columns for a paired match to a state and county as found in the FIA county 
+  reference file. Write in appropriate matches in the new county column.)
   
-  Notes: After running this script, the resulting CSV must be uploaded into a separate online application and further changed. 
+  Notes: After running part one of this script, the resulting CSV must be uploaded into a separate online application and further changed. 
   Running our csv through GEOLocate takes a significant amount of time and the completed result, which can be saved with a 
-  code must be redownloaded into a new CSV that will be renamed as gbif_DC_post-georef.csv. Some of the existing coordinates 
-  may also be affected by running GEOLocate, so a second supplementary script (1.3) will help check for errors.
+  code, must be redownloaded into a new CSV that will be renamed as gbif_DC_post-georef.csv. Some of the existing coordinates 
+  may also be affected by running GEOLocate, so round two of this script (1.2) will help check for errors.
   
-## 2.1.compile_occurrence_point_datasets
+## 2.1.compile_occurrence_point_datasets by Emily and Elizabeth
   Purpose: Using the FIA and GBIF data compiled in step 1.1 and 1.2, as well as occurrence data 
   from other sources (gbif, consortium, idigbio, bonap, A. Hipp, exsitu, natureserve, redlist, 
   usdaplants, other), we will make a larger stacked data frame containing all the occurrence data 
   we will need to make our model. Column names will be made uniform.
   
-  Input: all csv files from in_use_occurrence_raw folder in Google Drive, plus FIA translation files*
-         gbif_DC_post-georef_revised.csv
-         consortium_raw.csv
-         idigbio_raw.csv
-         fia_tree_raw.csv
-         fia_plot_raw.csv*
-         fia_species_raw.csv*
-         fia_county_raw.csv*
-         target_species_list.csv (to add missing columns to each dataset)
+  Input: all csv files from in_use_occurrence_raw folder and fia_translation_data_raw folder (*) on Google Drive
+         gbif_DC_post-georef_revised.csv (step 3)
+         consortium_raw.csv (step 4)
+         idigbio_raw.csv (step 5)
+         fia_tree_raw.csv (step 6)
+         fia_plot_raw.csv* (step 6)
+         fia_species_raw.csv* (step 6)
+         fia_county_raw.csv* (step 6)
+         target_species_list.csv (step 1: to add missing columns to each dataset)
+         /cb_2016_us_county_5m/cb_2016_us_county_5m.shp (step 7)
   
-  Output: standardized_col_compiled.csv
-          gbif_compiled.csv
-          consortium_compiled.csv
-          idigbio_compiled.csv
-          fia_compiled.csv
-          fia_absence_compiled.csv (absence data)
-          occurrence_compiled_dec2.csv in in-use_occurrence_compiled folder on Google Drive
-              containing uniform occurrence data for 28 species of interest from several sources
-              To be used in script 2.2 below.
+  Output: standardized_col_compiled.csv (step 2)
+          gbif_compiled.csv (step 3)
+          consortium_compiled.csv (step 4)
+          idigbio_compiled.csv (step 5)
+          fia_compiled.csv (step 6)
+          fia_absence_compiled.csv (absence data) (step 6 part 2)
+          occurrence_compiled_dec2.csv containing uniform occurrence data for 28 species of 
+          interest from several sources. To be used in script 2.2 below. (step 7)
+          Found in in-use_occurrence_compiled folder on Google Drive
   
   Output Column names: dataset, genus, species, decimalLongitude, decimalLatitude, basisOfRecord, year, locality, 
                 institutionCode, gps_determ, occurrenceRemarks, coordinateUncertaintyInMeters, stateProvince,
@@ -123,16 +139,20 @@ should contain references to their proper locations
           to the positive occurrences for each species. Plots in which each of the 13 species that could
           possibly have been found are absent are saved in a new dataframe.
 
-## 2.2.subset_occurrence_point_data
+## 2.2.subset_occurrence_point_data by Emily
   Purpose: After compiling all the occurrences into one dataset in the above script, we must remove 
-  duplicate occurrences, first overall, and then including county centroids.
+  duplicate occurrences, first overall, and then county centroids for counties which are already represented.
   
-  Input: occurrence_compiled_dec2.csv in in-use_occurrence_compiled folder on Google Drive
+  Input: occurrence_compiled_dec2.csv in in-use_occurrence_compiled folder on Google Drive (from script 2.1)
+         /cb_2016_us_county_5m/cb_2016_us_county_5m.shp (county shapefile used to create county centroid data frame)
+         Found in in-use_occurrence_compiled folder and cb_2016_us_county_5m folder on Google Drive
   
   Output: occurrence_compiled_dec2_unique.csv (no duplicates)
           occurrence_compiled_dec2_unique_countyDupMarked.csv (county centroids occurring in counties with other occurrences are marked)
           occurrence_compiled_dec2_unique_countyDupRemoved.csv (marked counties from above are removed)
-          occurrence_compiled_dec2_unique_countyDupRemoved_acceptedDistMarked.csv (exlcuding counties that are not in the "accepted" range)
+          occurrence_compiled_dec2_unique_countyDupRemoved_acceptedDistMarked.csv (above file with additional column marking remaining 
+                                                                                   counties that are not in the "accepted" range)
+          Found in in-use_occurrence_compiled folder on Google Drive
   
   Column Names: X, dataset, genus, species, decimalLongitude, decimalLatitude, basisOfRecord, year, 
                 locality, institutionCode, gps_determ, occurrenceRemarks, coordinatePrecisionInMeters, 
@@ -149,54 +169,59 @@ should contain references to their proper locations
   Notes: In some cases, two different species may occur at the same coordinate, so it
   is important to consider each subset of coordinates by species before removing any points.  
 
-## 3.add_climate_predictors_to_occurrence_df
-  Purpose: Add columns for climatic data to the occurrences compiled for our species
+## 3.add_climate_predictors_to_occurrence_df by Elizabeth--script works, but may change to fit needs of model
+  Purpose: Add columns for climatic data to the large dataset of occurrences compiled for our species. Also, add 
+  these columns with climate data to the absence dataset.
   
   Input: occurrence_compiled_dec2_unique_countyDupRemoved.csv
-         fia_absence_compiled_first12.csv
-         fia_absence_compiled_thirteenth.csv
+         fia_absence_compiled.csv
          climate rasterLayers from PRISM 
          (30-year normals for annual precipitation, mean annual temperature, maximum annual 
          temperature, minimum annual temperature) Additional rasterLayers can be added without much difficulty.
+         Found in folder in-use_occurrence_compiled/ and PRISM data on server in /home/data/PRISM/
   
-  Output: updated csv with species occurrence data and climate data for those areas
+  Output: occur_prism.csv 
+          (updated csv with both species occurrence data and climate data for those coordinates)
+          absent_prism.csv
+          (both will be placed in the in-use_occurrence_compiled folder in the Google Drive)
+          Found in folder in-use_occurrence_compiled/
   
-  Packages: dplyr, raster, rgdal, sp
+  Packages: dplyr, raster, rgdal, sp, plyr
   
   Functions: extract_PRISM (This single function will extract the appropriate climatic 
-  statistics from each layer of interest and append it to the existing data frame)
+  statistics from each layer of interest. After running it, a separate step is needed to append it to the existing data frame)
   
-## 4.extract_species_from_raw_df
+## 4.extract_species_from_raw_df by Elizabeth--script works, but may change to fit needs of model
   Purpose: Subset by species from large occurrence pool first 
   and then at different spatial scales second
   *THIS will likely be revised; some of this now covered with removal of duplicates*
   
-  Input: large occurrence csv from step 2
+  Input: occurrence_compiled_dec2_unique_countyDupRemoved.csv (The the script is currently set up to read this file, but 
+         this excludes any climatic values added in new columns in step 3.)
+         Found in folder in-use_occurrence_compiled/
   
-  Output: several smaller csvs, depending on preference of modeller
+  Output: shapefiles of occurrences for all species of interest and of absences for the species listed in FIA
+          occurrence shapefiles: "Quercus_(species epithet)"
+          absence shapefiles:    "(species epithet)_ absence"
+          Found in folder in-use_occurrence_compiled/species_shapefiles
   
   Packages: dplyr
   
-  Functions: extract_county_one ()
-             extract_localized_two ()
-             write_loc2_csv ()             
- 
-  Notes: 1) Subsetting by species is made especially easy with the use of the species_no code.
-  2) Subsetting can be done further at three different levels of spatial scale. 
-  ONE: county level--this large-scale picture is useful for mapping an upper limit of a 
-  species distribution. A comparison between this map and a federal species occurrence by
-  county map, from USDA plants, BONAP or NatureServe, can quickly highlight where occurrence 
-  points may have been mistaken. Some occurence data lack coordinates, but include county.
-  TWO: locality level--this subset removes occurrences that are only specified to the county 
-  level and includes all occurrence labeled with coordinates, including those found using 
-  GeoReference in step 2.
-  THREE: revised locality level--this subset starts with the subset from level two and further 
-  edits out points in which we have a lower confidence. For example, some coordinates that are 
-  given are associated with certain issues in the 'issue' column which may indicate an error. 
-  It is recommended to use this subset of occurrences for the final model.
+  Functions: create_species_shp (input the species name and make a shapefile of all occurrences in a dataset)
+             create_absence_shp (the absences needed a slightly different function to input the species name and 
+             make a shapefile of all coordinates in which a species was absent because the coordinates were set up
+             slightly differently--they hadn't undergone the same round of edits as the occurrence data.)
+             
+  Notes: 1) One of the species, Quercus graciliformis, underwent a slightly different process to make the
+        shapefile because it needed to be grouped with Quercus canbyi. 2) The occurrence shapefiles can be 
+        made fairly quickly, but the absence shapefiles can take up to an hour each. 3) Remember that absence data
+        is only available for species surveyed by FIA.
 
 ## Compile_occurrencePt_datasets.R
    Purpose: outdated version of step 2?
+   
+## PRIMS_unzip_daily.sh
+   Purpose: early version of script 0?
 
 ## extract_ITRDB.R
    Purpose: loop example from Shannon, consider removing to sagebrush folder
