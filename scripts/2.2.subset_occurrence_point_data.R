@@ -22,7 +22,8 @@ library(data.table)
 library(dplyr)
 library(plyr)
 
-## Counts number of duplicates removed for each record
+# This function never built, but intended to
+## Count number of duplicates removed for each record
 #count.dups <- function(DF) { ### i dont think this is working, just says "1" for every record
 #  DT <- data.table(DF)
 #  DT[,.N,by=names(DT)]
@@ -44,7 +45,7 @@ gen_subset <- function(orig_data, action, export_name){
 ### 1. Remove Spatial Duplicates by Species
 ################
 
-# read in occurrence point file
+# read in occurrence point file from end of script 2.1
 occur_all <- read.csv(file=paste0(compiled, '/occurrence_compiled_dec2.csv'), as.is=T)
 nrow(occur_all) #45390
 # round lat and long to 3 digits after decimal
@@ -52,17 +53,20 @@ occur_all$lat_round <- round(occur_all$decimalLatitude, 3)
 occur_all$long_round <- round(occur_all$decimalLongitude, 3)
 # remove all coordinates with a positive longitude and a negative latitude
 occur_all <- occur_all[which(occur_all$lat_round >= 0), ] # removes point in Brazil
-occur_all[which(occur_all$long_round >= 0), ] # notice errors in MS entries, longitude should be -89...
+# notice errors in below MS entries, longitude should be -89...
+occur_all[which(occur_all$long_round >= 0), ]
+# fix accidentally positive coordinates
 occur_all[which(occur_all$long_round >= 89 & occur_all$long_round <90), "long_round"] <- -(occur_all[which(occur_all$long_round >= 89 & occur_all$long_round <90), "long_round"])
-occur_all[which(occur_all$long_round >= 0), "locality"] #remaining entries in Europe and Asia
+# check to see remaining entries in Europe and Asia
+occur_all[which(occur_all$long_round >= 0), "locality"] 
 occur_all <- occur_all[which(occur_all$long_round <= 0), ]
 nrow(occur_all) #45385
 # before removing duplicates, let's number the occurrences so we know which ones will be saved
 occur_all$obs_no <- seq(1, length(occur_all$X), 1)
 # remove spatial duplicates based on species key and lat/long rounded to 3 digits after the decimal
 occur_dec2_unq <- occur_all%>%distinct(speciesKey,lat_round,long_round,.keep_all=TRUE)
-nrow(occur_dec2_unq) #8242 with 3 dec places
-# make a new vector with this unique observations
+nrow(occur_dec2_unq) #8242
+# make a new vector with these unique observations
 first_match <- occur_dec2_unq$obs_no
 # now we can return to our occur_all dataset and label the occurrences as duplicates or not
 occur_all$duplicate <- "Duplicate"
@@ -71,11 +75,13 @@ table(occur_all$duplicate)
 # Now we can find a way to group the duplicates or to count number of duplicates per unique occurrence
 #occur_all[occur_all$duplicate == "Unique", c("lat_round", "long_round", "obs_no", "species")]
 #occur_all[occur_all$duplicate == "Duplicate", c("lat_round", "long_round", "obs_no", "species")]
+# This function never built.
+
 # And we can easily subset out the duplicates and write a new file with the unique occurrences only.
 write.csv(occur_dec2_unq, file=paste0(compiled, "/occurrence_compiled_dec2_unique.csv"), row.names = F)
 
 ################
-### 2. Remove Spatial Duplicates by County #I'm sure there is a way to compress this code, just did it stream of consciousness
+### 2. Remove Spatial Duplicates by County 
 ################
 
 # remove unnecessary county centroids (i.e. when higher quality occurrence point is already located within that county)
@@ -108,16 +114,18 @@ pts.poly <- point.in.poly(occur_centroid_join, counties_wgs)
 # mark occurrence points that are county centroids within counties that are already represented by geolocated points
 occur_counties <- as.data.frame(pts.poly)
   nrow(occur_counties) #8241
-duplicates <- occur_counties[duplicated(occur_counties[c("speciesKey", "stateProvince", "county")]),]
+  duplicates <- occur_counties[duplicated(occur_counties[c("speciesKey", "stateProvince", "county")]),]
 nrow(duplicates) #6138
 to_remove <- subset(duplicates, gps_determ == "C" | gps_determ == "SC")
 nrow(to_remove) #158
 to_remove$county_centroid_dup <- rep("x")
 occur_dup_marked <- full_join(occur_counties, to_remove)
+# write a file with these county duplicates marked
 write.csv(occur_dup_marked, file=paste0(compiled, "/occurrence_compiled_dec2_unique_countyDupMarked.csv"), row.names = F)
-# remove county centroid duplicate records
+# then remove county centroid duplicate records
 occur_clean <- anti_join(occur_counties, to_remove, by = "X")
 nrow(occur_clean) #8083
+# And write another file without the county duplicates
 write.csv(occur_clean, file=paste0(compiled, "/occurrence_compiled_dec2_unique_countyDupRemoved.csv"), row.names = F)
 
 table(occur_clean$species)
@@ -135,6 +143,8 @@ table(occur_clean$species)
 ### 4. Mark Records Outside 'Accepted' Range
 ################
 
+# The accepted range refers to the maps created by the USDA and similar organizations.
+# They list the counties in which each species has been recorded, so they offer a broad range.
 accepted_dist <- subset(occur_all, dataset == "usdaplants" | dataset == "bonap" | dataset == "natureserve")
   nrow(accepted_dist) #2643
 # turn into SpatialPointsDataFrame
