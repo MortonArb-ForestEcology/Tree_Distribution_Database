@@ -13,13 +13,21 @@
 #                     fia_plot_raw.csv*
 #                     fia_species_raw.csv*
 #                     fia_county_raw.csv*
-#
+#                     target_species_list.csv
+#                     /cb_2016_us_county_5m/cb_2016_us_county_5m.shp 
 #
 # * marks files from fia_translation_data_raw folder
 # All other files from in-use_occurrence_raw folder
 #
 ############### OUTPUT: occurence_compiled_dec2.csv
 #                 (compilation of all occurrence data to be used in the model)
+#                 (plus below fully compiled datasets right before they are merged)
+#                 standardized_col_compiled.csv
+#                 gbif_compiled.csv
+#                 consortium_compiled.csv
+#                 idigbio_compiled.csv
+#                 fia_compiled.csv
+#                 fia_absence_compiled.csv (absence data)
 #
 ################
 ### LIBRARIES and FUNCTIONS
