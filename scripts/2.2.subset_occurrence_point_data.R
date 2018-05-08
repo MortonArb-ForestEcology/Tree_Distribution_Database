@@ -3,6 +3,7 @@
 ############# subset occurrence point data to remove duplicates, etc.
 
 ############### INPUT: occurrence_compiled_dec2.csv
+#                       /cb_2016_us_county_5m/cb_2016_us_county_5m.shp
 ############### OUTPUT: occurrence_compiled_dec2_unique.csv
 #                       occurrence_compiled_dec2_unique_countyDupMarked.csv
 #                       occurrence_compiled_dec2_unique_countyDupRemoved.csv
