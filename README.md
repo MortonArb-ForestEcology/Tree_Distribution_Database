@@ -101,14 +101,14 @@ should contain references to their proper locations
   usdaplants, other), we will make a larger stacked data frame containing all the occurrence data 
   we will need to make our model. Column names will be made uniform.
   
-  Input: all csv files from in_use_occurrence_raw folder and fia_translation_data_raw folder (*) on Google Drive
+  Input: all csv files from in_use_occurrence_raw folder and fia_translation_data_raw folder (+) on Google Drive
          gbif_DC_post-georef_revised.csv (step 3)
          consortium_raw.csv (step 4)
          idigbio_raw.csv (step 5)
          fia_tree_raw.csv (step 6)
-         fia_plot_raw.csv* (step 6)
-         fia_species_raw.csv* (step 6)
-         fia_county_raw.csv* (step 6)
+         fia_plot_raw.csv+ (step 6)
+         fia_species_raw.csv+ (step 6)
+         fia_county_raw.csv+ (step 6)
          target_species_list.csv (step 1: to add missing columns to each dataset)
          /cb_2016_us_county_5m/cb_2016_us_county_5m.shp (step 7)
   
