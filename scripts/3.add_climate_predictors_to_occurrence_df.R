@@ -2,13 +2,9 @@
 ########### 2.27.18 Elizabeth Tokarz
 ###########
 ###########
-
-
 ############### INPUT: occurrence_compiled_dec2_unique_countyDupRemoved.csv
-#                       fia_absence_compiled_first12.csv
-#                       fia_absence_compiled_thirteenth.csv
+#                       fia_absence_compiled.csv
 #               (from script 2.2_subset_occurrence_point_data.R)
-#
 #
 #               Also: climate RasterLayers from PRISM database (.bil files)
 ####### Find PRISM data on ULMUS server in  /home/data/PRISM
@@ -45,8 +41,9 @@ occur_all <- read.csv(file=paste0(compiled, '/occurrence_compiled_dec2_unique_co
 # read in absence data
 absent <- read.csv(file=paste0(compiled, '/fia_absence_compiled.csv'), as.is=T)
 
-# set wd for PRISM data
+# set wd for PRISM data if on computer
 # setwd("C:/Users/Elizabeth/Desktop/2017_CTS_fellowship/PRISM")
+# use these file locations for pulling PRISM from the server
 # /home/data/PRISM/yearly_calculated/PRISM_ppt_2016.gri (example)... load each variable and each year?
 # /home/data/PRISM/normal_4km/ppt/PRISM_ppt_30yr_normal_4kmM2_annual_bil.bil
 # /home/data/PRISM/normal_4km/tmean/PRISM_tmean_30yr_normal_4kmM2_annual_bil.bil
@@ -58,18 +55,6 @@ annual_ppt <- raster("PRISM_ppt_30yr_normal_4kmM2_annual_bil.bil")
 annual_mean_temp <- raster("PRISM_tmean_30yr_normal_4kmM2_annual_bil.bil")
 annual_max_temp <- raster("PRISM_tmax_30yr_normal_4kmM2_annual_bil.bil")
 annual_min_temp <- raster("PRISM_tmin_30yr_normal_4kmM2_annual_bil.bil")
-
-# make shapefile of occurrence data we need for each model
-occ_shapefile <- function(d.f, subset){
-  d.f <- d.f[subset,]
-  d.f_coord <- d.f[, c("long_round", "lat_round")]
-  spdf <- SpatialPointsDataFrame(coords = d.f_coord, data = d.f, 
-                                 proj4string = CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"))
-  
-}
-
-occ_shapefile(occur_all, unique(occur_all$speciesKey)[1])
-
 
 # in this function, extract all PRISM values that you want
 extract_PRISM <- function(d.f){
