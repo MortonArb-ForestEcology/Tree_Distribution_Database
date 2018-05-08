@@ -23,6 +23,7 @@ library(data.table)
 ######################################################################################
 ################# ROUND ONE ##########################################################
 ######################################################################################
+# read in the full gbif file. Recall that it has hundreds of columns.
 gbif_full <- read.csv(file='gbif_raw_DarwinCore_edit.csv', as.is=T)
 nrow(gbif_full) #12195
 # rename and compress for ease of manipulation
@@ -36,6 +37,7 @@ gbif <- subset(gbif, select = c(basisOfRecord, institutionCode, genus,
                                 coordinateUncertaintyInMeters,
                                 georeferenceSources, issue))
 
+# change column names from DarwinCore standard to GeoLocate column names
 setnames(gbif,
          old=c("decimalLatitude","decimalLongitude","basisOfRecord","institutionCode","coordinateUncertaintyInMeters", "countryCode", "stateProvince", "scientificName"),
          new=c("lat","long","basis","source","uncert_m", "country", "state", "synonym"))
@@ -48,24 +50,24 @@ gbif$locality[is.na(gbif$locality)]  <- gbif$verbatimLocality[is.na(gbif$localit
 sum(is.na(gbif$locality)) #1835, better
 
 # STATE
-# First check the state column for a direct match to one of the lower 48 states
-# Fill in matches in a new column.
-# For remaining NAs in the new state column, check the locality of those rows for state names or abbreviations
-# Finally, for any remaining NAs in the new state column, check the verbatim locality again.
-
+# Make a function to write in the appropriate state for each row in a new state column.
 # make a new column before running this function
 gbif$state_new <- NA
 
 # Note that case cannot be ignored, otherwise, kansas will replace arkansas.
 extract_state_new <- function(d.f, loc, repl){
-  rows <- grep(pattern = loc, x = d.f$state) 
-  d.f$state_new[rows] <- repl
+  # First check the state column for a direct match to one of the lower 48 states
+    rows <- grep(pattern = loc, x = d.f$state) 
+    # Fill in the rows with matches with the state name in a new column.
+    d.f$state_new[rows] <- repl
   gbif_s_na <- which(is.na(d.f$state_new))
+  # For remaining NAs in the new state column, check the locality of those rows for state names or abbreviations
   rows <- grep(pattern = loc, x = d.f$locality) 
   overlap <- intersect(gbif_s_na, rows)
   d.f$state_new[overlap] <- repl
   gbif_s_na <- which(is.na(d.f$state_new))
-  rows <- grep(pattern = loc, x = d.f$verbatimLocality) 
+  # Finally, for any remaining NAs in the new state column, check the verbatim locality.
+    rows <- grep(pattern = loc, x = d.f$verbatimLocality) 
   overlap <- intersect(gbif_s_na, rows)
   d.f$state_new[overlap] <- repl
   return(d.f$state_new)
@@ -94,9 +96,12 @@ for (i in 1:length(state_names)){
 sum(is.na(gbif$state_new)) # 1527
 sum(is.na(gbif$locality[which(is.na(gbif$state))])) # 928 localities are NAs
 
-#unique(gbif$locality[!is.na(gbif$locality) & is.na(gbif$state_new)]) # a lot of these localities are outside the US
-# There are a couple of funny outliers--you may change these below vectors based on your dataset and the above output
-# make a loop for the rest:
+# check the remaining rows with NAs in the new state column to consider how else they might be filled.
+#unique(gbif$locality[!is.na(gbif$locality) & is.na(gbif$state_new)]) 
+# a lot of these localities are outside the US, so we shouldn't worry about those.
+# However, we can recognize some state.
+# These below vectors may change based on your dataset and the above output
+# make a loop using the same search and replace "extract _state_new" function
 change_it <- c("Santa Barbara", "San Francisco", "OSP", "Floradida", "Californica", 
               "(Calif.)", "Seqouia", "Fla.", "Oglethorp", "Starkesville", "Stone Mt.", 
               "Fort Lauderdale", "New mexico")
@@ -109,30 +114,44 @@ for (i in 1:length(to_this)){
 }
 sum(is.na(gbif$state_new)) # 1494
 
-# checking for typos/errors in non-NAs
+# checking for typos/errors in non-NA original state entries
 unique(gbif[is.na(gbif$state_new), "state"] )
 # these states mostly represent non-US locations
 # We can now move on to filling in the county columns.
 
 # COUNTY
+# First, make the new column for county
 gbif$county_new <- NA
 
-# read in county and state vectors
+# read in county and state vectors from the FIA county reference file from the FIA datamart.
 fia_cou <- read.csv(file=paste0(translate_fia, '/fia_county_raw.csv'), as.is=T)
 # These two vectors contain all the counties in the US
 cou_state_names <- fia_cou$STATENM
 cou_county_names <- fia_cou$COUNTYNM
 
 # make a function to search through the state, county and locality data to look for matches
+# In this function, we consider the state and county as a pair. The county and
+# correlating state will always be entered as two of the arguments.
 extract_county_new_v2 <- function(d.f, state_loc, loc){
+  # First to make sure that the county matches the state, we will only consider 
+  # occurrences in the state half of the pair.
   gbif_c_look <- which(d.f$state_new == state_loc)
+  # We will also look at all localities containing the name of the county.
+  # Note that this might misrepresent an occurrence if a street or town is 
+  # mentioned in the locality that matches a county name elsewhere in the state
   rows <- grep(pattern = loc, x = d.f$locality, ignore.case = T)
+  # Checking to make sure the row both has the right state and the right county 
+  # listed in the pair given in the argument, we look at the intersection of the row numbers.
   overlap <- intersect(gbif_c_look, rows)
+  # and then only for the overlapping rows do we write the county name into the new county column.
   d.f$county_new[overlap]  <- loc
-  # Sometimes the county was already mentioned in the county column
-  # Note that the above might misrepresent an occurrence if a street or town is mentioned in the locality that matches a county name elsewhere in the state
+  # Sometimes the county was already mentioned in the county column, so next we 
+  # check the county column for the county name in the current pair.
   rows <- grep(pattern = loc, x = d.f$county, ignore.case = T)
+  # Then we see which row numbers are also in the state listed in the argument.
   overlap <- intersect(gbif_c_look, rows)
+  # Then the county name is written into the new county column for all occurrences with
+  # the state in the pair, as well as the county name, this time in the county column.
   d.f$county_new[overlap]  <- loc
   return(d.f$county_new)
 }
@@ -142,11 +161,13 @@ for (i in 1:length(cou_state_names)){
 gbif$county_new <- extract_county_new_v2(gbif, cou_state_names[i], cou_county_names[i])
 }
 
+# Compare how many counties were filled in in the original column to the new column.
 sum(is.na(gbif$county)) # 2587
 sum(is.na(gbif$county_new)) # 2966
 
+# Look at the original state and county data in the rows in which the new county column is still NA.
 unique(gbif[which(is.na(gbif$county_new)), c("state", "county")])
-# because of typos in the FIA document or the GBIF entries, we need to fill in some blanks:
+# because of typos in the FIA document or the GBIF entries, we can fill in some blanks:
 # The below vectors can be adjusted based on the above results for your dataset
 
 # For misspelled counties that do not match FIA
@@ -154,6 +175,9 @@ county_counties <- c("DeSoto", "De Kalb", "Saint Clair", "DE BACA", "De Baca", "
 county_states <- c("Louisiana", "Georgia", "Alabama", "New Mexico", "New Mexico", "Florida", "Texas", "Georgia", "Florida")
 county_replacements <- c("DeSoto", "DeKalb", "St. Clair", "De Baca", "De Baca", "DeSoto", "Cochran", "Oglethorpe", "St. Johns")  
 
+# This loop simply writes the county_replacement data to the new county column 
+# for rows matching both the county_counties and county_states data in the original
+# state and county columns.
 for (i in 1:length(county_counties)){
 gbif$county_new[which(gbif$county==county_counties[i] & gbif$state==county_states[i])] <- county_replacements[i]
 }
@@ -163,16 +187,17 @@ sum(is.na(gbif$county_new)) # 2929
 county_counties <- c("Charlton", "Alcorn", "Orangeburg")
 state_replacements <- c("Georgia", "Mississippi", "South Carolina")
 
+# This loop simply writes the county_counties replacement data to the new county column
+# and the state_replacements data to the new state data for rows matching the 
+# unique county_counties data in the original county column.
 for(i in 1:length(county_counties)){
 gbif$county_new[which(gbif$county==county_counties[i])] <- county_counties[i]
 gbif$state_new[which(gbif$county==county_counties[i])] <- state_replacements[i]
 }
 sum(is.na(gbif$county_new)) # 2926
 
-# check new county names now
-unique(gbif$county_new)
-
-# Next, if the county is NA, but the municipality is not, then we can rewrite municipality into the county column
+# Next, if the new county is NA, but the municipality is not, then we can rewrite 
+# municipality data into the new county column.
 gbif_c_na <- which(is.na(gbif$county_new))
 mun <- which(!is.na(gbif$municipality))
 overlap <- intersect(gbif_c_na, mun)
@@ -180,7 +205,8 @@ gbif$county_new[overlap] <- gbif$municipality[overlap]
 sum(is.na(gbif$county_new)) # 2921
 
 # Back to LOCALITY
-# and if the locality is NA, but the county is not, then we can rewrite the county into the locality column
+# and if the locality is NA, but the new county is not, then we can rewrite 
+# the new county data into the locality column.
 sum(is.na(gbif$locality))  #1835
 gbif_c_na <- which(is.na(gbif$locality))
 mun <- which(!is.na(gbif$county_new))
@@ -188,7 +214,7 @@ overlap <- intersect(gbif_c_na, mun)
 gbif$locality[overlap] <- gbif$county_new[overlap]
 sum(is.na(gbif$locality))  #995
 
-# Finally, to prevent some errors, let's write out some basic abbreviations in locality
+# Finally, to prevent some errors, let's write out some basic abbreviations in locality.
 # remove commas first
 gbif$locality <- gsub(pattern = ",", x = gbif$locality, replacement = " ")
 gbif$locality <- gsub(pattern = "\\'", x = gbif$locality, fixed = T, replacement = "")
@@ -204,6 +230,8 @@ to_this <- c("mountain", "mountain", "mountains", "canyon", "canyon", "junction"
              " northwest ", " ", " ", " ", " miles ", " miles ", " kilometers ", " road ",
              " road ", " avenue ", " fork ", " fork ", " Mount ", " Peak ")
 
+# This loop finds all cases of the characters in the change_it vector and replaces 
+# them with the characters in the to_this vector.
 for (i in 1: length(to_this)){
   gbif$locality <- gsub(pattern = change_it[i], x = gbif$locality, replacement = to_this[i])
 }
@@ -225,7 +253,8 @@ geo_loc$precision <- NA
 geo_loc$error_polygon <- NA
 geo_loc$multiple_results <- NA
 # We can add other columns later and it may be faster to run the GeoLocate app
-# without all of them. Just keep a few so we can identify the columns.
+# without all of them. Just keep a few so we can identify the columns and make 
+# sure the order is unchanged after emerging from GeoLocate.
 geo_loc$year <- gbif$year
 geo_loc$speciesKey <- gbif$speciesKey
 geo_loc$obs_no <- seq(1, length(gbif$basis), 1)
@@ -268,7 +297,7 @@ sum(geo_loc$latitude==post_geo$latitude) #NA  Wow--everything has changed...This
 # We may need to change some back, but we also should be aware that some of those were
 # associated with certain issues that could have been coordinate-related.
 
-# let's give all of these non-NA coordinates an L for localized in new column "gps_determ"
+# let's give all of these non-NA coordinates an L for localized in a new column: "gps_determ"
 post_geo$gps_determ <- NA
 post_geo$gps_determ[!is.na(post_geo$latitude)] <- "L"
 
@@ -282,6 +311,9 @@ pre_filled <- which(!is.na(geo_loc$latitude))
 rounded <- grep(pattern = "COORDINATE_ROUNDED", x = gbif[pre_filled, "issue"])
 mismatch <- grep(pattern = "COORDINATE_MISMATCH", x = gbif[pre_filled, "issue"])
 problems <- union(rounded, mismatch)
+# We can make a vector of the so-called issueless rows, in which we trust the 
+# pre-filled coordinates more than the GeoLocate output. From our vector of the 
+# numbers of the pre-filled rows, remove all row numbers that had the issues described above.
 issueless <- pre_filled[-problems]
 # Now replace the "issueless rows with their pre-existing coordinates
 post_geo$latitude[issueless] <- geo_loc$latitude[issueless]
@@ -299,7 +331,7 @@ b <- which(!is.na(check_sc$county))
 keep_these <- intersect(a,b)
 ## now rewrite check_sc to feature numbers
 check_sc <- which(is.na(post_geo$gps_determ))
-# and write in the c for county
+# and write in the C for county
 post_geo[check_sc[keep_these], "gps_determ"] <- "C"
 
 # now remove all occurrences that still have NA in gps_determ
@@ -327,6 +359,7 @@ medium1 <- as.numeric(grep(post_geo$precision, pattern = "Medium"))
 medium2 <- as.numeric(grep(post_geo$precision, pattern = "medium"))
 low <- as.numeric(grep(post_geo$precision, pattern = "Low"))
 blank <- as.numeric(which(post_geo$precision==""))
+# We can concatenate these row numbers to create the order in which we want the occurrences
 precise_order <- c(high, medium1, medium2, low, blank)
 post_geo <- post_geo[precise_order, ]
 
