@@ -195,7 +195,7 @@ should contain references to their proper locations
   Purpose: Separate the full dataset into smaller subsets of each species. Make shapefiles for the occurrence and
   absence coordinates of each species.
   
-  Input: occurrence_compiled_dec2_unique_countyDupRemoved.csv (The the script is currently set up to read this file, but 
+  Input: occurrence_compiled_dec2_unique_countyDupRemoved.csv (The script is currently set up to read this file, but 
          this excludes any climatic values added in new columns in step 3.)
          Found in folder in-use_occurrence_compiled/
   
