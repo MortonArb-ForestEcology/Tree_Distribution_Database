@@ -4,17 +4,16 @@
 ###########
 ###########   make species shapefiles
 ###########
-
-
 ############### INPUT: raw "occur_all" data csv 
 #                 occurrence_compiled_dec2_unique_countyDupRemoved.csv             
 #
 #     package: dplyr
 #
 #     ############### OUTPUT:shapefiles for each species of interest
+#                             occurrence shapefiles: "Quercus_(species epithet)" 
+#                             absence shapefiles:    "(species epithet)_absence"
+#   in species_shapefiles folder in in-use_occurrence_compiled folder in Google Drive
 #
-#
-
 library(dplyr)
 library(raster)
 library(maptools)
