@@ -104,13 +104,16 @@ df <- join(df, sp_list, by = "species", type="left"); str(df)
 df <- df[!(is.na(df$speciesKey)),]
 nrow(df) #37326 (ELT), 30900
 
+# though we will use this object at the end of the script to build the master 
+# dataset, we will also save the modified data frame up to this point. We will do the 
+# same in the following steps.
 write.csv(df, file=paste0(one_up, "/in-use_occurrence_compiled/standardized_col_compiled.csv"))
 
 ################
 ### 3. Standardize GBIF Data
 ################
 
-# read in raw occurrence points
+# read in raw occurrence points from the GBIF post_GeoLocate revision
 gbif <- read.csv(file='gbif_DC_post-georef_revised.csv', as.is=T)
 nrow(gbif) #11089
 
@@ -119,9 +122,9 @@ gbif$species <- as.factor(gbif$species)
 # recognize that scientificName refers to something different in sp_list
 
 # The rows will duplicate if their species key duplicates. ex. five lobata lines
-# in sp-list, so each lobata occurrence will spring four duplicates here, unless we add the first match argument.
-# add FIA ID column
-# The order will not be changed when using the join function
+# in sp-list, so each lobata occurrence will spring four duplicates here, 
+# unless we add the first match argument.
+# Also, the order will not be changed when using the join function
 gbif <- join(gbif, sp_list, by = c("speciesKey"), type = "full", match = "first")
 
 # remove extraneous columns
@@ -281,6 +284,7 @@ fia_absence_joint <- plot
 # remove most rows from exisiting fia dataset
 fia_pres <- subset(fia, select = c(decimalLatitude, decimalLongitude,
                               species,fia_codes, year))
+# change the names from DarwinCore to fia standards
 setnames(fia_pres,
          old=c("decimalLatitude","decimalLongitude", "year", "fia_codes"),
           new=c("LAT","LON", "INVYR", "SPCD"))
@@ -300,6 +304,7 @@ presence <- fia_pres[fia_pres$SPCD==rare_oak[2],]
 nrow(presence)
 fia_absence_joint$austrina <- 0
 
+# This species is different because some occurrences were reported by FIA
 presence <- fia_pres[fia_pres$SPCD==rare_oak[3],]
 nrow(presence)
 presence$dumosa <- 1  
@@ -354,6 +359,7 @@ fia_absence_joint$tardifolia <- 0
 presence <- fia_pres[fia_pres$SPCD==rare_oak[13],]
 fia_absence_joint$toumeyi <- 0
 
+# Now make a new dataframe with this augmented PLOT file with its 13 new columns.
 write.csv(fia_absence_joint, file=paste0(one_up, "/in-use_occurrence_compiled/fia_absence_compiled.csv"))
 
 ################
@@ -418,6 +424,7 @@ replace <- c("UNKNOWN","\\<0\\>","N/A","NA","^$","is.na(i)")
 for (i in replace){
   occur_all$year <- gsub(i,"1111",occur_all$year)
 }
+# change the class of some column values to prevent errors
 occur_all$year<-as.numeric(occur_all$year)
 occur_all$decimalLatitude<-as.numeric(occur_all$decimalLatitude)
 occur_all$decimalLongitude<-as.numeric(occur_all$decimalLongitude)
