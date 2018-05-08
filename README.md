@@ -207,7 +207,8 @@ should contain references to their proper locations
   Packages: dplyr
   
   Functions: create_species_shp (input the species name and make a shapefile of all occurrences in a dataset)
-             create_absence_shp (the absences needed a slightly different function to input the species name and 
+           
+   create_absence_shp (the absences needed a slightly different function to input the species name and 
              make a shapefile of all coordinates in which a species was absent because the coordinates were set up
              slightly differently--they hadn't undergone the same round of edits as the occurrence data.)
              
