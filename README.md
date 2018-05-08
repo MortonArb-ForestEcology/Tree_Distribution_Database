@@ -192,9 +192,8 @@ should contain references to their proper locations
   statistics from each layer of interest. After running it, a separate step is needed to append it to the existing data frame)
   
 ## 4.extract_species_from_raw_df by Elizabeth--script works, but may change to fit needs of model
-  Purpose: Subset by species from large occurrence pool first 
-  and then at different spatial scales second
-  *THIS will likely be revised; some of this now covered with removal of duplicates*
+  Purpose: Separate the full dataset into smaller subsets of each species. Make shapefiles for the occurrence and
+  absence coordinates of each species.
   
   Input: occurrence_compiled_dec2_unique_countyDupRemoved.csv (The the script is currently set up to read this file, but 
          this excludes any climatic values added in new columns in step 3.)
