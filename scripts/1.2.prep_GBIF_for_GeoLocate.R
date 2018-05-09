@@ -23,8 +23,7 @@ library(data.table)
 ######################################################################################
 ################# ROUND ONE ##########################################################
 ######################################################################################
-# read in the full gbif file. Recall that it has hundreds of columns.
-gbif_full <- read.csv(file='gbif_raw_DarwinCore_edit.csv', as.is=T)
+gbif_full <- read.csv(file='gbif_raw_DarwinCore_edit.csv', as.is=T, na.strings=c("","NA")) # replace any empty or "NA" cells with NA so the rest of the script works smoothly
 nrow(gbif_full) #12195
 # rename and compress for ease of manipulation
 gbif <- gbif_full
@@ -57,17 +56,17 @@ gbif$state_new <- NA
 # Note that case cannot be ignored, otherwise, kansas will replace arkansas.
 extract_state_new <- function(d.f, loc, repl){
   # First check the state column for a direct match to one of the lower 48 states
-    rows <- grep(pattern = loc, x = d.f$state) 
+    rows <- grep(pattern = loc, x = d.f$state)
     # Fill in the rows with matches with the state name in a new column.
     d.f$state_new[rows] <- repl
   gbif_s_na <- which(is.na(d.f$state_new))
   # For remaining NAs in the new state column, check the locality of those rows for state names or abbreviations
-  rows <- grep(pattern = loc, x = d.f$locality) 
+  rows <- grep(pattern = loc, x = d.f$locality)
   overlap <- intersect(gbif_s_na, rows)
   d.f$state_new[overlap] <- repl
   gbif_s_na <- which(is.na(d.f$state_new))
   # Finally, for any remaining NAs in the new state column, check the verbatim locality.
-    rows <- grep(pattern = loc, x = d.f$verbatimLocality) 
+    rows <- grep(pattern = loc, x = d.f$verbatimLocality)
   overlap <- intersect(gbif_s_na, rows)
   d.f$state_new[overlap] <- repl
   return(d.f$state_new)
@@ -96,17 +95,116 @@ for (i in 1:length(state_names)){
 sum(is.na(gbif$state_new)) # 1527
 sum(is.na(gbif$locality[which(is.na(gbif$state))])) # 928 localities are NAs
 
+<<<<<<< Updated upstream
 # check the remaining rows with NAs in the new state column to consider how else they might be filled.
-#unique(gbif$locality[!is.na(gbif$locality) & is.na(gbif$state_new)]) 
+unique(gbif$locality[!is.na(gbif$locality) & is.na(gbif$state_new)]) # 414 ROWS
 # a lot of these localities are outside the US, so we shouldn't worry about those.
+# remove occurrences which say they are in a different country (not US)
+gbif_us <- gbif[which(gbif$country=="US" | is.na(gbif$country)),] # 104 ROWS
+# now check rows where state was not extracted
+unique(gbif_us$locality[!is.na(gbif_us$locality) & is.na(gbif_us$state_new)])
+# There are a couple of funny outliers--you may change these below vectors based on your dataset and the above output
+# Here is the full output
+  [2] "Cosumnes River Preserve"
+  [3] "Stebbins Cold Canyon Reserve"
+  [5] "triunfco park"
+  [6] "Oak park, Oceanside"
+  [7] "Bidwell-Sacramento River State Park"
+  [8] "knights ferry"
+  [9] "Fremont Peak State Park"
+ [10] "Cache Creek Conservancy Nature Preserve"
+ [11] "Jasper Ridge"
+ [12] "North Table Mountain Ecological Reserve"
+ [13] "Chrysalis Charter School"
+ [14] "37.9127330556, -121.9430652778"
+ [15] "N. Broward. Vest for 51. Str. Fort Lauderdale NW"
+ [16] "Stone Mt., DeKalb County"
+ [17] "Northeast of Starkesville bridge, Lee County"
+ [18] "About 8 miles southeast of Lexington, Oglethorp County"
+ [19] "Buffalo Creek, east of Lexington, Oglethorp County"
+ [20] "Jasper Ridge Biological Preserve"
+ [21] "Overfelt Gardens"
+ [23] "lower arroyo park"
+ [24] "Lake Blue Scrub"
+ [25] "Picchetti Ranch Open Space Preserve"
+ [26] "buck institute for research on aging"
+ [27] "mitchell canyon visitor center"
+ [28] "Flinn Springs County Park"
+ [29] "Stanford Dish"
+ [30] "Santa Margarita Preserve"
+ [31] "Highway 18, 5.3 - 5.4 miles North of road to Eunice (highway 176)"
+ [32] "8.5 mi. south of San Jon"
+ [34] "Santa Barbara"
+ [35] "10 mi W of Vici on United States Hwy 60"
+ [36] "Fort Smith to the Rio Grande."
+ [37] "Diablo Foothills Regional Park"
+ [38] "Coyote Valley OSP"
+ [39] "effie yeaw nature center"
+ [40] "McClellan Ranch Preserve"
+ [41] "Mount Wanda"
+ [42] "Franklin Canyon Park, Chaparral Trail"
+ [43] "Guadalupe River Park"
+ [44] "Anderson Marsh State Historic Park"
+ [45] "Riverfront Regional Park"
+ [46] "novato / buck institute"
+ [47] "Sierra Vista OSP"
+ [48] "Westwood Hills Park"
+ [49] "Paramount Ranch"
+ [50] "Californie"
+ [53] "Sedgwick Reserve"
+ [54] "Oak Grove Regional Park,"
+ [55] "San Francisco, Oakhu - Inn, San Matio."
+ [56] "Petersburg, Fla."
+ [57] "Sequoia Gigantea Region, Amador County, Volcano."
+ [58] "Sequoia Gigantea Region, Amador County, Pinegrove."
+ [59] "Sequoia Gigantea Region, Amador County, Middle Fork."
+ [60] "Californie."
+ [61] "Santa Rosa (Calif.)."
+ [62] "Californica, Higher Sta. Lucia mts, on road to Tassajara Hot Springs."
+ [63] "Lake Sutherland"
+ [64] "Black Canyon Rd"
+ [65] "Alameda County"
+ [66] "Crestridge Ecological Reserve--Horsemill Rd access"
+ [68] "Consumnes River Preserve, 13501 Franklin Blvd., Galt, Ca 95632"
+ [69] "Gibson Ranch County Park"
+ [70] "George J. Hatfield State Recreation Area"
+ [71] "Sunol Regional Park"
+ [72] "Alameda County: Mount Hamilton Range. Mines Road just south of del Valle Rd. Riparian along Arroyo Mocho"
+ [73] "Floradida, County: Franklin; ca. 1mile N of Alligator Point"
+ [74] "Mount Tamalpais"
+ [76] "Stone Mountain"
+ [77] "Yellow River, near Stone Mt."
+ [79] "Near Creshviews"
+ [80] "Santa Lucia [range]"
+ [81] "San Francisco"
+ [82] "San Francisco- Dés Sacraments"
+ [83] "San Francisco - Dés Sacramento"
+ [84] "Benicia SRA"
+ [85] "Briones Regional Park"
+ [86] "Blue Oak Ranch Reserve"
+ [87] "Almaden Quicksilver County Park"
+ [88] "Congaree National Park"
+ [89] "Skyline Ridge Open Space Preserve"
+ [90] "Zaca Ridge Road, Santa Barbara County"
+ [91] "Santa Rosa Creek"
+ [92] "Las Trampas Regional Park"
+ [93] "American River, Sacramento"
+ [94] "Conejo Mountain Creek"
+ [95] "jasper ridge biological Preserve, Stanford Ca"
+ [96] "Edgewood Park, Redwood City"
+ [97] "Simi Valley"
+ [98] "37.40025329589844, -122.21720886230469"
+[100] "Lakeport, loc.: 8 mi. SW of Lakeport, alt 2000 ft."
+[101] "Calif.U.S.A."
+[104] "Copenhagen University's Arboretum"
 # However, we can recognize some state.
 # These below vectors may change based on your dataset and the above output
 # make a loop using the same search and replace "extract _state_new" function
-change_it <- c("Santa Barbara", "San Francisco", "OSP", "Floradida", "Californica", 
-              "(Calif.)", "Seqouia", "Fla.", "Oglethorp", "Starkesville", "Stone Mt.", 
+change_it <- c("Santa Barbara", "San Francisco", "OSP", "Floradida", "Californica",
+              "(Calif.)", "Seqouia", "Fla.", "Oglethorp", "Starkesville", "Stone Mt.",
               "Fort Lauderdale", "New mexico")
-to_this <- c( "California", "California", "Oregon", "Florida", "California", 
-              "California", "California", "Florida", "Georgia", "Georgia", "Georgia", 
+to_this <- c( "California", "California", "Oregon", "Florida", "California",
+              "California", "California", "Florida", "Georgia", "Georgia", "Georgia",
               "Florida", "New Mexico")
 
 for (i in 1:length(to_this)){
@@ -133,19 +231,19 @@ cou_county_names <- fia_cou$COUNTYNM
 # In this function, we consider the state and county as a pair. The county and
 # correlating state will always be entered as two of the arguments.
 extract_county_new_v2 <- function(d.f, state_loc, loc){
-  # First to make sure that the county matches the state, we will only consider 
+  # First to make sure that the county matches the state, we will only consider
   # occurrences in the state half of the pair.
   gbif_c_look <- which(d.f$state_new == state_loc)
   # We will also look at all localities containing the name of the county.
-  # Note that this might misrepresent an occurrence if a street or town is 
+  # Note that this might misrepresent an occurrence if a street or town is
   # mentioned in the locality that matches a county name elsewhere in the state
   rows <- grep(pattern = loc, x = d.f$locality, ignore.case = T)
-  # Checking to make sure the row both has the right state and the right county 
+  # Checking to make sure the row both has the right state and the right county
   # listed in the pair given in the argument, we look at the intersection of the row numbers.
   overlap <- intersect(gbif_c_look, rows)
   # and then only for the overlapping rows do we write the county name into the new county column.
   d.f$county_new[overlap]  <- loc
-  # Sometimes the county was already mentioned in the county column, so next we 
+  # Sometimes the county was already mentioned in the county column, so next we
   # check the county column for the county name in the current pair.
   rows <- grep(pattern = loc, x = d.f$county, ignore.case = T)
   # Then we see which row numbers are also in the state listed in the argument.
@@ -173,9 +271,9 @@ unique(gbif[which(is.na(gbif$county_new)), c("state", "county")])
 # For misspelled counties that do not match FIA
 county_counties <- c("DeSoto", "De Kalb", "Saint Clair", "DE BACA", "De Baca", "De Soto", "Cockran", "Oglethorp Co.", "Saint Johns")
 county_states <- c("Louisiana", "Georgia", "Alabama", "New Mexico", "New Mexico", "Florida", "Texas", "Georgia", "Florida")
-county_replacements <- c("DeSoto", "DeKalb", "St. Clair", "De Baca", "De Baca", "DeSoto", "Cochran", "Oglethorpe", "St. Johns")  
+county_replacements <- c("DeSoto", "DeKalb", "St. Clair", "De Baca", "De Baca", "DeSoto", "Cochran", "Oglethorpe", "St. Johns")
 
-# This loop simply writes the county_replacement data to the new county column 
+# This loop simply writes the county_replacement data to the new county column
 # for rows matching both the county_counties and county_states data in the original
 # state and county columns.
 for (i in 1:length(county_counties)){
@@ -188,7 +286,7 @@ county_counties <- c("Charlton", "Alcorn", "Orangeburg")
 state_replacements <- c("Georgia", "Mississippi", "South Carolina")
 
 # This loop simply writes the county_counties replacement data to the new county column
-# and the state_replacements data to the new state data for rows matching the 
+# and the state_replacements data to the new state data for rows matching the
 # unique county_counties data in the original county column.
 for(i in 1:length(county_counties)){
 gbif$county_new[which(gbif$county==county_counties[i])] <- county_counties[i]
@@ -196,7 +294,7 @@ gbif$state_new[which(gbif$county==county_counties[i])] <- state_replacements[i]
 }
 sum(is.na(gbif$county_new)) # 2926
 
-# Next, if the new county is NA, but the municipality is not, then we can rewrite 
+# Next, if the new county is NA, but the municipality is not, then we can rewrite
 # municipality data into the new county column.
 gbif_c_na <- which(is.na(gbif$county_new))
 mun <- which(!is.na(gbif$municipality))
@@ -205,7 +303,7 @@ gbif$county_new[overlap] <- gbif$municipality[overlap]
 sum(is.na(gbif$county_new)) # 2921
 
 # Back to LOCALITY
-# and if the locality is NA, but the new county is not, then we can rewrite 
+# and if the locality is NA, but the new county is not, then we can rewrite
 # the new county data into the locality column.
 sum(is.na(gbif$locality))  #1835
 gbif_c_na <- which(is.na(gbif$locality))
@@ -230,7 +328,7 @@ to_this <- c("mountain", "mountain", "mountains", "canyon", "canyon", "junction"
              " northwest ", " ", " ", " ", " miles ", " miles ", " kilometers ", " road ",
              " road ", " avenue ", " fork ", " fork ", " Mount ", " Peak ")
 
-# This loop finds all cases of the characters in the change_it vector and replaces 
+# This loop finds all cases of the characters in the change_it vector and replaces
 # them with the characters in the to_this vector.
 for (i in 1: length(to_this)){
   gbif$locality <- gsub(pattern = change_it[i], x = gbif$locality, replacement = to_this[i])
@@ -253,7 +351,7 @@ geo_loc$precision <- NA
 geo_loc$error_polygon <- NA
 geo_loc$multiple_results <- NA
 # We can add other columns later and it may be faster to run the GeoLocate app
-# without all of them. Just keep a few so we can identify the columns and make 
+# without all of them. Just keep a few so we can identify the columns and make
 # sure the order is unchanged after emerging from GeoLocate.
 geo_loc$year <- gbif$year
 geo_loc$speciesKey <- gbif$speciesKey
@@ -311,8 +409,8 @@ pre_filled <- which(!is.na(geo_loc$latitude))
 rounded <- grep(pattern = "COORDINATE_ROUNDED", x = gbif[pre_filled, "issue"])
 mismatch <- grep(pattern = "COORDINATE_MISMATCH", x = gbif[pre_filled, "issue"])
 problems <- union(rounded, mismatch)
-# We can make a vector of the so-called issueless rows, in which we trust the 
-# pre-filled coordinates more than the GeoLocate output. From our vector of the 
+# We can make a vector of the so-called issueless rows, in which we trust the
+# pre-filled coordinates more than the GeoLocate output. From our vector of the
 # numbers of the pre-filled rows, remove all row numbers that had the issues described above.
 issueless <- pre_filled[-problems]
 # Now replace the "issueless rows with their pre-existing coordinates
