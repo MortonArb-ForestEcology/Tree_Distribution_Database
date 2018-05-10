@@ -48,6 +48,9 @@ sum(is.na(gbif$locality)) #3044
 gbif$locality[is.na(gbif$locality)]  <- gbif$verbatimLocality[is.na(gbif$locality)]
 sum(is.na(gbif$locality)) #1835, better
 
+# Next, concatenate any municipality entries to the locality column.
+gbif$locality <- paste(gbif$locality, gbif$municipality, sep = "; ")
+
 # STATE
 # Make a function to write in the appropriate state for each row in a new state column.
 # make a new column before running this function
@@ -179,6 +182,8 @@ extract_county_new_v2 <- function(d.f, state_loc, loc){
   # and then only for the overlapping rows do we write the county name into the new county column.
   d.f$county_new[overlap]  <- loc
 
+  
+  
   return(d.f$county_new)
 }
 
@@ -191,25 +196,16 @@ gbif$county_new <- extract_county_new_v2(gbif, cou_state_names[i], cou_county_na
 
 # Compare how many counties were filled in in the original column to the new column.
 sum(is.na(gbif$county)) # 2587
-sum(is.na(gbif$county_new)) # 3365
-
-# Next, if the new county is NA, but the municipality is not, then we can rewrite
-# municipality data into the new county column.
-gbif_c_na <- which(is.na(gbif$county_new))
-mun <- which(!is.na(gbif$municipality))
-overlap <- intersect(gbif_c_na, mun)
-gbif$municipality[overlap] # see what the replacements will be--we know this isn't perfect
-gbif$county_new[overlap] <- gbif$municipality[overlap]
-sum(is.na(gbif$county_new)) # 3361
+sum(is.na(gbif$county_new)) # 3363
 
 unique(gbif[which(is.na(gbif$county_new)), c("state", "county")])
 # because of typos in the FIA document or the GBIF entries, we can fill in some blanks:
 # The below vectors can be adjusted based on the above results for your dataset
 
 # For misspelled counties that do not match FIA
-county_counties <- c("DeSoto", "De Kalb", "Saint Clair", "DE BACA", "De Baca", "De Soto", "Cockran", "Oglethorp Co", "Saint Johns", "Saint Lucie", "Saint Louis", "San Bernadino", "Coconico", "Stone Mountain")
-county_states <- c("Louisiana", "Georgia", "Alabama", "New Mexico", "New Mexico", "Florida", "Texas", "Georgia", "Florida", "Florida", "Missouri", "California", "Arizona", "Georgia")
-county_replacements <- c("DeSoto", "DeKalb", "St. Clair", "De Baca", "De Baca", "DeSoto", "Cochran", "Oglethorpe", "St. Johns", "St. Lucie", "St. Louis", "San Bernardino", "Coconino", "DeKalb")
+county_counties <- c("DeSoto", "De Kalb", "Saint Clair", "DE BACA", "De Baca", "De Soto", "Cockran", "Oglethorp Co", "Saint Johns", "Saint Lucie", "Saint Louis", "San Bernadino")
+county_states <- c("Louisiana", "Georgia", "Alabama", "New Mexico", "New Mexico", "Florida", "Texas", "Georgia", "Florida", "Florida", "Missouri", "California")
+county_replacements <- c("DeSoto", "DeKalb", "St. Clair", "De Baca", "De Baca", "DeSoto", "Cochran", "Oglethorpe", "St. Johns", "St. Lucie", "St. Louis", "San Bernardino")
 
 # This loop simply writes the county_replacement data to the new county column
 # for rows matching both the county_counties and county_states data in the original
@@ -218,7 +214,7 @@ county_replacements <- c("DeSoto", "DeKalb", "St. Clair", "De Baca", "De Baca", 
 for (i in 1:length(county_counties)){
 gbif$county_new[which(gbif$county==county_counties[i] & gbif$state==county_states[i])] <- county_replacements[i]
 }
-sum(is.na(gbif$county_new)) # 3324
+sum(is.na(gbif$county_new)) # 3326
 
 # For unique county names lacking states
 county_counties <- c("Charlton", "Alcorn", "Orangeburg", "Castro", "Okaloosa")
@@ -231,17 +227,17 @@ for(i in 1:length(county_counties)){
 gbif$county_new[which(gbif$county==county_counties[i])] <- county_counties[i]
 gbif$state_new[which(gbif$county==county_counties[i])] <- state_replacements[i]
 }
-sum(is.na(gbif$county_new)) # 3324
+sum(is.na(gbif$county_new)) # 3323
 
 # Back to LOCALITY
 # and if the locality is NA, but the new county is not, then we can rewrite
 # the new county data into the locality column.
-sum(is.na(gbif$locality))  #1835
-gbif_c_na <- which(is.na(gbif$locality))
+sum(gbif$locality=="NA; NA")  #1814
+gbif_c_na <- which(gbif$locality=="NA; NA")
 mun <- which(!is.na(gbif$county_new))
 overlap <- intersect(gbif_c_na, mun)
 gbif$locality[overlap] <- gbif$county_new[overlap]
-sum(is.na(gbif$locality))  #995
+sum(gbif$locality=="NA; NA")  #995
 
 # Finally, to prevent some errors, let's write out some basic abbreviations in locality.
 # remove commas first
