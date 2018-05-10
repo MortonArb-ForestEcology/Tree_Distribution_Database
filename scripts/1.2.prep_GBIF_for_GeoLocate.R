@@ -115,12 +115,12 @@ sum(is.na(gbif$state_new)) # 1361
 sum(is.na(gbif$locality[which(is.na(gbif$state))])) # 928 localities are NAs
 
 # check the remaining rows with NAs in the new state column to consider how else they might be filled.
-unique(gbif$locality[!is.na(gbif$locality) & is.na(gbif$state_new)]) # 414 ROWS
+unique(gbif[is.na(gbif$state_new), "locality"]) #292
 # a lot of these localities are outside the US, so we shouldn't worry about those.
 # remove occurrences which say they are in a different country (not US)
 gbif_us <- gbif[which(gbif$country=="US" | is.na(gbif$country)),] # 104 ROWS
 # now check rows where state was not extracted
-unique(gbif_us$locality[!is.na(gbif_us$locality) & is.na(gbif_us$state_new)])
+unique(gbif_us$locality[!is.na(gbif_us$locality) & is.na(gbif_us$state_new)]) # 101
 # There are a couple of funny outliers--you may change these below vectors based on your dataset and the above output
 # However, we can recognize some states.
 # These below vectors may change based on your dataset and the above output
@@ -159,18 +159,19 @@ extract_county_new_v2 <- function(d.f, state_loc, loc){
   # First to make sure that the county matches the state, we will only consider
   # occurrences in the state half of the pair.
   gbif_c_look <- which(d.f$state_new == state_loc)
-  # Sometimes the county was already mentioned in the county column, so next we
+  # Often the county was already mentioned in the county column, so first we
   # check the county column for the county name in the current pair.
   rows <- grep(pattern = loc, x = d.f$county, ignore.case = T)
   # Then we see which row numbers are also in the state listed in the argument.
   overlap <- intersect(gbif_c_look, rows)
   # Then the county name is written into the new county column for all occurrences with
-  # the state in the pair, as well as the county name, this time in the county column.
+  # the state in the pair, and the county name in the original county column.
   d.f$county_new[overlap]  <- loc
   # We will also look at all localities containing the name of the county.
   # Note that this might misrepresent an occurrence if a street or town is
   # mentioned in the locality that matches a county name elsewhere in the state
-  gbif_c_look <- which(is.na(d.f$state_new) == state_loc)
+  # Make sure we do not overwrite the new county entries written above.
+  gbif_c_look <- which(gbif$state_new[is.na(gbif$county_new)] == state_loc)
   rows <- grep(pattern = loc, x = d.f$locality, ignore.case = T)
   # Checking to make sure the row both has the right state and the right county
   # listed in the pair given in the argument, we look at the intersection of the row numbers.
@@ -181,6 +182,8 @@ extract_county_new_v2 <- function(d.f, state_loc, loc){
   return(d.f$county_new)
 }
 
+#which(gbif$state_new[!is.na(gbif$state_new)] == "Arkansas")
+
 # fill in counties with this loop. It should take 5-10 minutes to run.
 for (i in 1:length(cou_state_names)){
 gbif$county_new <- extract_county_new_v2(gbif, cou_state_names[i], cou_county_names[i])
@@ -188,17 +191,18 @@ gbif$county_new <- extract_county_new_v2(gbif, cou_state_names[i], cou_county_na
 
 # Compare how many counties were filled in in the original column to the new column.
 sum(is.na(gbif$county)) # 2587
-sum(is.na(gbif$county_new)) # 2966
+sum(is.na(gbif$county_new)) # 3364
 
+unique(gbif[which(is.na(gbif$county_new) & !is.na(gbif$county)), c("state", "county")])
 # Look at the original state and county data in the rows in which the new county column is still NA.
 unique(gbif[which(is.na(gbif$county_new)), c("state", "county")])
 # because of typos in the FIA document or the GBIF entries, we can fill in some blanks:
 # The below vectors can be adjusted based on the above results for your dataset
 
 # For misspelled counties that do not match FIA
-county_counties <- c("DeSoto", "De Kalb", "Saint Clair", "DE BACA", "De Baca", "De Soto", "Cockran", "Oglethorp Co.", "Saint Johns")
-county_states <- c("Louisiana", "Georgia", "Alabama", "New Mexico", "New Mexico", "Florida", "Texas", "Georgia", "Florida")
-county_replacements <- c("DeSoto", "DeKalb", "St. Clair", "De Baca", "De Baca", "DeSoto", "Cochran", "Oglethorpe", "St. Johns")
+county_counties <- c("DeSoto", "De Kalb", "Saint Clair", "DE BACA", "De Baca", "De Soto", "Cockran", "Oglethorp Co", "Saint Johns", "Saint Lucie", "Saint Louis", "San Bernadino")
+county_states <- c("Louisiana", "Georgia", "Alabama", "New Mexico", "New Mexico", "Florida", "Texas", "Georgia", "Florida", "Florida", "Missouri", "California")
+county_replacements <- c("DeSoto", "DeKalb", "St. Clair", "De Baca", "De Baca", "DeSoto", "Cochran", "Oglethorpe", "St. Johns", "St. Lucie", "St. Louis", "San Bernardino")
 
 # This loop simply writes the county_replacement data to the new county column
 # for rows matching both the county_counties and county_states data in the original
@@ -206,7 +210,7 @@ county_replacements <- c("DeSoto", "DeKalb", "St. Clair", "De Baca", "De Baca", 
 for (i in 1:length(county_counties)){
 gbif$county_new[which(gbif$county==county_counties[i] & gbif$state==county_states[i])] <- county_replacements[i]
 }
-sum(is.na(gbif$county_new)) # 2929
+sum(is.na(gbif$county_new)) # 3327
 
 # For unique county names lacking states
 county_counties <- c("Charlton", "Alcorn", "Orangeburg")
@@ -219,7 +223,7 @@ for(i in 1:length(county_counties)){
 gbif$county_new[which(gbif$county==county_counties[i])] <- county_counties[i]
 gbif$state_new[which(gbif$county==county_counties[i])] <- state_replacements[i]
 }
-sum(is.na(gbif$county_new)) # 2926
+sum(is.na(gbif$county_new)) # 3324
 
 # Next, if the new county is NA, but the municipality is not, then we can rewrite
 # municipality data into the new county column.
@@ -227,7 +231,7 @@ gbif_c_na <- which(is.na(gbif$county_new))
 mun <- which(!is.na(gbif$municipality))
 overlap <- intersect(gbif_c_na, mun)
 gbif$county_new[overlap] <- gbif$municipality[overlap]
-sum(is.na(gbif$county_new)) # 2921
+sum(is.na(gbif$county_new)) # 3319
 
 # Back to LOCALITY
 # and if the locality is NA, but the new county is not, then we can rewrite
