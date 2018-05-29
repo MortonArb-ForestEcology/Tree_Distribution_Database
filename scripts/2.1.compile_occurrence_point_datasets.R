@@ -14,7 +14,7 @@
 #                     fia_species_raw.csv*
 #                     fia_county_raw.csv*
 #                     target_species_list.csv
-#                     /cb_2016_us_county_5m/cb_2016_us_county_5m.shp 
+#                     /cb_2016_us_county_5m/cb_2016_us_county_5m.shp
 #
 # * marks files from fia_translation_data_raw folder
 # All other files from in-use_occurrence_raw folder
@@ -104,8 +104,8 @@ df <- join(df, sp_list, by = "species", type="left"); str(df)
 df <- df[!(is.na(df$speciesKey)),]
 nrow(df) #37326 (ELT), 30900
 
-# though we will use this object at the end of the script to build the master 
-# dataset, we will also save the modified data frame up to this point. We will do the 
+# though we will use this object at the end of the script to build the master
+# dataset, we will also save the modified data frame up to this point. We will do the
 # same in the following steps.
 write.csv(df, file=paste0(one_up, "/in-use_occurrence_compiled/standardized_col_compiled.csv"))
 
@@ -114,7 +114,7 @@ write.csv(df, file=paste0(one_up, "/in-use_occurrence_compiled/standardized_col_
 ################
 
 # read in raw occurrence points from the GBIF post_GeoLocate revision
-gbif <- read.csv(file='gbif_DC_post-georef_revised.csv', as.is=T)
+gbif <- read.csv(file='gbif_DC_post-georef_revised2.csv', as.is=T)
 nrow(gbif) #11089
 
 # make sure species is a factor
@@ -122,7 +122,7 @@ gbif$species <- as.factor(gbif$species)
 # recognize that scientificName refers to something different in sp_list
 
 # The rows will duplicate if their species key duplicates. ex. five lobata lines
-# in sp-list, so each lobata occurrence will spring four duplicates here, 
+# in sp-list, so each lobata occurrence will spring four duplicates here,
 # unless we add the first match argument.
 # Also, the order will not be changed when using the join function
 gbif <- join(gbif, sp_list, by = c("speciesKey"), type = "full", match = "first")
@@ -293,7 +293,7 @@ setnames(fia_pres,
 presence <- fia_pres[fia_pres$SPCD==rare_oak[1],]
 nrow(presence)
 # if greater than 0, make an extra column indicating presence of the species in that plot
-#presence$rare_sp <- 1  
+#presence$rare_sp <- 1
 # then join it to the larger plot
 #fia_absence_joint <- join(fia_absence_joint, presence, by = c("LAT", "LON", "INVYR") type = "left")
 # if the nrow is 0, then simply add a column directly to the plot data frame
@@ -307,7 +307,7 @@ fia_absence_joint$austrina <- 0
 # This species is different because some occurrences were reported by FIA
 presence <- fia_pres[fia_pres$SPCD==rare_oak[3],]
 nrow(presence)
-presence$dumosa <- 1  
+presence$dumosa <- 1
 fia_absence_joint <- join(fia_absence_joint, presence, by = c("LAT", "LON", "INVYR"), type = "left")
 # remove extra columns
 fia_absence_joint <- subset(fia_absence_joint, select = -c(species, SPCD))
@@ -346,7 +346,7 @@ fia_absence_joint[which(is.na(fia_absence_joint$oglethorpensis)), "oglethorpensi
 
 presence <- fia_pres[fia_pres$SPCD==rare_oak[10],]
 fia_absence_joint$robusta <- 0
- 
+
 presence <- fia_pres[fia_pres$SPCD==rare_oak[11],]
 presence$similis <- 1
 fia_absence_joint <- join(fia_absence_joint, presence, by = c("LAT", "LON", "INVYR"), type = "left")
@@ -396,7 +396,7 @@ all_data <- Reduce(rbind.all.columns, datasets)
   # So let's tack on the names to these coordinates with fia_cou
   centroids <- join(centroids, fia_cou, by = c("STATECD", "COUNTYCD"), type = "left")
   # It looks like some numbers are still not quite aligning, there may be errors in states with a lot of counties--VA and AK and FL (Dade)--see NAs
-  
+
   # Second we can make a subset of the occurrences that lack coordinates, but have state and county.
   fill_in_county_coord <- which(is.na(all_data$decimalLatitude)) # this is the rows to subset of all_data
   match_these_counties <-  all_data[(is.na(all_data$decimalLatitude)),c("stateProvince", "county")] # this is a dataframe of the state and county pairs we have to match
@@ -406,13 +406,13 @@ all_data <- Reduce(rbind.all.columns, datasets)
   match_these_counties$COUNTYNM <- gsub(" Co.", "", match_these_counties$COUNTYNM, fixed = T)
   match_these_counties <- join(match_these_counties, centroids, by = c("STATENM", "COUNTYNM"), type ="left")
   # Note that any misspelled counties will not be found. Some rows were still unable to match data.
-  
+
   # now fill in these coordinate gaps
   all_data[fill_in_county_coord, "decimalLatitude"] <- match_these_counties$lat_round
   all_data[fill_in_county_coord, "decimalLongitude"] <- match_these_counties$long_round
   # and label the points as gps_determ = "C"
   all_data[fill_in_county_coord, "gps_determ"] <- "C"
-  
+
 # remove rows with no lat and long still
 occur_all <- all_data[!(is.na(all_data$decimalLatitude)),]
   nrow(occur_all) #59357
