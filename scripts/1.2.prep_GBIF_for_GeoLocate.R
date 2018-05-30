@@ -273,18 +273,22 @@ geo_loc$obs_no <- gbif$obs_no
 nrow(geo_loc) #12195
 str(geo_loc)
 
+# remove duplicate rows so we geolocate the smallest amount of data possible
+geo_loc <- distinct(geo_loc,country,state,county,locality_string,speciesKey,.keep_all=T)
+nrow(geo_loc) #7547
+
 # version 1: records WITH COUNTY
 geo_loc1 <- geo_loc[which(!is.na(geo_loc$county)),] # | !is.na(geo_loc$locality)),]
-nrow(geo_loc1) #8873
+nrow(geo_loc1) #5853
 # version 2: records WITH LOCALITY
 geo_loc2 <- geo_loc[which(!is.na(geo_loc$locality)),]
-nrow(geo_loc2) #10952
+nrow(geo_loc2) #7296
 # version 3: records MISSING COORDINATES
 geo_loc3 <- geo_loc[which(is.na(geo_loc$latitude)),]
-nrow(geo_loc3) #5168
+nrow(geo_loc3) #2194
 # version 4: records WITH LOCALITY & MISSING COORDINATES
 geo_loc4 <- geo_loc3[which(!is.na(geo_loc3$locality)),]
-nrow(geo_loc4) #4041
+nrow(geo_loc4) #1968 ; this was ~4000 before removing duplicated rows!
 
 # write a csv to upload into geoLocate
 write.csv(geo_loc4, file='gbif_DC_georef_hasLocalANDnoCoord.csv', row.names = F)
@@ -313,9 +317,10 @@ write.csv(geo_loc4, file='gbif_DC_georef_hasLocalANDnoCoord.csv', row.names = F)
 ################# ROUND TWO [post GeoLocate] ##########################################################
 ######################################################################################
 
+# read in files and set gps determination column appropriately
 # all records put through GeoLocate
-post_geo <- read.csv(file='gbif_DC_post-georef4.csv', as.is=T)
-nrow(post_geo) #3379
+post_geo <- read.csv(file='gbif_DC_post-georef.csv', as.is=T)
+nrow(post_geo) #1968
 # all records from step one
 pre_geo <- read.csv(file='gbif_DC_cleaned.csv', as.is=T)
 pre_geo$gps_determ <- NA
@@ -327,14 +332,46 @@ nrow(pre_geo_coord) #7027
 # records with coords filled in by GeoLocate
 post_geo_succ <- post_geo[which(!is.na(post_geo$latitude)),]
 post_geo_succ$gps_determ <- "L"
-nrow(post_geo_succ) #3045
+nrow(post_geo_succ) #1709
 # all records with coordinates now
 have_coord <- join(post_geo_succ,pre_geo_coord,type='full') #,by='obs_no')
-nrow(have_coord) #10072
-# all records, with post-geo coords included
+nrow(have_coord) #8736
+# all records without coords
 diff <- setdiff(pre_geo$obs_no,have_coord$obs_no)
 no_coord <- pre_geo[diff,]
-nrow(no_coord) #2123
+no_coord$gps_determ <- "NA"
+nrow(no_coord) #3459
+
+all_occ <- join(have_coord,no_coord,type='full') #,by='obs_no')
+nrow(all_occ) #12195
+sum(all_occ$gps_determ == "L") #3045
+sum(all_occ$gps_determ == "G") #7027
+sum(all_occ$gps_determ == "NA") #1383
+# rename columns to Darwin Core
+setnames(all_occ,
+         old=c("lat","long","country","state"),
+         new=c("decimalLatitude","decimalLongitude","countryCode","stateProvince"))
+
+# lastly we will reorder the occurrences here according to their year and precision (given by geolocate)
+all_occ <- all_occ[order(all_occ$year, decreasing = T), ]
+# order by precision
+high <- as.numeric(grep(all_occ$precision, pattern = "High"))
+medium1 <- as.numeric(grep(all_occ$precision, pattern = "Medium"))
+medium2 <- as.numeric(grep(all_occ$precision, pattern = "medium"))
+low <- as.numeric(grep(all_occ$precision, pattern = "Low"))
+blank <- as.numeric(which(is.na(all_occ$precision)))
+# we can concatenate these row numbers to create the order in which we want the occurrences
+precise_order <- c(high, medium1, medium2, low, blank)
+all_occ <- all_occ[precise_order, ]
+
+# write a new dataset
+write.csv(all_occ, file='gbif_DC_post-georef_revised.csv', row.names = F)
+
+
+
+
+
+
 
 ### THIS PART DOES NOT APPLY CURRENTLY BECAUSE ALL POINTS ARE NOT RUN THROUGH GEOLOCATE ###
 # Now let's see how many of the coordinates we had before have changed.
@@ -342,54 +379,6 @@ nrow(no_coord) #2123
 # means that some of our pre-existing coordinates that were uploaded into GeoLocate were changed.
 # We may need to change some back, but we also should be aware that some of those were
 # associated with certain issues that could have been coordinate-related.
-
-# fill in county centroid coordinates where necessary
-# read in county and state vectors from the FIA county reference file from the FIA datamart.
-fia_cou <- read.csv(file=paste0(translate_fia, '/fia_county_raw.csv'), as.is=T)
-# read in csv with county centroid coordinates
-counties <- read.csv(file='counties_wgs.csv', as.is=T)
-setnames(fia_cou,
-         old=c("STATECD","COUNTYCD"),
-         new=c("STATEFP","COUNTYFP"))
-centroids <- join(counties, fia_cou, by = c('STATEFP','COUNTYFP'), type = 'left')
-state_names <- centroids$STATENM
-county_names <- centroids$COUNTYNM
-lat <- centroids$CENTROID_Y
-long <- centroids$CENTROID_X
-
-extract_county_centroid <- function(d.f, states, counties, lat, long){
-  # First to make sure that the county matches the state, we will only consider
-  # occurrences in the state half of the pair.
-  gbif_s_look <- which(d.f$state == states)
-  gbif_l_look <- which(is.na(d.f$lat))
-  # Often the county was already mentioned in the county column, so first we
-  # check the county column for the county name in the current pair.
-  rows <- grep(pattern = counties, x = d.f$county, ignore.case = T)
-  # Then we see which row numbers are also in the state listed in the argument.
-  overlap <- intersect(gbif_s_look, rows)
-  overlap2 <- intersect(gbif_l_look, rows)
-  overlap_all <- intersect(overlap, overlap2)
-  # Then the coordinate is written into the new county column for all occurrences with
-  # the state in the pair, and the county name in the original county column.
-  d.f$lat[overlap_all] <- lat
-  d.f$long[overlap_all] <- long
-  d.f$gps_determ[overlap_all] <- "C"
-  return(d.f)
-}
-for (i in 1:nrow(no_coord)){
-  no_coord <- extract_county_centroid(no_coord, state_names[i], county_names[i], lat[i], long[i])
-}
-filled_succ <- no_coord[which(!is.na(no_coord$lat)),]
-nrow(filled_succ) #740
-no_coord[which(is.na(no_coord$lat)),]$gps_determ <- "NA"
-
-all_occ <- join(have_coord,no_coord,type='full') #,by='obs_no')
-nrow(all_occ) #12195
-
-sum(all_occ$gps_determ == "L") #3045
-sum(all_occ$gps_determ == "C") #740
-sum(all_occ$gps_determ == "G") #7027
-sum(all_occ$gps_determ == "NA") #1383
 
 # find which coordinates existed in the input document
 # pre_filled <- which(!is.na(geo_loc$latitude))
@@ -454,25 +443,3 @@ sum(all_occ$gps_determ == "NA") #1383
 #post_geo$stateProvince <- post_geo$state
 #post_geo$decimalLatitude <- post_geo$latitude
 #post_geo$decimalLongitude <- post_geo$longitude
-
-setnames(all_occ,
-         old=c("lat","long","country","state"),
-         new=c("decimalLatitude","decimalLongitude","countryCode","stateProvince"))
-
-# Lastly we will reorder the occurrences here according to their year and precision, as determined by GeoLocate
-# By year
-all_occ <- all_occ[order(all_occ$year, decreasing = T), ]
-
-# Then we will sort "high" precision first, and then "medium" then "low" and lastly "NA" or "(blank)"
-high <- as.numeric(grep(all_occ$precision, pattern = "High"))
-medium1 <- as.numeric(grep(all_occ$precision, pattern = "Medium"))
-medium2 <- as.numeric(grep(all_occ$precision, pattern = "medium"))
-low <- as.numeric(grep(all_occ$precision, pattern = "Low"))
-blank <- as.numeric(which(is.na(all_occ$precision)))
-
-# We can concatenate these row numbers to create the order in which we want the occurrences
-precise_order <- c(high, medium1, medium2, low, blank)
-all_occ <- all_occ[precise_order, ]
-
-# and write a new dataset
-write.csv(all_occ, file='gbif_DC_post-georef_revised4.csv', row.names = F)
