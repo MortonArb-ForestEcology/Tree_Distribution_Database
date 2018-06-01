@@ -35,7 +35,7 @@
   					## a subfolder to the main working directory
       #one_up <-
       #translate_fia <-
-    #compiled <- 
+    #compiled <-
       f_out <- "SDM_output"
       data_in <- "/Users/sstill/Box/Research/Active_Projects/MortonArb_SDM"
 
@@ -63,6 +63,28 @@
   f_out <- "SDM_output"
   #   pypath <- "/Library/Frameworks/GDAL.framework/Versions/current/Programs/gdal_polygonize.py"
 }
+
+### LOAD PACKAGES ###
+library(dplyr)
+library(plyr)
+library(rdf)
+library(rgeos)
+library(rgbif)
+library(ridigbio)
+library(data.table)
+library(tidyr)
+library(stringr)
+library(lubridate)
+library(rgdal)
+library(geosphere)
+library(sp)
+library(spatialEco)
+library(mapview)
+
+
+
+
+
 
 ###
 ##Elizabeth Tokarz Sys.info ()

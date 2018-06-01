@@ -1,48 +1,38 @@
-############ 2.1
+############ 1.2
 ########### 3.22.18 Emily Beckman
 ############# compile all occurrence point data into one standardized dataframe
 
 ## Be sure to run "set_workingdirectory.R" before running this script
 
 ############### INPUT: several csv files of raw oak occurrence data:
-#                     gbif_DC_post-georef_revised.csv
+#                     gbif_DarwinCore_edit.csv
 #                     consortium_raw.csv
 #                     idigbio_raw.csv
+#                     exsitu_survey_raw.csv
 #                     fia_tree_raw.csv
 #                     fia_plot_raw.csv*
 #                     fia_species_raw.csv*
 #                     fia_county_raw.csv*
 #                     target_species_list.csv
-#                     /cb_2016_us_county_5m/cb_2016_us_county_5m.shp
 #
 # * marks files from fia_translation_data_raw folder
 # All other files from in-use_occurrence_raw folder
 
-############### OUTPUT: occurence_compiled_dec2.csv
+############### OUTPUT: raw_occurrence_compiled.csv
 #                 (compilation of all occurrence data to be used in the model)
 #                 (plus below fully compiled datasets right before they are merged)
 #                 standardized_col_compiled.csv
 #                 gbif_compiled.csv
 #                 consortium_compiled.csv
 #                 idigbio_compiled.csv
+#                 exsitu_compiled.csv
 #                 fia_compiled.csv
 #                 fia_absence_compiled.csv (absence data)
 
 
-############################
-### Libraries and Functions
-############################
-
-library(dplyr)
-library(plyr)
-library(rgbif)
-library(ridigbio)
-library(data.table)
-library(tidyr)
-library(stringr)
-library(lubridate)
-library(rgdal)
-library(geosphere)
+##############
+### Functions
+##############
 
 ## Subset data and (optionally) write a CSV
 gen_subset <- function(orig_data, action, export_name){
@@ -84,14 +74,14 @@ sp_list <- read.csv(file=paste0(one_up, '/target_species_list.csv'), header = T)
 # read in standardized occurrence point datasets (exactly the same column headers in each file)
 file_list <- list.files(path = "standard_col", pattern = ".csv", full.names = T)
 file_dfs <- lapply(file_list, read.csv, header = TRUE, fileEncoding="latin1", strip.white = TRUE, colClasses = "character")
-length(file_dfs) #7
+length(file_dfs) #6
 
 # stack standardized datasets to create one dataframe
 df <- data.frame()
 for(file in seq_along(file_dfs)){
   df <- rbind(df, file_dfs[[file]])
 }
-str(df); nrow(df) #93192 (ELT), 94426
+str(df); nrow(df) #93171
 df$gps_determ <- ifelse(df$gps_determ=="", "NA", df$gps_determ)
 # rename columns to match Darwin Core Archive format
 setnames(df,
@@ -102,7 +92,7 @@ setnames(df,
 df <- join(df, sp_list, by = "species", type="left"); str(df)
 # remove rows with no species name match (i.e. keep records for target species only)
 df <- df[!(is.na(df$speciesKey)),]
-nrow(df) #37326 (ELT), 30900
+nrow(df) #37303
 
 # though we will use this object at the end of the script to build the master
 # dataset, we will also save the modified data frame up to this point. We will do the
@@ -114,8 +104,15 @@ write.csv(df, file=paste0(one_up, "/in-use_occurrence_compiled/standardized_col_
 ############################
 
 # read in raw occurrence points from the GBIF post_GeoLocate revision
-gbif <- read.csv(file='gbif_DC_post-georef_revised.csv', as.is=T)
+gbif <- read.csv(file='gbif_raw_DarwinCore_edit.csv', as.is=T, na.strings=c("","NA")) # replace any empty or "NA" cells with NA so the rest of the script works smoothly
 nrow(gbif) #12195
+# keep only the pertinent columns
+gbif <- subset(gbif, select = c(order,family,genus,specificEpithet,infraspecificEpithet,scientificName,
+                                institutionCode,collectionCode,datasetName,basisOfRecord,catalogNumber,
+                                recordNumber,decimalLatitude,decimalLongitude,coordinateUncertaintyInMeters,
+                                georeferenceSources,year,individualCount,countryCode,stateProvince,county,
+                                municipality,locality,locationRemarks,verbatimLocality,occurrenceRemarks,
+                                habitat,fieldNotes,issue,species,speciesKey))
 # make sure species is a factor
 gbif$species <- as.factor(gbif$species)
 # recognize that scientificName refers to something different in sp_list
@@ -128,8 +125,19 @@ gbif <- join(gbif, sp_list, by = c("speciesKey"), type = "full", match = "first"
 # add and fill dataset name column
 gbif$dataset <- "gbif"
 gbif$fia_codes <- as.factor(gbif$fia_codes)
-gbif$gps_determ <- as.factor(gbif$gps_determ)
-str(gbif)
+# fill in gps_determ col
+for(row in 1:nrow(gbif)){
+  if(!is.na(gbif$decimalLatitude[row]) && !is.na(gbif$decimalLongitude[row])){
+    gbif$gps_determ[row] <- "G"
+  }
+  else{
+    gbif$gps_determ[row] <- "NA"
+  }
+}
+table(gps_determ)
+# G    NA
+# 7027 5168
+#str(gbif)
 nrow(gbif) #12195
 
 write.csv(gbif, file=paste0(one_up, "/in-use_occurrence_compiled/gbif_compiled.csv"))
@@ -139,7 +147,7 @@ write.csv(gbif, file=paste0(one_up, "/in-use_occurrence_compiled/gbif_compiled.c
 ###########################################
 
 # read in raw occurrence points
-consortium <- read.csv(file='consortium_raw.csv', as.is=T)
+consortium <- read.csv(file='consortium_raw.csv', as.is=T, na.strings=c("","NA")) # replace any empty or "NA" cells with NA so the rest of the script works smoothly
 nrow(consortium) #98500
 # keep only the pertinent columns
 consortium <- subset(consortium, select = c(order,family,genus,specificEpithet,infraspecificEpithet,
@@ -155,7 +163,19 @@ consortium$synonyms <- consortium$scientificName
 consortium <- join(consortium, sp_list, by = "synonyms", type="left", match = "first"); str(consortium)
 # remove rows with no species name match (i.e. keep records for target species only)
 consortium <- consortium[!(is.na(consortium$species)),]
-nrow(consortium) #5068 (ELT)
+# fill in gps_determ col
+for(row in 1:nrow(consortium)){
+  if(!is.na(consortium$decimalLatitude[row]) && !is.na(consortium$decimalLongitude[row])){
+    consortium$gps_determ[row] <- "G"
+  }
+  else{
+    consortium$gps_determ[row] <- "NA"
+  }
+}
+table(consortium$gps_determ)
+# G    NA
+# 1583 3485
+nrow(consortium) #5068
 
 write.csv(consortium, file=paste0(one_up, "/in-use_occurrence_compiled/consortium_compiled.csv"))
 
@@ -164,7 +184,7 @@ write.csv(consortium, file=paste0(one_up, "/in-use_occurrence_compiled/consortiu
 ###############################
 
 # read in raw occurrence points
-idigbio <- read.csv(file='idigbio_raw.csv', as.is=T)
+idigbio <- read.csv(file='idigbio_raw.csv', as.is=T, na.strings=c("","NA")) # replace any empty or "NA" cells with NA so the rest of the script works smoothly)
 nrow(idigbio) #196485
 
 # remove duplicate column
@@ -209,12 +229,54 @@ idigbio$synonyms <- as.factor(paste(idigbio$genus,idigbio$specificEpithet))
 idigbio <- join(idigbio, sp_list, by = "synonyms", type="left"); str(idigbio)
 # remove rows with no species name match (i.e. keep records for target species only)
 idigbio <- idigbio[!(is.na(idigbio$speciesKey)),]
+# fill in gps_determ col
+for(row in 1:nrow(idigbio)){
+  if(!is.na(idigbio$decimalLatitude[row]) && !is.na(idigbio$decimalLongitude[row])){
+    idigbio$gps_determ[row] <- "G"
+  }
+  else{
+    idigbio$gps_determ[row] <- "NA"
+  }
+}
+table(idigbio$gps_determ)
+# G    NA
+# 6065 5668
 nrow(idigbio) # 11733 (ELT)
 
 write.csv(idigbio, file=paste0(one_up, "/in-use_occurrence_compiled/idigbio_compiled.csv"))
 
+#########################################
+### 6. Standardize Exsitu Wild Prov. Data
+#########################################
+
+exsitu <- read.csv(file='exsitu_survey_raw.csv', as.is=T, na.strings=c("","NA")) # replace any empty or "NA" cells with NA so the rest of the script works smoothly)
+nrow(exsitu) #1640
+
+# keep only the pertinent columns
+exsitu <- subset(exsitu, select = c(institution,species,prov_type,all_locality_orig,lat_dd,long_dd,
+                                    county,state,gps_determination,sum.no_alive.))
+# rename columns to match Darwin Core Archive format
+setnames(exsitu,
+         old=c("species","institution","prov_type","lat_dd","long_dd","sum.no_alive.",
+                "state","all_locality_orig","gps_determination"),
+         new=c("specificEpithet","institutionCode","basisOfRecord","decimalLatitude",
+                "decimalLongitude","individualCount","stateProvince","locality","gps_determ"))
+# add genus column
+exsitu$genus <- "Quercus"
+# create species column to match with sp_list
+exsitu$species <- as.factor(paste(exsitu$genus,exsitu$specificEpithet))
+# add species ID columns from target species list
+exsitu <- join(exsitu, sp_list, by = "species",type="left",match="first"); str(exsitu)
+# add and fill dataset name column
+exsitu$dataset <- "exsitu"
+# remove rows with no species name match (i.e. keep records for target species only)
+exsitu <- exsitu[!(is.na(exsitu$speciesKey)),]
+nrow(exsitu) # 1545
+
+write.csv(exsitu, file=paste0(one_up, "/in-use_occurrence_compiled/exsitu_compiled.csv"))
+
 #####################################
-### 6. Standardize FIA Presence Data
+### 7. Standardize FIA Presence Data
 #####################################
 
 # read in FIA files
@@ -263,13 +325,33 @@ setnames(fia,
          new=c("decimalLatitude","decimalLongitude", "year", "stateProvince", "county", "fia_codes", "genus","specificEpithet", "individualCount", "countryCode"))
 fia$dataset <- "fia"
 fia$basisOfRecord <- "observation"
+fia$gps_determ <- "G"
 # add standard species ID columns
 fia <- join(fia, sp_list, by = c("fia_codes", "species"), type="left", match = "first"); str(fia)
 
 write.csv(fia, file=paste0(one_up, "/in-use_occurrence_compiled/fia_compiled.csv"))
 
+##########################
+### 8. Stack All Datasets
+##########################
+
+# Create a list of all dataframes you want to stack
+datasets <- list(df,gbif,consortium,idigbio,exsitu,fia)
+# 'Reduce' iterates through list and merges with previous dataframe in the list
+all_data <- Reduce(rbind.all.columns, datasets)
+  nrow(all_data) #68237
+  #str(all_data)
+  unique(all_data$gps_determ)
+  all_data$gps_determ <- ifelse(is.na(all_data$gps_determ),"NA",all_data$gps_determ)
+  table(all_data$gps_determ)
+  # C     G      L    NA
+  # 3691  37178  280  27088
+
+# write final file
+write.csv(all_data, file="raw_occurrence_compiled.csv")
+
 ################################
-### 7. Compile FIA Absence Data
+### 9. Compile FIA Absence Data
 ################################
 
 # note that this absence data will only be for the 13 species that FIA included in its inventory
@@ -350,156 +432,3 @@ fia_absence_joint$toumeyi <- 0
 
 # Now make a new dataframe with this augmented PLOT file with its 13 new columns
 write.csv(fia_absence_joint, file=paste0(one_up, "/in-use_occurrence_compiled/fia_absence_compiled.csv"))
-
-##########################
-### 8. Stack All Datasets
-##########################
-
-# Create a list of all dataframes you want to stack
-datasets <- list(df,gbif,consortium,idigbio,fia)
-# 'Reduce' iterates through list and merges with previous dataframe in the list
-all_data <- Reduce(rbind.all.columns, datasets)
-  nrow(all_data) #66805
-
-#########################
-## 9. Fill County Centroids
-#########################
-
-# fill in county centroid coordinates where necessary and possible
-# read in county and state vectors from the FIA county reference file from the FIA datamart.
-fia_cou <- read.csv(file=paste0(translate_fia, '/fia_county_raw.csv'), as.is=T)
-# read in csv with county centroid coordinates
-counties <- read.csv(file='counties_wgs.csv', as.is=T)
-setnames(fia_cou,
-         old=c("STATECD","COUNTYCD"),
-         new=c("STATEFP","COUNTYFP"))
-centroids <- join(counties, fia_cou, by = c('STATEFP','COUNTYFP'), type = 'left')
-state_names <- centroids$STATENM
-county_names <- centroids$COUNTYNM
-lat <- centroids$CENTROID_Y
-long <- centroids$CENTROID_X
-
-# create dataframe of only records without coordinates
-no_coords <- all_data[which(is.na(all_data$decimalLatitude)),]
-nrow(no_coords) #14321
-# and one of only records with cordinates
-have_coord <- all_data[which(!is.na(all_data$decimalLatitude)),]
-nrow(have_coord) #52484
-
-extract_county_centroid <- function(d.f, states, counties, lat, long){
-  # First to make sure that the county matches the state, we will only consider
-  # occurrences in the state half of the pair.
-  gbif_s_look <- which(d.f$state == states)
-  gbif_l_look <- which(is.na(d.f$lat))
-  # Often the county was already mentioned in the county column, so first we
-  # check the county column for the county name in the current pair.
-  rows <- grep(pattern = counties, x = d.f$county, ignore.case = T)
-  # Then we see which row numbers are also in the state listed in the argument.
-  overlap <- intersect(gbif_s_look, rows)
-  overlap2 <- intersect(gbif_l_look, rows)
-  overlap_all <- intersect(overlap, overlap2)
-  # Then the coordinate is written into the new county column for all occurrences with
-  # the state in the pair, and the county name in the original county column.
-  d.f$lat[overlap_all] <- lat
-  d.f$long[overlap_all] <- long
-  d.f$gps_determ[overlap_all] <- "C"
-  return(d.f)
-}
-for (i in 1:nrow(no_coord)){
-  no_coord <- extract_county_centroid(no_coord, state_names[i], county_names[i], lat[i], long[i])
-}
-# see how many rows were filled with county centroid
-filled <- no_coord[which(!is.na(no_coord$lat)),]
-nrow(filled) #2253
-# assign "NA" gps determination to remaining records without coordinates
-no_coord[which(is.na(no_coord$lat)),]$gps_determ <- "NA"
-# join all records with coordinates together
-occur_all <- join(have_coord,filled,type='full') #,by='obs_no')
-nrow(occur_all) #54737
-
-#####################
-## 10. Finishing Touches
-#####################
-
-# make some changes across this dataset to prevent future errors
-occur_all$year[is.na(occur_all$year)]<-"1111"
-replace <- c("UNKNOWN","\\<0\\>","N/A","NA","^$","is.na(i)")
-for (i in replace){
-  occur_all$year <- gsub(i,"1111",occur_all$year)
-}
-# change the class of some column values to prevent errors
-occur_all$year<-as.numeric(occur_all$year)
-occur_all$decimalLatitude<-as.numeric(occur_all$decimalLatitude)
-occur_all$decimalLongitude<-as.numeric(occur_all$decimalLongitude)
-occur_all$locality<-gsub(",",".",occur_all$locality)
-
-# remove points with fewer than 2 digits after the decimal for lat and/or long
-occur_dec2 <- occur_all[grep("\\.[0-9][1-9]",occur_all$decimalLatitude),]
-nrow(occur_dec2) #45036
-occur_dec2 <- occur_dec2[grep("\\.[0-9][1-9]",occur_dec2$decimalLongitude),]
-nrow(occur_dec2) #39908
-
-# reorder dataset before subsetting in next script to place higher quality datasets and most recent records first
-occur_dec2 <- occur_dec2[order(factor(occur_dec2$dataset,levels=c("other","redlist","consortium","fia","ex_situ",
-                                                               "gbif","andrew_hipp","natureserve","bonap","usda"))),]
-head(occur_dec2)
-occur_dec2 <- occur_dec2[order(occur_dec2$year, na.last = TRUE, decreasing = T),]
-unique(occur_dec2$year)
-
-# write file
-write.csv(occur_dec2, file=paste0(compiled, "/occurrence_compiled_dec2.csv"))
-
-
-
-
-
-
-
-### NOT USED RIGHT NOW -- accidentally wrote different way to get county centroid coordinates..
-### this one might be better though?
-# Some occurrences do not have coordinate data, but they do have state and county information
-# Write in county centroid coordinates and label them with a C
-  # FIRST make dataframe of county centroids
-  # load shapefile of US county boundaries
-  #counties_map <- readOGR(paste0(one_up, '/cb_2016_us_county_5m/cb_2016_us_county_5m.shp'))
-  # project to WGS84
-  #wgs84 <- CRS("+init=epsg:4326 +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")
-  #counties_wgs <- spTransform(counties_map, wgs84)
-  # make dataframe of county centroids (lat and long)
-  #centroids <- as.data.frame(centroid(counties_wgs))
-  #colnames(centroids) <- c("centroid_long", "centroid_lat")
-  # round centroid lat and long to 3 digits after decimal
-  #centroids$long_round <- round(centroids$centroid_long, 3)
-  #centroids$lat_round <- round(centroids$centroid_lat, 3)
-  # add county names to data frame
-    # remove the 0s from the county FP codes by making the factors characters, then numeric, then factors again.
-  #  centroids$STATECD <- as.factor(as.numeric(as.character(counties_wgs$STATEFP)))
-  #  centroids$COUNTYCD <- as.factor(as.numeric(as.character(counties_wgs$COUNTYFP)))
-  #fia_cou$STATECD <- as.factor(fia_cou$STATECD)
-  #fia_cou$COUNTYCD <- as.factor(fia_cou$COUNTYCD)
-  # Luckily these state and county codes align with the fia_county file from above
-  # So let's tack on the names to these coordinates with fia_cou
-  #centroids <- join(centroids, fia_cou, by = c("STATECD", "COUNTYCD"), type = "left")
-  # It looks like some numbers are still not quite aligning, there may be errors in states with a lot of counties--VA and AK and FL (Dade)--see NAs
-
-  # Second we can make a subset of the occurrences that lack coordinates, but have state and county.
-  #fill_in_county_coord <- which(is.na(all_data$decimalLatitude)) # this is the rows to subset of all_data
-  #match_these_counties <-  all_data[(is.na(all_data$decimalLatitude)),c("stateProvince", "county")] # this is a dataframe of the state and county pairs we have to match
-  #colnames(match_these_counties) <- c("STATENM", "COUNTYNM")
-  # clean counties
-  #match_these_counties$COUNTYNM <- gsub(" County", "", match_these_counties$COUNTYNM, fixed = T)
-  #match_these_counties$COUNTYNM <- gsub(" Co.", "", match_these_counties$COUNTYNM, fixed = T)
-  #match_these_counties <- join(match_these_counties, centroids, by = c("STATENM", "COUNTYNM"), type ="left")
-  # Note that any misspelled counties will not be found. Some rows were still unable to match data.
-
-  # now fill in these coordinate gaps
-  #all_data[fill_in_county_coord, "decimalLatitude"] <- match_these_counties$lat_round
-  #all_data[fill_in_county_coord, "decimalLongitude"] <- match_these_counties$long_round
-  # and label the points as gps_determ = "C"
-  #all_data[fill_in_county_coord, "gps_determ"] <- "C"
-
-# remove rows with no lat and long still
-#occur_all <- all_data[!(is.na(all_data$decimalLatitude)),]
-#  nrow(occur_all) #59357
-#occur_all <- all_data[!(is.na(all_data$decimalLongitude)),]
-#  nrow(occur_all) #59357
