@@ -125,6 +125,7 @@ gbif <- join(gbif, sp_list, by = c("speciesKey"), type = "full", match = "first"
 # add and fill dataset name column
 gbif$dataset <- "gbif"
 gbif$fia_codes <- as.factor(gbif$fia_codes)
+gbif$gps_determ <- "NA"
 # fill in gps_determ col
 for(row in 1:nrow(gbif)){
   if(!is.na(gbif$decimalLatitude[row]) && !is.na(gbif$decimalLongitude[row])){
@@ -134,7 +135,7 @@ for(row in 1:nrow(gbif)){
     gbif$gps_determ[row] <- "NA"
   }
 }
-table(gps_determ)
+table(gbif$gps_determ)
 # G    NA
 # 7027 5168
 #str(gbif)
@@ -271,6 +272,7 @@ exsitu <- join(exsitu, sp_list, by = "species",type="left",match="first"); str(e
 exsitu$dataset <- "exsitu"
 # remove rows with no species name match (i.e. keep records for target species only)
 exsitu <- exsitu[!(is.na(exsitu$speciesKey)),]
+exsitu$gps_determ <- ifelse(is.na(exsitu$gps_determ), "NA", exsitu$gps_determ)
 nrow(exsitu) # 1545
 
 write.csv(exsitu, file=paste0(one_up, "/in-use_occurrence_compiled/exsitu_compiled.csv"))
@@ -342,7 +344,9 @@ all_data <- Reduce(rbind.all.columns, datasets)
   nrow(all_data) #68237
   #str(all_data)
   unique(all_data$gps_determ)
-  all_data$gps_determ <- ifelse(is.na(all_data$gps_determ),"NA",all_data$gps_determ)
+  test <- all_data[which(all_data$gps_determ == "NA" & !is.na(all_data$decimalLatitude)),]
+    unique(test$dataset)
+  #all_data$gps_determ <- ifelse(is.na(all_data$gps_determ),"NA",all_data$gps_determ)
   table(all_data$gps_determ)
   # C     G      L    NA
   # 3691  37178  280  27088

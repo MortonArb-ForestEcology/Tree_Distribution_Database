@@ -16,6 +16,7 @@
 all_data <- read.csv(file="raw_occurrence_compiled.csv", as.is=T, na.strings=c("","NA")) # replace any empty or "NA" cells with NA so the rest of the script works smoothly
 nrow(all_data)
 table(all_data$gps_determ)
+unique(all_data$gps_determ)
 # rename and compress for ease of manipulation
 df <- all_data
 # select desired columns and drop the rest
@@ -239,6 +240,7 @@ for (i in 1:length(cou_state_distinct)){
   df$state_new <- extract_county_distinct(df, cou_state_distinct[i], cou_county_distinct[i], 1)
 }
 write.csv(df, file='df_DC_working.csv', row.names = F)
+#df <- read.csv(file="df_DC_working.csv", as.is=T)
 
 # compare how many counties were NA within the original column and the new column
 sum(is.na(df$county)) #39466
@@ -271,6 +273,8 @@ setnames(df,
 write.csv(df, file='df_DC_cleaned.csv', row.names = F)
 #write.csv(df, file='all_occ_counties_filled.csv', row.names = F)
 table(df$gps_determ)
+unique(df$gps_determ)
+nrow(df[which(is.na(df$gps_determ) & !is.na(df$decimalLatitude)),])
 
 #####################
 ## 5. Finishing Touches
@@ -306,6 +310,7 @@ the_rest <- occur_all[diff,]
 nrow(the_rest) #50974
 write.csv(the_rest, file=paste0(compiled, "/occurrence_compiled_refined_no_geolocate.csv"))
 
+test <- the_rest[which(is.na(the_rest$gps_determ) & !is.na(the_rest$decimalLatitude)),]
 
 
 ### THIS PART DOES NOT APPLY CURRENTLY BECAUSE ALL POINTS ARE NOT RUN THROUGH GEOLOCATE ###

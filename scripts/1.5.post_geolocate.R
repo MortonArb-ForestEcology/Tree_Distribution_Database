@@ -22,15 +22,15 @@ setnames(post_geo,
 
 # records before input to GeoLocate (gbif & consortium)
 pre_geo <- read.csv(file=paste0(compiled, '/occurrence_compiled_refined_for_geolocate.csv'), as.is=T, na.strings=c("","NA"))
-pre_geo$gps_determ <- "NA"
-pre_geo$precision <- "NA"
+pre_geo$gps_determ <- NA
+pre_geo$precision <- NA
 nrow(pre_geo) #17263
 
 # records not put through GeoLocate
 no_geo <- read.csv(file=paste0(compiled, '/occurrence_compiled_refined_no_geolocate.csv'), as.is=T, na.strings=c("","NA"))
 nrow(no_geo) #50974
 table(no_geo$gps_determ)
-no_geo$gps_determ <- ifelse(is.na(no_geo$gps_determ),"NA",no_geo$gps_determ)
+no_geo$gps_determ <- ifelse(is.na(no_geo$gps_determ),NA,no_geo$gps_determ)
 unique(no_geo$gps_determ)
 no_geo$precision <- "NA"
 
@@ -99,7 +99,7 @@ long <- centroids$CENTROID_X
 # create dataframe of only records without coordinates
 no_coord <- all_occ[which(is.na(all_occ$decimalLatitude)),]
 nrow(no_coord) #12294
-no_coord$gps_determ <- "NA"
+no_coord$gps_determ <- NA
 # and one of only records with cordinates
 have_coord <- all_occ[which(!is.na(all_occ$decimalLatitude)),]
 nrow(have_coord) #55943
@@ -119,26 +119,25 @@ for (i in 1:length(county_names)){
 }
 # see how many rows were filled with county centroid
 filled <- no_coord[which(!is.na(no_coord$decimalLatitude)),]
-nrow(filled) #8826
+nrow(filled) #8818
+  test <- filled[which(is.na(filled$gps_determ)),]
+  nrow(test)
 
 # join data back together
-occur_all <- join(no_coord,have_coord,type="full")
+occur_all <- join(filled,have_coord,type="full")
 write.csv(occur_all, file=paste0(compiled, '/occurrence_compiled_post_geolocate_filled.csv'), row.names = F)
 
 #####################
 ## 5. Finishing Touches
 #####################
 
-# remove rows with no lat/long
-occur_all <- occur_all[which(!is.na(occur_all$decimalLatitude)),]
-nrow(occur_all) #64769
-unique(occur_all$decimalLatitude)
-
 # remove points with fewer than 2 digits after the decimal for lat and/or long
 occur_dec2 <- occur_all[grep("\\.[0-9][1-9]",occur_all$decimalLatitude),]
 nrow(occur_dec2) #56492
 occur_dec2 <- occur_dec2[grep("\\.[0-9][1-9]",occur_dec2$decimalLongitude),]
 nrow(occur_dec2) #50102
+test <- occur_dec2[which(is.na(occur_dec2$gps_determ)),]
+  nrow(test)
 
 # reorder dataset before subsetting in next script to place higher quality datasets and most recent records first
 occur_dec2 <- occur_dec2[order(factor(occur_dec2$dataset,levels=c("other","redlist","fia","exsitu","consortium","gbif",
@@ -147,4 +146,4 @@ head(occur_dec2)
 occur_dec2 <- occur_dec2[order(occur_dec2$year, na.last = TRUE, decreasing = T),]
 unique(occur_dec2$year)
 
-write.csv(occur_dec2, file=paste0(compiled, '/occurrence_compiled_post_geolocate_filled_dec2.csv'), row.names = F)
+write.csv(occur_all, file=paste0(compiled, '/occurrence_compiled_post_geolocate_filled_dec2.csv'), row.names = F)
